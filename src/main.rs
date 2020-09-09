@@ -5,22 +5,20 @@ use rustybrot::Config;
 
 fn main() {
     
-    //Define a vector to hold the arguments from the command line
-    let args: Vec<String> = env::args().collect();
-
-    //Use the vector to create a new Config struct
-    //if it can not be parsed, display the resulting
-    //error
-    let config = Config::new(&args).unwrap_or_else(|err| {
-        println!("Problem parsing arguments: {}", err);
-        process::exit(2);
+    //Pass the command line parameters from the environment
+    //into the constructor of the config function. This then
+    //returns a config object, or an error if the input can
+    //not be parsed
+    let config = Config::new(env::args()).unwrap_or_else(|err| {
+        eprintln!("Problem parsing arguments: {}", err);
+        process::exit(1);
     });
 
     //Call the run function, and if it returns an error,
     //display it
     if let Err(e) = rustybrot::run(config) {
-        println!("Application encountered an error: {}", e);
+        eprintln!("Application encountered an error: {}", e);
 
-        process::exit(2);
+        process::exit(1);
     }
 }

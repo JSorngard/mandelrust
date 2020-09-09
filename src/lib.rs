@@ -1,4 +1,5 @@
 use std::error::Error;
+use std::env;
 
 //Runs the main logic of the program and returns an error to
 //main if something goes wrong
@@ -60,12 +61,20 @@ impl Config {
     //Returns a Result wrapper which contains a Config
     //struct if the arguments could be parsed correctly
     //and an error otherwise
-    pub fn new(args: &[String]) -> Result<Config, &'static str> {
-        if args.len() < 2 + 1 {
-            return Err("not enough arguments");
-        }
-        let first = args[1].clone();
-        let second = args[2].clone();
+    pub fn new(mut args: env::Args) -> Result<Config, &'static str> {
+		//Ignore name of program        
+        args.next();
+
+        let first = match args.next() {
+        	Some(arg) => arg,
+        	None => return Err("Didn't get the first argument")
+        };
+
+        let second = match args.next() {
+        	Some(arg) => arg,
+        	None => return Err("Didn't get the second argument")
+        };
+
         Ok(Config { first, second})
     }
 }
