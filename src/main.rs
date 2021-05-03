@@ -1,7 +1,8 @@
 use std::process;
-use std::env;
 
 use rustybrot::Config;
+
+extern crate image;
 
 fn main() {
     
@@ -9,7 +10,7 @@ fn main() {
     //into the constructor of the config function. This then
     //returns a config object, or an error if the input can
     //not be parsed
-    let config = Config::new(env::args()).unwrap_or_else(|err| {
+    let config = Config::new().unwrap_or_else(|err| {
         eprintln!("Problem parsing arguments: {}", err);
         process::exit(1);
     });
