@@ -4,7 +4,7 @@ use clap::{App, Arg};
 use image::RgbImage;
 
 //Runs the main logic of the program and returns an error to
-//main if something goes wrong
+//main if something goes wrong.
 pub fn run(config: Config) -> Result<(), Box<dyn Error>> {
     let center_real = config.center_real;
     let center_imag = config.center_imag;
@@ -83,7 +83,7 @@ pub fn render(
         escape_speed = 0.0;
         samples = 0;
 
-        //Compute point to sample
+        //Compute point to sample.
         c_real = start_real + real_distance * (x as f64) / (xresolution as f64);
         c_imag = start_imag + imag_distance * (y as f64) / (yresolution as f64);
 
@@ -92,14 +92,14 @@ pub fn render(
         //    continue;
         //}
 
-        //Supersampling loop
+        //Supersampling loop.
         //Samples points in a grid around the intended point and averages
         //the results together to get a smoother image.
         for k in 1..=i64::pow(ssaa as i64, 2) {
             coloffset = ((k % (ssaa as i64) - 1) as f64) * invfactor;
             rowoffset = (((k - 1) as f64) / (ssaa as f64) - 1.0) * invfactor;
 
-            //Compute escape speed of point
+            //Compute escape speed of point.
             esc = iterate(
                 c_real + rowoffset * real_delta,
                 c_imag + coloffset * imag_delta,
@@ -109,7 +109,7 @@ pub fn render(
             samples += 1;
             escape_speed += esc;
 
-            //If we are far from the fractal we do not need to supersample
+            //If we are far from the fractal we do not need to supersample.
             if esc > 0.9 {
                 //Uncomment the next line to check supersampling region.
                 //escape_speed = 0.0;
@@ -133,13 +133,13 @@ pub fn render(
 
 /*
 Iterates the mandelbrot function on the input number until
-it either escapes or exceeds the maximum number of iterations
+it either escapes or exceeds the maximum number of iterations.
 */
 pub fn iterate(c_re: f64, c_im: f64, maxiterations: i64) -> f64 {
     let c_imag_sqr = c_im * c_im;
     let mag_sqr = c_re * c_re + c_imag_sqr;
 
-    //Check whether the point is within the main cardioid or period 2 bulb
+    //Check whether the point is within the main cardioid or period 2 bulb.
     if f64::powf(c_re + 1.0, 2.0) + c_imag_sqr <= 0.0625
         || mag_sqr * (8.0 * mag_sqr - 3.0) <= 0.09375 - c_re
     {
@@ -152,8 +152,8 @@ pub fn iterate(c_re: f64, c_im: f64, maxiterations: i64) -> f64 {
     let mut z_im_sqr = 0.0;
     let mut iterations = 0;
 
-    //Iterates the mandelbrot function
-    //This loop uses only 3 multiplications, which is the minimum
+    //Iterates the mandelbrot function.
+    //This loop uses only 3 multiplications, which is the minimum.
     while iterations < maxiterations && z_re_sqr + z_im_sqr <= 36.0 {
         z_im *= z_re;
         z_im += z_im;
@@ -173,7 +173,7 @@ pub fn iterate(c_re: f64, c_im: f64, maxiterations: i64) -> f64 {
 }
 
 //A struct containing the runtime specified configuration
-//of the program
+//of the program.
 pub struct Config {
     pub center_real: f64,
     pub center_imag: f64,
@@ -185,12 +185,12 @@ pub struct Config {
     pub zoom: f64,
 }
 
-//Implementation of the Config struct
+//Implementation of the Config struct.
 impl Config {
     /*
     Returns a Result wrapper which contains a Config
     struct if the arguments could be parsed correctly
-    and an error otherwise
+    and an error otherwise.
     */
     pub fn new() -> Result<Config, &'static str> {
         let mut center_real = "-0.75";
