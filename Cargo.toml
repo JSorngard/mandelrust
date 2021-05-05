@@ -1,6 +1,6 @@
 [package]
 name = "rustybrot"
-version = "0.1.0"
+version = "1.0.0"
 authors = ["JSorngard"]
 edition = "2018"
 
@@ -9,3 +9,7 @@ edition = "2018"
 [dependencies]
 clap = "3.0.0-beta.2"
 image = "0.23.14"
+
+[profile.release]
+lto = "fat"
+codegen-units = 1
