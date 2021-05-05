@@ -5,7 +5,6 @@ use rustybrot::Config;
 extern crate image;
 
 fn main() {
-    
     //Pass the command line parameters from the environment
     //into the constructor of the config function. This then
     //returns a config object, or an error if the input can
@@ -19,7 +18,6 @@ fn main() {
     //display it
     if let Err(e) = rustybrot::run(config) {
         eprintln!("Application encountered an error: {}", e);
-
         process::exit(1);
     }
 }

@@ -16,20 +16,6 @@ pub fn run(config: Config) -> Result<(), Box<dyn Error>> {
     let imag_distance = config.imag_distance / zoom;
     let real_distance = aspect_ratio * imag_distance;
     let depth = 255;
-    println!(
-        "The real part of the center point is {}, and the imag part is {}",
-        center_real, center_imag
-    );
-    println!(
-        "The aspect ratio is {}, and the resolution is {}x{}",
-        aspect_ratio, xresolution, yresolution
-    );
-    if save_result {
-        println!("We should save the result");
-    } else {
-        println!("We should not save the result");
-    }
-    println!("We're gonna zoom in by a factor of {}", zoom);
 
     let img = render(
         xresolution,
@@ -41,8 +27,9 @@ pub fn run(config: Config) -> Result<(), Box<dyn Error>> {
         depth,
     );
 
-    img.save("m.png").unwrap();
-
+    if save_result {
+        img.save("m.png").unwrap();
+    }
     //Everything finished correctly!
     Ok(())
 }
@@ -68,18 +55,20 @@ pub fn render(
         c_imag = start_imag + imag_distance * (y as f64) / (yresolution as f64);
         intensity = iterate(c_real, c_imag, depth as i64);
         *pixel = image::Rgb([
-            (intensity * f64::powf(depth as f64, 1.0 - (intensity * 45.0) * 2.0)) as u8,
+            (intensity * f64::powf(depth as f64, 1.0 - f64::powf(intensity, 45.0) * 2.0)) as u8,
             (intensity * 70.0 - (880.0 * f64::powf(intensity, 18.0))
                 + (701.0 * f64::powf(intensity, 9.0))) as u8,
-            (intensity * 80.0 + (f64::powf(intensity, 9.0) * depth as f64)
+            (intensity * 80.0 + (f64::powf(intensity, 9.0) * (depth as f64))
                 - (950.0 * f64::powf(intensity, 99.0))) as u8,
         ])
     }
     return img;
 }
 
-//Iterates the mandelbrot function on the input number until
-//it either escapes or exceeds the maximum number of iterations
+/*
+Iterates the mandelbrot function on the input number until
+it either escapes or exceeds the maximum number of iterations
+*/
 pub fn iterate(c_re: f64, c_im: f64, maxiterations: i64) -> f64 {
     let c_imag_sqr = c_im * c_im;
     let mag_sqr = c_re * c_re + c_imag_sqr;
@@ -113,8 +102,8 @@ pub fn iterate(c_re: f64, c_im: f64, maxiterations: i64) -> f64 {
         return 0.0;
     }
 
-    (maxiterations - iterations) as f64
-        - 4.0 * f64::powf((z_re_sqr + z_im_sqr).sqrt(), -0.4) / (maxiterations as f64)
+    ((maxiterations - iterations) as f64 - 4.0 * f64::powf((z_re_sqr + z_im_sqr).sqrt(), -0.4))
+        / (maxiterations as f64)
 }
 
 //A struct containing the runtime specified configuration
@@ -131,9 +120,11 @@ pub struct Config {
 
 //Implementation of the Config struct
 impl Config {
-    //Returns a Result wrapper which contains a Config
-    //struct if the arguments could be parsed correctly
-    //and an error otherwise
+    /*
+    Returns a Result wrapper which contains a Config
+    struct if the arguments could be parsed correctly
+    and an error otherwise
+    */
     pub fn new() -> Result<Config, &'static str> {
         let mut center_real = "-0.75";
         let mut center_imag = "0.0";
@@ -224,31 +215,30 @@ impl Config {
             zoom = z;
         }
 
-        //Parse the inputs from strings into the appropriate
-        //types
+        //Parse the inputs from strings into the appropriate types
         let center_real: f64 = match center_real.trim().parse() {
             Ok(num) => num,
-            Err(_) => return Err("Could not interpret RE(CENTER) as a float"),
+            Err(_) => return Err("could not interpret RE(CENTER) as a float"),
         };
 
         let center_imag: f64 = match center_imag.trim().parse() {
             Ok(num) => num,
-            Err(_) => return Err("Could not interpret IM(CENTER) as a float"),
+            Err(_) => return Err("could not interpret IM(CENTER) as a float"),
         };
 
         let aspect_ratio: f64 = match aspect_ratio.trim().parse() {
             Ok(num) => num,
-            Err(_) => return Err("Could not interpret ASPECT RATIO as a float"),
+            Err(_) => return Err("could not interpret ASPECT RATIO as a float"),
         };
 
         let resolution: u32 = match resolution.trim().parse() {
             Ok(num) => num,
-            Err(_) => return Err("Could not interpret RESOLUTION as an integer"),
+            Err(_) => return Err("could not interpret RESOLUTION as an integer"),
         };
 
         let zoom: f64 = match zoom.trim().parse() {
             Ok(num) => num,
-            Err(_) => return Err("Could not interpret ZOOM FACTOR as a float"),
+            Err(_) => return Err("could not interpret ZOOM FACTOR as a float"),
         };
 
         Ok(Config {
