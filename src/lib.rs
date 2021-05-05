@@ -78,7 +78,7 @@ pub fn render(
     let mut rowoffset: f64;
     let mut esc: f64;
     for (x, y, pixel) in img.enumerate_pixels_mut() {
-        //Book keeping variables.
+        //Book-keeping variables.
         escape_speed = 0.0;
         samples = 0;
 
@@ -109,6 +109,9 @@ pub fn render(
             }
         }
         escape_speed /= samples as f64;
+
+        //Color in the image. These color curves were found through experimentation
+        //There is not much logic for them to be this.
         *pixel = image::Rgb([
             (escape_speed * f64::powf(depth as f64, 1.0 - f64::powf(escape_speed, 45.0) * 2.0))
                 as u8,
