@@ -16,20 +16,33 @@ pub fn run(config: Config) -> Result<(), Box<dyn Error>> {
     let imag_distance = config.imag_distance / zoom;
     let real_distance = aspect_ratio * imag_distance;
     let depth = 255;
+    let ssaa = config.ssaa;
+    let real_delta = real_distance / (xresolution - 1) as f64;
+    let imag_delta = imag_distance / (yresolution - 1) as f64;
+
+    println!("Using a resolution of {}x{}", xresolution, yresolution);
+    println!("Supersampling with a factor of {}", ssaa);
+    if zoom != 1.0 {
+        println!("Zooming by a factor of {}", zoom);
+    }
 
     let img = render(
         xresolution,
         yresolution,
+        ssaa,
         center_real,
         center_imag,
-        imag_distance,
+        real_delta,
+        imag_delta,
         real_distance,
+        imag_distance,
         depth,
     );
 
     if save_result {
         img.save("m.png").unwrap();
     }
+
     //Everything finished correctly!
     Ok(())
 }
@@ -37,29 +50,72 @@ pub fn run(config: Config) -> Result<(), Box<dyn Error>> {
 pub fn render(
     xresolution: u32,
     yresolution: u32,
+    ssaa: u32,
     center_real: f64,
     center_imag: f64,
-    imag_distance: f64,
+    real_delta: f64,
+    imag_delta: f64,
     real_distance: f64,
+    imag_distance: f64,
     depth: u8,
 ) -> RgbImage {
     let mut img = RgbImage::new(xresolution, yresolution);
     let start_real = center_real - real_distance / 2.0;
     let start_imag = center_imag - imag_distance / 2.0;
-    let mut intensity;
+    let mut escape_speed;
     let mut c_real;
     let mut c_imag;
 
+    let invfactor: f64;
+    if ssaa == 0 {
+        invfactor = 0.0;
+    } else {
+        invfactor = 1.0 / (ssaa as f64);
+    }
+
+    let mut samples: u32;
+    let mut coloffset: f64;
+    let mut rowoffset: f64;
+    let mut esc: f64;
     for (x, y, pixel) in img.enumerate_pixels_mut() {
+        //Book keeping variables.
+        escape_speed = 0.0;
+        samples = 0;
+
+        //Compute point to sample
         c_real = start_real + real_distance * (x as f64) / (xresolution as f64);
         c_imag = start_imag + imag_distance * (y as f64) / (yresolution as f64);
-        intensity = iterate(c_real, c_imag, depth as i64);
+
+        //Super sampling loop
+        for k in 1..=i64::pow(ssaa as i64, 2) {
+            coloffset = ((k % (ssaa as i64) - 1) as f64) * invfactor;
+            rowoffset = (((k - 1) as f64) / (ssaa as f64) - 1.0) * invfactor;
+
+            //Compute escape speed of point
+            esc = iterate(
+                c_real + rowoffset * real_delta,
+                c_imag + coloffset * imag_delta,
+                depth as i64,
+            );
+
+            samples += 1;
+            escape_speed += esc;
+
+            //If we are far from the fractal we do not need to supersample
+            if esc > 0.9 {
+                //Uncomment the next line to check supersampling region.
+                //escape_speed = 0.0;
+                break;
+            }
+        }
+        escape_speed /= samples as f64;
         *pixel = image::Rgb([
-            (intensity * f64::powf(depth as f64, 1.0 - f64::powf(intensity, 45.0) * 2.0)) as u8,
-            (intensity * 70.0 - (880.0 * f64::powf(intensity, 18.0))
-                + (701.0 * f64::powf(intensity, 9.0))) as u8,
-            (intensity * 80.0 + (f64::powf(intensity, 9.0) * (depth as f64))
-                - (950.0 * f64::powf(intensity, 99.0))) as u8,
+            (escape_speed * f64::powf(depth as f64, 1.0 - f64::powf(escape_speed, 45.0) * 2.0))
+                as u8,
+            (escape_speed * 70.0 - (880.0 * f64::powf(escape_speed, 18.0))
+                + (701.0 * f64::powf(escape_speed, 9.0))) as u8,
+            (escape_speed * 80.0 + (f64::powf(escape_speed, 9.0) * (depth as f64))
+                - (950.0 * f64::powf(escape_speed, 99.0))) as u8,
         ])
     }
     return img;
@@ -114,6 +170,7 @@ pub struct Config {
     pub aspect_ratio: f64,
     pub imag_distance: f64,
     pub resolution: u32,
+    pub ssaa: u32,
     pub save_result: bool,
     pub zoom: f64,
 }
@@ -133,6 +190,7 @@ impl Config {
         let mut resolution = "2160";
         let mut save_result = true;
         let mut zoom = "1";
+        let mut ssaa = "3";
 
         let matches = App::new("rustybrot")
             .version("0.1")
@@ -193,6 +251,16 @@ impl Config {
                     .required(false)
                     .default_value(zoom),
             )
+            .arg(
+                Arg::new("ssaa")
+                    .short('s')
+                    .long("ssaa")
+                    .value_name("SSAA")
+                    .about("whether to supersample every pixel, and how much")
+                    .takes_value(true)
+                    .default_value(ssaa)
+                    .required(false),
+            )
             .get_matches();
 
         //Extract command line arguments
@@ -207,6 +275,9 @@ impl Config {
         }
         if let Some(res) = matches.value_of("resolution") {
             resolution = res;
+        }
+        if let Some(s) = matches.value_of("ssaa") {
+            ssaa = s;
         }
         if matches.is_present("no_save") {
             save_result = false;
@@ -236,6 +307,11 @@ impl Config {
             Err(_) => return Err("could not interpret RESOLUTION as an integer"),
         };
 
+        let ssaa: u32 = match ssaa.trim().parse() {
+            Ok(num) => num,
+            Err(_) => return Err("could not interpret SSAA as an integer"),
+        };
+
         let zoom: f64 = match zoom.trim().parse() {
             Ok(num) => num,
             Err(_) => return Err("could not interpret ZOOM FACTOR as a float"),
@@ -247,6 +323,7 @@ impl Config {
             aspect_ratio,
             imag_distance,
             resolution,
+            ssaa,
             save_result,
             zoom,
         })
