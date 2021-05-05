@@ -77,6 +77,7 @@ pub fn render(
     let mut coloffset: f64;
     let mut rowoffset: f64;
     let mut esc: f64;
+    //let mirror_direction = center_imag >= 0.0; //True if we want to reflect the image down, and false if we reflect it up.
     for (x, y, pixel) in img.enumerate_pixels_mut() {
         //Book-keeping variables.
         escape_speed = 0.0;
@@ -86,7 +87,14 @@ pub fn render(
         c_real = start_real + real_distance * (x as f64) / (xresolution as f64);
         c_imag = start_imag + imag_distance * (y as f64) / (yresolution as f64);
 
-        //Super sampling loop
+        //We do not need to compute points reflected in the real axis since the image is symmetrical.
+        //if mirror_direction && c_imag <= 0.0 || !mirror_direction && c_imag >= 0.0 {
+        //    continue;
+        //}
+
+        //Supersampling loop
+        //Samples points in a grid around the intended point and averages
+        //the results together to get a smoother image.
         for k in 1..=i64::pow(ssaa as i64, 2) {
             coloffset = ((k % (ssaa as i64) - 1) as f64) * invfactor;
             rowoffset = (((k - 1) as f64) / (ssaa as f64) - 1.0) * invfactor;
@@ -110,8 +118,7 @@ pub fn render(
         }
         escape_speed /= samples as f64;
 
-        //Color in the image. These color curves were found through experimentation
-        //There is not much logic for them to be this.
+        //Color in the image. These color curves were found through experimentation.
         *pixel = image::Rgb([
             (escape_speed * f64::powf(depth as f64, 1.0 - f64::powf(escape_speed, 45.0) * 2.0))
                 as u8,
@@ -206,6 +213,7 @@ impl Config {
                     .about("the real part of the center point of the image")
                     .takes_value(true)
                     .required(false)
+                    .allow_hyphen_values(true)
                     .default_value(center_real),
             )
             .arg(
@@ -215,6 +223,7 @@ impl Config {
                     .about("the imag part of the center point of the image")
                     .takes_value(true)
                     .required(false)
+                    .allow_hyphen_values(true)
                     .default_value(center_imag),
             )
             .arg(
