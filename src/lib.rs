@@ -1,4 +1,5 @@
 use std::error::Error;
+use std::io::Write;
 
 use clap::{App, Arg};
 use image::RgbImage;
@@ -19,11 +20,18 @@ pub fn run(config: Config) -> Result<(), Box<dyn Error>> {
     let ssaa = config.ssaa;
     let real_delta = real_distance / (xresolution - 1) as f64;
     let imag_delta = imag_distance / (yresolution - 1) as f64;
+    let verbose = config.verbose;
 
-    println!("Using a resolution of {}x{}", xresolution, yresolution);
-    println!("Supersampling with a factor of {}", ssaa);
-    if zoom != 1.0 {
-        println!("Zooming by a factor of {}", zoom);
+    if verbose {
+        println!("Using a resolution of {}x{}", xresolution, yresolution);
+        println!("Supersampling with a factor of {}", ssaa);
+        if zoom != 1.0 {
+            println!("Zooming by a factor of {}", zoom);
+        }
+    }
+
+    if verbose {
+        println!("Rendering");
     }
 
     let img = render(
@@ -37,9 +45,13 @@ pub fn run(config: Config) -> Result<(), Box<dyn Error>> {
         real_distance,
         imag_distance,
         depth,
+        verbose,
     );
 
     if save_result {
+        if verbose {
+            println!("Saving image");
+        }
         img.save("m.png").unwrap();
     }
 
@@ -58,6 +70,7 @@ pub fn render(
     real_distance: f64,
     imag_distance: f64,
     depth: u8,
+    verbose: bool,
 ) -> RgbImage {
     let mut img = RgbImage::new(xresolution, yresolution);
     let start_real = center_real - real_distance / 2.0;
@@ -77,11 +90,27 @@ pub fn render(
     let mut coloffset: f64;
     let mut rowoffset: f64;
     let mut esc: f64;
+    let mut previous_print: u32 = 0;
+    let mut new_print: u32;
     //let mirror_direction = center_imag >= 0.0; //True if we want to reflect the image down, and false if we reflect it up.
     for (x, y, pixel) in img.enumerate_pixels_mut() {
         //Book-keeping variables.
         escape_speed = 0.0;
         samples = 0;
+
+        //If verbose we want to print progress
+        if verbose {
+            new_print = 100 * y / yresolution;
+            //But only if we have something new to say
+            if new_print != previous_print {
+                print!("{}%\r", new_print);
+                std::io::stdout()
+                    .flush()
+                    .ok()
+                    .expect("could not flush stdout");
+                previous_print = new_print;
+            }
+        }
 
         //Compute point to sample.
         c_real = start_real + real_distance * (x as f64) / (xresolution as f64);
@@ -183,6 +212,7 @@ pub struct Config {
     pub ssaa: u32,
     pub save_result: bool,
     pub zoom: f64,
+    pub verbose: bool,
 }
 
 //Implementation of the Config struct.
@@ -198,7 +228,6 @@ impl Config {
         let mut aspect_ratio = "1.5";
         let imag_distance = 8.0 / 3.0;
         let mut resolution = "2160";
-        let mut save_result = true;
         let mut zoom = "1";
         let mut ssaa = "3";
 
@@ -273,6 +302,13 @@ impl Config {
                     .default_value(ssaa)
                     .required(false),
             )
+            .arg(
+                Arg::new("verbose")
+                    .short('v')
+                    .about("print extra information")
+                    .takes_value(false)
+                    .required(false),
+            )
             .get_matches();
 
         //Extract command line arguments
@@ -291,9 +327,8 @@ impl Config {
         if let Some(s) = matches.value_of("ssaa") {
             ssaa = s;
         }
-        if matches.is_present("no_save") {
-            save_result = false;
-        }
+        let save_result = !matches.is_present("no_save");
+        let verbose = matches.is_present("verbose");
         if let Some(z) = matches.value_of("zoom") {
             zoom = z;
         }
@@ -338,6 +373,7 @@ impl Config {
             ssaa,
             save_result,
             zoom,
+            verbose,
         })
     }
 }
