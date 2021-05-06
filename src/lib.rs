@@ -22,9 +22,18 @@ pub fn run(config: Config) -> Result<(), Box<dyn Error>> {
     let imag_delta = imag_distance / (yresolution - 1) as f64;
     let verbose = config.verbose;
 
+    //Output some basic information about what the program will be rendering.
     if verbose {
-        println!("Using a resolution of {}x{}", xresolution, yresolution);
-        println!("Supersampling with a factor of {}", ssaa);
+        print!("---- Generating a");
+        if ssaa != 1 {
+            print!(" {} times supersampled", u32::pow(ssaa, 2));
+        } else {
+            print!("n");
+        }
+        println!(
+            " image with a resolution of {}x{} ----",
+            xresolution, yresolution
+        );
         if zoom != 1.0 {
             println!("Zooming by a factor of {}", zoom);
         }
