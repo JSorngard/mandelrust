@@ -1,5 +1,5 @@
 use std::error::Error;
-use std::io::Write;
+use std::io::Write; //Needed for std::io::stdout() to exist in this scope
 
 use clap::{App, Arg};
 use image::RgbImage;
