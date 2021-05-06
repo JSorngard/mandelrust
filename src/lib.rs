@@ -146,7 +146,7 @@ pub fn render(
 
             //If we are far from the fractal we do not need to supersample.
             if esc > 0.9 {
-                //Uncomment the next line to check supersampling region.
+                //Uncomment the next line to only show supersampling region as non-black.
                 //escape_speed = 0.0;
                 break;
             }
@@ -168,7 +168,10 @@ pub fn render(
 
 //Flushes the stdout buffer.
 fn flush() {
-    std::io::stdout().flush().ok();
+    std::io::stdout()
+        .flush()
+        .ok()
+        .expect("could not flush stdout buffer");
 }
 
 /*
