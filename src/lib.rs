@@ -39,10 +39,6 @@ pub fn run(config: Config) -> Result<(), Box<dyn Error>> {
         }
     }
 
-    if verbose {
-        println!("Rendering");
-    }
-
     let img = render(
         xresolution,
         yresolution,
@@ -59,9 +55,13 @@ pub fn run(config: Config) -> Result<(), Box<dyn Error>> {
 
     if save_result {
         if verbose {
-            println!("Saving image");
+            print!("\rSaving image   ");
+            flush();
         }
         img.save("m.png").unwrap();
+        if verbose {
+            println!("\rDone           ");
+        }
     }
 
     //Everything finished correctly!
@@ -112,11 +112,8 @@ pub fn render(
             new_print = 100 * y / yresolution;
             //But only if we have something new to say
             if new_print != previous_print {
-                print!("{}%\r", new_print);
-                std::io::stdout()
-                    .flush()
-                    .ok()
-                    .expect("could not flush stdout");
+                print!("Rendering: {}%\r", new_print);
+                flush();
                 previous_print = new_print;
             }
         }
@@ -167,6 +164,11 @@ pub fn render(
         ])
     }
     return img;
+}
+
+//Flushes the stdout buffer.
+fn flush() {
+    std::io::stdout().flush().ok();
 }
 
 /*
