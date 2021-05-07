@@ -246,6 +246,14 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "18794a8ad5b29321f790b55d93dfba91e125cb1a9edbd4f8e3150acc771c1a5e"
 
 [[package]]
+name = "mandelrust"
+version = "1.0.0"
+dependencies = [
+ "clap",
+ "image",
+]
+
+[[package]]
 name = "memoffset"
 version = "0.6.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -407,14 +415,6 @@ dependencies = [
  "crossbeam-utils",
  "lazy_static",
  "num_cpus",
-]
-
-[[package]]
-name = "rustybrot"
-version = "1.0.0"
-dependencies = [
- "clap",
- "image",
 ]
 
 [[package]]

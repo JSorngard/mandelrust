@@ -1,5 +1,5 @@
 [package]
-name = "rustybrot"
+name = "mandelrust"
 version = "1.0.0"
 authors = ["JSorngard"]
 edition = "2018"
