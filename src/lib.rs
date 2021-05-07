@@ -59,9 +59,9 @@ pub fn run(config: Config) -> Result<(), Box<dyn Error>> {
             flush();
         }
         img.save("m.png").unwrap();
-        if verbose {
-            println!("\rDone           ");
-        }
+    }
+    if verbose {
+        println!("\rDone           ");
     }
 
     //Everything finished correctly!
