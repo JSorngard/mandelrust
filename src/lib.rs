@@ -55,7 +55,7 @@ pub fn run(config: Config) -> Result<(), Box<dyn Error>> {
 
     if save_result {
         if verbose {
-            print!("\rSaving image   ");
+            print!("\rSaving image    ");
             flush();
         }
         img.save("m.png").unwrap();
@@ -81,12 +81,6 @@ pub fn render(
     depth: u8,
     verbose: bool,
 ) -> RgbImage {
-    let start_real = center_real - real_distance / 2.0;
-    let start_imag = center_imag - imag_distance / 2.0;
-    let mut escape_speed;
-    let mut c_real;
-    let mut c_imag;
-
     let invfactor: f64;
     if ssaa == 0 {
         invfactor = 0.0;
@@ -94,33 +88,52 @@ pub fn render(
         invfactor = 1.0 / (ssaa as f64);
     }
 
+    let mirror = f64::abs(center_imag) < imag_distance; //True if the image contains the real axis, false otherwise.
+    let mirror_sign: i32;
+    //If the image contains the real axis we want to mirror
+    //the result of the largest half on to the smallest.
+    //One way of doing this is to always assume we are rendering
+    //in lower half of the complex plane. If the assumption is false
+    //we only need to flip the image vertically to get the
+    //correct result since it is symmetric under conjugation.
+    if center_imag >= 0.0 {
+        mirror_sign = -1;
+    } else {
+        mirror_sign = 1;
+    }
+    let start_real = center_real - real_distance / 2.0;
+    let start_imag = (mirror_sign as f64) * center_imag - imag_distance / 2.0;
+
+    //Create the image rotated by 90 degrees so that the loop
+    //Runs fastest over the imaginary axis.
+    //This guarantees that when we try to mirror pixels
+    //the source has already been computed.
+    let mut img = RgbImage::new(yresolution, xresolution);
+    let mut previous_print: u32 = 0;
+    let mut new_print: u32;
     let mut samples: u32;
     let mut coloffset: f64;
     let mut rowoffset: f64;
     let mut esc: f64;
-    let mut previous_print: u32 = 0;
-    let mut new_print: u32;
-
-    //let mirror = f64::abs(center_imag) < imag_distance; //True if the image contains the real axis, false otherwise.
-    //let mirror_sign: i32;
-    //if center_imag >= 0.0 {
-    //    mirror_sign = 1;
-    //} else {
-    //    mirror_sign = -1;
-    //}
-
-    //Create the image rotated by 90 degrees so that the loop
-    //Runs fastest over the imaginary axis.
-    let mut img = RgbImage::new(yresolution, xresolution);
+    let mut escape_speed;
+    let mut c_real;
+    let mut c_imag;
     for (y, x, pixel) in img.enumerate_pixels_mut() {
-        //Book-keeping variables.
-        escape_speed = 0.0;
-        samples = 0;
+        //Compute point to sample.
 
-        //If verbose we want to print progress
+        //If we have rendered all the pixels with
+        //negative imaginary part for this real
+        //part we skip this pixel.
+        c_imag = start_imag + imag_distance * (y as f64) / (yresolution as f64);
+        if mirror && c_imag > 0.0 {
+            continue;
+        }
+        c_real = start_real + real_distance * (x as f64) / (xresolution as f64);
+
+        //If verbose we want to print progress.
         if verbose {
             new_print = 100 * x / xresolution;
-            //But only if we have something new to say
+            //But only if we have something new to say.
             if new_print != previous_print {
                 print!("Rendering: {}%\r", new_print);
                 flush();
@@ -128,14 +141,9 @@ pub fn render(
             }
         }
 
-        //Compute point to sample.
-        c_real = start_real + real_distance * (x as f64) / (xresolution as f64);
-        c_imag = start_imag + imag_distance * (y as f64) / (yresolution as f64);
-
-        //We do not need to compute points reflected in the real axis since the image is symmetrical.
-        //if mirror_direction && c_imag <= 0.0 || !mirror_direction && c_imag >= 0.0 {
-        //    continue;
-        //}
+        //Reset supersampling variables.
+        escape_speed = 0.0;
+        samples = 0;
 
         //Supersampling loop.
         //Samples points in a grid around the intended point and averages
@@ -174,7 +182,15 @@ pub fn render(
         ])
     }
 
+    if verbose {
+        print!("\rProcessing image");
+        flush();
+    }
+
     img = image::imageops::rotate270(&img);
+    if mirror_sign == -1 {
+        img = image::imageops::flip_vertical(&img);
+    }
 
     return img;
 }
