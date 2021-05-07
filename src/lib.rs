@@ -81,7 +81,6 @@ pub fn render(
     depth: u8,
     verbose: bool,
 ) -> RgbImage {
-    let mut img = RgbImage::new(xresolution, yresolution);
     let start_real = center_real - real_distance / 2.0;
     let start_imag = center_imag - imag_distance / 2.0;
     let mut escape_speed;
@@ -101,15 +100,26 @@ pub fn render(
     let mut esc: f64;
     let mut previous_print: u32 = 0;
     let mut new_print: u32;
-    //let mirror_direction = center_imag >= 0.0; //True if we want to reflect the image down, and false if we reflect it up.
-    for (x, y, pixel) in img.enumerate_pixels_mut() {
+
+    //let mirror = f64::abs(center_imag) < imag_distance; //True if the image contains the real axis, false otherwise.
+    //let mirror_sign: i32;
+    //if center_imag >= 0.0 {
+    //    mirror_sign = 1;
+    //} else {
+    //    mirror_sign = -1;
+    //}
+
+    //Create the image rotated by 90 degrees so that the loop
+    //Runs fastest over the imaginary axis.
+    let mut img = RgbImage::new(yresolution, xresolution);
+    for (y, x, pixel) in img.enumerate_pixels_mut() {
         //Book-keeping variables.
         escape_speed = 0.0;
         samples = 0;
 
         //If verbose we want to print progress
         if verbose {
-            new_print = 100 * y / yresolution;
+            new_print = 100 * x / xresolution;
             //But only if we have something new to say
             if new_print != previous_print {
                 print!("Rendering: {}%\r", new_print);
@@ -163,6 +173,9 @@ pub fn render(
                 - (950.0 * f64::powf(escape_speed, 99.0))) as u8,
         ])
     }
+
+    img = image::imageops::rotate270(&img);
+
     return img;
 }
 
