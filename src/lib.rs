@@ -113,12 +113,13 @@ pub fn render(
         pixels.push(0 as u8);
     }
 
+    let mut c_real: f64;
     let mut previous_print: u32 = 0;
     let mut new_print: u32;
-    let mut c_real: f64;
+    let mut image_slice: &mut [u8];
     for x in 0..xresolution {
         c_real = start_real + real_distance * (x as f64) / (xresolution as f64);
-        let image_slice: &mut [u8] = &mut pixels[x as usize * yresolution as usize * 3 as usize
+        image_slice = &mut pixels[x as usize * yresolution as usize * 3 as usize
             ..yresolution as usize * (x as usize + 1 as usize) * 3 as usize];
         color_row(
             c_real,
