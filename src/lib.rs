@@ -30,13 +30,14 @@ pub fn run(config: Config) -> Result<(), Box<dyn Error>> {
         } else {
             print!("n");
         }
-        println!(
-            " image with a resolution of {}x{} ----",
+        print!(
+            " image with a resolution of {}x{}",
             xresolution, yresolution
         );
         if zoom != 1.0 {
-            println!("Zooming by a factor of {}", zoom);
+            print!("zoomed by a factor of {}", zoom);
         }
+        println!(" ----");
     }
 
     let img = render(
@@ -55,13 +56,13 @@ pub fn run(config: Config) -> Result<(), Box<dyn Error>> {
 
     if save_result {
         if verbose {
-            print!("\rSaving image    ");
+            print!("\rEncoding and saving image    ");
             flush();
         }
         img.save("m.png").unwrap();
     }
     if verbose {
-        println!("\rDone           ");
+        println!("\rDone                     ");
     }
 
     //Everything finished correctly!
@@ -142,7 +143,7 @@ pub fn render(
             new_print = 100 * x / xresolution;
             //Update progress only if we have something new to say.
             if new_print != previous_print {
-                print!("Rendering: {}%\r", new_print);
+                print!("Computing: {}%\r", new_print);
                 flush();
                 previous_print = new_print;
             }
@@ -150,14 +151,17 @@ pub fn render(
     }
 
     if verbose {
-        print!("\rProcessing image");
+        print!("\rRendering image");
         flush();
     }
-
     let mut img =
         image::ImageBuffer::<image::Rgb<u8>, Vec<u8>>::from_vec(yresolution, xresolution, pixels)
             .unwrap();
 
+    if verbose {
+        print!("\rProcessing image");
+        flush();
+    }
     img = image::imageops::rotate270(&img);
     if mirror_sign == -1 {
         img = image::imageops::flip_vertical(&img);
@@ -320,8 +324,8 @@ impl Config {
         let mut zoom = "1";
         let mut ssaa = "3";
 
-        let matches = App::new("rustybrot")
-            .version("0.1")
+        let matches = App::new("mandelrust")
+            .version("1.1.0")
             .author("Johanna Sörngård, jsorngard@gmail.com")
             .about("Renders an image of the Mandelbrot set")
             .arg(
