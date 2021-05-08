@@ -123,70 +123,30 @@ pub fn render(
         pixels.push(0 as u8);
     }
 
-    let mut previous_print: u32 = 0;
-    let mut new_print: u32;
-    let depth = 255;
-    for x in (0..xresolution).into_iter().map(|real| {
-        let c_real = start_real + real_distance * (real as f64) / (xresolution as f64);
-        let image_slice: &mut [u8] = &mut pixels[real as usize * yresolution as usize * 3 as usize
-            ..yresolution as usize * (real as usize + 1 as usize) * 3 as usize];
-        color_row(
-            c_real,
-            yresolution,
-            start_imag,
-            imag_distance,
-            real_delta,
-            imag_delta,
-            mirror,
-            ssaa,
-            one_over_ssaa,
-            depth,
-            image_slice,
-        );
-        real
-    }) {
-        if verbose {
-            new_print = 100 * x / xresolution;
-            //Update progress only if we have something new to say.
-            if new_print != previous_print {
-                print!("\rComputing: {}%", new_print);
-                flush();
-                previous_print = new_print;
-            }
-        }
-    }
-    /*let mut c_real: f64;
-    let mut previous_print: u32 = 0;
-    let mut new_print: u32;
-    let mut image_slice: &mut [u8];
-    let depth = 255;
-    for x in 0..xresolution {
-        c_real = start_real + real_distance * (x as f64) / (xresolution as f64);
-        image_slice = &mut pixels[x as usize * yresolution as usize * 3 as usize
-            ..yresolution as usize * (x as usize + 1 as usize) * 3 as usize];
-        color_row(
-            c_real,
-            yresolution,
-            start_imag,
-            imag_distance,
-            real_delta,
-            imag_delta,
-            mirror,
-            ssaa,
-            one_over_ssaa,
-            depth,
-            image_slice,
-        );
-        if verbose {
-            new_print = 100 * x / xresolution;
-            //Update progress only if we have something new to say.
-            if new_print != previous_print {
-                print!("\rComputing: {}%", new_print);
-                flush();
-                previous_print = new_print;
-            }
-        }
-    }*/
+    let _computed_columns: () = (0..xresolution)
+        .into_iter()
+        .map(|real| {
+            //Compute the real part of c.
+            let c_real = start_real + real_distance * (real as f64) / (xresolution as f64);
+            //Create a mutable reference to a slice into the pixels that correspond
+            //to said real value of c.
+            let pixel_row: &mut [u8] = &mut pixels[real as usize * yresolution as usize * 3 as usize
+                ..yresolution as usize * (real as usize + 1 as usize) * 3 as usize];
+            //Color the given slice of pixels.
+            color_row(
+                c_real,
+                yresolution,
+                start_imag,
+                imag_distance,
+                real_delta,
+                imag_delta,
+                mirror,
+                ssaa,
+                one_over_ssaa,
+                pixel_row,
+            );
+        })
+        .collect();
 
     if verbose {
         print!("\rRendering image");
@@ -218,7 +178,6 @@ fn color_row(
     mirror: bool,
     ssaa: u32,
     one_over_ssaa: f64,
-    depth: u8,
     result: &mut [u8],
 ) {
     let mut c_imag: f64;
@@ -228,6 +187,7 @@ fn color_row(
     let mut rowoffset: f64;
     let mut esc: f64;
     let mut mirror_from = 0;
+    let depth = 255;
     for y in (0..yresolution * 3).step_by(3) {
         c_imag = start_imag + imag_distance * (y as f64) / (3.0 * yresolution as f64);
         //If we have rendered all the pixels with
