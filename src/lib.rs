@@ -105,23 +105,17 @@ pub fn render(
     let start_real = center_real - real_distance / 2.0;
     let start_imag = (mirror_sign as f64) * center_imag - imag_distance / 2.0;
 
-    //Create the image rotated by 90 degrees so that the loop
-    //Runs fastest over the imaginary axis.
-    //This guarantees that when we try to mirror pixels
-    //the source has already been computed.
-    let mut previous_print: u32 = 0;
-    let mut new_print: u32;
-    let mut c_real: f64;
-    //Initialize image
+    //We create a vector of u8's that will store the pixel information
     let mut pixels: Vec<u8> =
         Vec::with_capacity(xresolution as usize * yresolution as usize * 3 as usize);
+    //Expand it to its full size in one command so that we will never have to reallocate it.
     unsafe {
         pixels.set_len(xresolution as usize * yresolution as usize * 3 as usize);
     }
-    for i in 0..xresolution * yresolution * 3 {
-        pixels[i as usize] = 0 as u8;
-    }
 
+    let mut previous_print: u32 = 0;
+    let mut new_print: u32;
+    let mut c_real: f64;
     for x in 0..xresolution {
         c_real = start_real + real_distance * (x as f64) / (xresolution as f64);
         let image_slice: &mut [u8] = &mut pixels[x as usize * yresolution as usize * 3 as usize
