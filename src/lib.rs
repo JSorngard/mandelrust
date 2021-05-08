@@ -82,11 +82,11 @@ pub fn render(
     depth: u8,
     verbose: bool,
 ) -> RgbImage {
-    let invfactor: f64;
+    let one_over_ssaa: f64;
     if ssaa == 0 {
-        invfactor = 0.0;
+        one_over_ssaa = 0.0;
     } else {
-        invfactor = 1.0 / (ssaa as f64);
+        one_over_ssaa = 1.0 / (ssaa as f64);
     }
 
     let mirror = f64::abs(center_imag) < imag_distance; //True if the image contains the real axis, false otherwise.
@@ -130,7 +130,7 @@ pub fn render(
             imag_delta,
             mirror,
             ssaa,
-            invfactor,
+            one_over_ssaa,
             depth,
             image_slice,
         );
@@ -174,7 +174,7 @@ fn color_row(
     imag_delta: f64,
     mirror: bool,
     ssaa: u32,
-    invfactor: f64,
+    one_over_ssaa: f64,
     depth: u8,
     result: &mut [u8],
 ) {
@@ -204,8 +204,8 @@ fn color_row(
             //Samples points in a grid around the intended point and averages
             //the results together to get a smoother image.
             for k in 1..=i64::pow(ssaa as i64, 2) {
-                coloffset = ((k % (ssaa as i64) - 1) as f64) * invfactor;
-                rowoffset = (((k - 1) as f64) / (ssaa as f64) - 1.0) * invfactor;
+                coloffset = ((k % (ssaa as i64) - 1) as f64) * one_over_ssaa;
+                rowoffset = (((k - 1) as f64) / (ssaa as f64) - 1.0) * one_over_ssaa;
 
                 //Compute escape speed of point.
                 esc = iterate(
