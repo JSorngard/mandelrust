@@ -108,9 +108,9 @@ pub fn render(
     //We create a vector of u8's that will store the pixel information
     let mut pixels: Vec<u8> =
         Vec::with_capacity(xresolution as usize * yresolution as usize * 3 as usize);
-    //Expand it to its full size in one command so that we will never have to reallocate it.
-    unsafe {
-        pixels.set_len(xresolution as usize * yresolution as usize * 3 as usize);
+    //Expand it to its full size so that we will not have to reallocate it again.
+    for _i in 0..(xresolution * yresolution * 3) {
+        pixels.push(0 as u8);
     }
 
     let mut previous_print: u32 = 0;
