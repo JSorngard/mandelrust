@@ -16,10 +16,7 @@ pub fn run(config: Config) -> Result<(), Box<dyn Error>> {
     let zoom = config.zoom;
     let imag_distance = config.imag_distance / zoom;
     let real_distance = aspect_ratio * imag_distance;
-    let depth = 255;
     let ssaa = config.ssaa;
-    let real_delta = real_distance / (xresolution - 1) as f64;
-    let imag_delta = imag_distance / (yresolution - 1) as f64;
     let verbose = config.verbose;
 
     //Output some basic information about what the program will be rendering.
@@ -46,11 +43,8 @@ pub fn run(config: Config) -> Result<(), Box<dyn Error>> {
         ssaa,
         center_real,
         center_imag,
-        real_delta,
-        imag_delta,
         real_distance,
         imag_distance,
-        depth,
         verbose,
     );
 
@@ -69,17 +63,30 @@ pub fn run(config: Config) -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
+/*
+Takes in variables describing where to render and at what resolution
+and produces an image of the Mandelbrot set.
+xresolution and yresolution is the resolution in pixels in the real
+and imaginary direction respectively.
+ssaa is the number of supersampled points along one direction. If ssaa
+is e.g. 3, then a supersampled pixel will be sampled 3^2 = 9 times.
+center_real and center_imag are the real and imaginary parts of the
+point at the center of the image.
+real_distance and imag_distance describe the size of the region in the
+complex plane to render. E.g. if real_distance = imag_distance = 1,
+xresolution = yresolution = 100 and center = 0+0i a square of size 1x1
+centered on the origin will be computed and rendered as a 100x100 pixel
+image.
+If verbose is true the function will print progress information to stdout.
+*/
 pub fn render(
     xresolution: u32,
     yresolution: u32,
     ssaa: u32,
     center_real: f64,
     center_imag: f64,
-    real_delta: f64,
-    imag_delta: f64,
     real_distance: f64,
     imag_distance: f64,
-    depth: u8,
     verbose: bool,
 ) -> RgbImage {
     let one_over_ssaa: f64;
@@ -88,6 +95,9 @@ pub fn render(
     } else {
         one_over_ssaa = 1.0 / (ssaa as f64);
     }
+
+    let real_delta = real_distance / (xresolution - 1) as f64;
+    let imag_delta = imag_distance / (yresolution - 1) as f64;
 
     let mirror = f64::abs(center_imag) < imag_distance; //True if the image contains the real axis, false otherwise.
     let mirror_sign: i32;
@@ -113,10 +123,43 @@ pub fn render(
         pixels.push(0 as u8);
     }
 
-    let mut c_real: f64;
+    let mut previous_print: u32 = 0;
+    let mut new_print: u32;
+    let depth = 255;
+    for x in (0..xresolution).into_iter().map(|real| {
+        let c_real = start_real + real_distance * (real as f64) / (xresolution as f64);
+        let image_slice: &mut [u8] = &mut pixels[real as usize * yresolution as usize * 3 as usize
+            ..yresolution as usize * (real as usize + 1 as usize) * 3 as usize];
+        color_row(
+            c_real,
+            yresolution,
+            start_imag,
+            imag_distance,
+            real_delta,
+            imag_delta,
+            mirror,
+            ssaa,
+            one_over_ssaa,
+            depth,
+            image_slice,
+        );
+        real
+    }) {
+        if verbose {
+            new_print = 100 * x / xresolution;
+            //Update progress only if we have something new to say.
+            if new_print != previous_print {
+                print!("\rComputing: {}%", new_print);
+                flush();
+                previous_print = new_print;
+            }
+        }
+    }
+    /*let mut c_real: f64;
     let mut previous_print: u32 = 0;
     let mut new_print: u32;
     let mut image_slice: &mut [u8];
+    let depth = 255;
     for x in 0..xresolution {
         c_real = start_real + real_distance * (x as f64) / (xresolution as f64);
         image_slice = &mut pixels[x as usize * yresolution as usize * 3 as usize
@@ -143,7 +186,7 @@ pub fn render(
                 previous_print = new_print;
             }
         }
-    }
+    }*/
 
     if verbose {
         print!("\rRendering image");
@@ -213,9 +256,8 @@ fn color_row(
                     c_imag + coloffset * imag_delta,
                     depth as i64,
                 );
-
-                samples += 1;
                 escape_speed += esc;
+                samples += 1;
 
                 //If we are far from the fractal we do not need to supersample.
                 if esc > 0.9 {
