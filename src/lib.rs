@@ -137,7 +137,7 @@ pub fn render(
             new_print = 100 * x / xresolution;
             //Update progress only if we have something new to say.
             if new_print != previous_print {
-                print!("Computing: {}%\r", new_print);
+                print!("\rComputing: {}%", new_print);
                 flush();
                 previous_print = new_print;
             }
