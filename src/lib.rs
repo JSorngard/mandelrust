@@ -108,78 +108,45 @@ pub fn render(
     //Runs fastest over the imaginary axis.
     //This guarantees that when we try to mirror pixels
     //the source has already been computed.
-    let mut img = RgbImage::new(yresolution, xresolution);
     let mut previous_print: u32 = 0;
     let mut new_print: u32;
-    let mut samples: u32;
-    let mut coloffset: f64;
-    let mut rowoffset: f64;
-    let mut esc: f64;
-    let mut escape_speed;
-    let mut c_real;
-    let mut c_imag;
-    for (y, x, pixel) in img.enumerate_pixels_mut() {
-        //Compute point to sample.
+    let mut c_real: f64;
+    //Initialize image
+    let mut pixels: Vec<u8> =
+        Vec::with_capacity(xresolution as usize * yresolution as usize * 3 as usize);
+    unsafe {
+        pixels.set_len(xresolution as usize * yresolution as usize * 3 as usize);
+    }
+    for i in 0..xresolution * yresolution * 3 {
+        pixels[i as usize] = 0 as u8;
+    }
 
-        //If we have rendered all the pixels with
-        //negative imaginary part for this real
-        //part we skip this pixel.
-        c_imag = start_imag + imag_distance * (y as f64) / (yresolution as f64);
-        if mirror && c_imag > 0.0 {
-            continue;
-        }
+    for x in 0..xresolution {
         c_real = start_real + real_distance * (x as f64) / (xresolution as f64);
-
-        //If verbose we want to print progress.
+        let image_slice: &mut [u8] = &mut pixels[x as usize * yresolution as usize * 3 as usize
+            ..yresolution as usize * (x as usize + 1 as usize) * 3 as usize];
+        color_row(
+            c_real,
+            yresolution,
+            start_imag,
+            imag_distance,
+            real_delta,
+            imag_delta,
+            mirror,
+            ssaa,
+            invfactor,
+            depth,
+            image_slice,
+        );
         if verbose {
             new_print = 100 * x / xresolution;
-            //But only if we have something new to say.
+            //Update progress only if we have something new to say.
             if new_print != previous_print {
                 print!("Rendering: {}%\r", new_print);
                 flush();
                 previous_print = new_print;
             }
         }
-
-        //Reset supersampling variables.
-        escape_speed = 0.0;
-        samples = 0;
-
-        //Supersampling loop.
-        //Samples points in a grid around the intended point and averages
-        //the results together to get a smoother image.
-        for k in 1..=i64::pow(ssaa as i64, 2) {
-            coloffset = ((k % (ssaa as i64) - 1) as f64) * invfactor;
-            rowoffset = (((k - 1) as f64) / (ssaa as f64) - 1.0) * invfactor;
-
-            //Compute escape speed of point.
-            esc = iterate(
-                c_real + rowoffset * real_delta,
-                c_imag + coloffset * imag_delta,
-                depth as i64,
-            );
-
-            samples += 1;
-            escape_speed += esc;
-
-            //If we are far from the fractal we do not need to supersample.
-            if esc > 0.9 {
-                //Uncomment the next line to only show supersampling region as non-black.
-                //escape_speed = 0.0;
-                break;
-            }
-        }
-        escape_speed /= samples as f64;
-
-        //Color in the image. These color curves were found through experimentation.
-        *pixel = image::Rgb([
-            (escape_speed * f64::powf(depth as f64, 1.0 - f64::powf(escape_speed, 45.0) * 2.0))
-                as u8,
-            (escape_speed * 70.0 - (880.0 * f64::powf(escape_speed, 18.0))
-                + (701.0 * f64::powf(escape_speed, 9.0))) as u8,
-            (escape_speed * 80.0 + (f64::powf(escape_speed, 9.0) * (depth as f64))
-                - (950.0 * f64::powf(escape_speed, 99.0))) as u8,
-        ])
     }
 
     if verbose {
@@ -187,12 +154,91 @@ pub fn render(
         flush();
     }
 
+    let mut img =
+        image::ImageBuffer::<image::Rgb<u8>, Vec<u8>>::from_vec(yresolution, xresolution, pixels)
+            .unwrap();
+
     img = image::imageops::rotate270(&img);
     if mirror_sign == -1 {
         img = image::imageops::flip_vertical(&img);
     }
 
     return img;
+}
+
+fn color_row(
+    c_real: f64,
+    yresolution: u32,
+    start_imag: f64,
+    imag_distance: f64,
+    real_delta: f64,
+    imag_delta: f64,
+    mirror: bool,
+    ssaa: u32,
+    invfactor: f64,
+    depth: u8,
+    result: &mut [u8],
+) {
+    let mut c_imag: f64;
+    let mut escape_speed: f64;
+    let mut samples: u32;
+    let mut coloffset: f64;
+    let mut rowoffset: f64;
+    let mut esc: f64;
+    let mut mirror_from = 0;
+    for y in (0..yresolution * 3).step_by(3) {
+        c_imag = start_imag + imag_distance * (y as f64) / (3.0 * yresolution as f64);
+        //If we have rendered all the pixels with
+        //negative imaginary part for this real
+        //part we mirror this pixel
+        if mirror && c_imag > 0.0 {
+            result[y as usize] = result[(mirror_from - 3) as usize];
+            result[y as usize + 1 as usize] = result[mirror_from as usize - 2 as usize];
+            result[y as usize + 2 as usize] = result[mirror_from as usize - 1 as usize];
+            mirror_from -= 3;
+        } else {
+            //Reset supersampling variables.
+            escape_speed = 0.0;
+            samples = 0;
+
+            //Supersampling loop.
+            //Samples points in a grid around the intended point and averages
+            //the results together to get a smoother image.
+            for k in 1..=i64::pow(ssaa as i64, 2) {
+                coloffset = ((k % (ssaa as i64) - 1) as f64) * invfactor;
+                rowoffset = (((k - 1) as f64) / (ssaa as f64) - 1.0) * invfactor;
+
+                //Compute escape speed of point.
+                esc = iterate(
+                    c_real + rowoffset * real_delta,
+                    c_imag + coloffset * imag_delta,
+                    depth as i64,
+                );
+
+                samples += 1;
+                escape_speed += esc;
+
+                //If we are far from the fractal we do not need to supersample.
+                if esc > 0.9 {
+                    //Uncomment the next line to only show supersampling region as non-black.
+                    //escape_speed = 0.0;
+                    break;
+                }
+            }
+            escape_speed /= samples as f64;
+            //Determine the color of the pixel. These color curves were found through experimentation.
+            result[y as usize] = (escape_speed
+                * f64::powf(depth as f64, 1.0 - f64::powf(escape_speed, 45.0) * 2.0))
+                as u8;
+            result[y as usize + 1 as usize] =
+                (escape_speed * 70.0 - (880.0 * f64::powf(escape_speed, 18.0))
+                    + (701.0 * f64::powf(escape_speed, 9.0))) as u8;
+            result[y as usize + 2 as usize] =
+                (escape_speed * 80.0 + (f64::powf(escape_speed, 9.0) * (depth as f64))
+                    - (950.0 * f64::powf(escape_speed, 99.0))) as u8;
+            mirror_from += 3;
+        }
+    }
 }
 
 //Flushes the stdout buffer.
