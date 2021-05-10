@@ -301,7 +301,7 @@ pub fn iterate(c_re: f64, c_im: f64, maxiterations: i64) -> f64 {
         }
 
         period += 1;
-        if period > 20 {
+        if period > 10 {
             period = 0;
             old_re = z_re;
             old_im = z_im;
