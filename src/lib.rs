@@ -123,30 +123,40 @@ pub fn render(
         pixels.push(0 as u8);
     }
 
-    let _computed_columns: () = (0..xresolution)
-        .into_iter()
-        .map(|real| {
-            //Compute the real part of c.
-            let c_real = start_real + real_distance * (real as f64) / (xresolution as f64);
-            //Create a mutable reference to a slice into the pixels that correspond
-            //to said real value of c.
-            let pixel_row: &mut [u8] = &mut pixels[real as usize * yresolution as usize * 3 as usize
-                ..yresolution as usize * (real as usize + 1 as usize) * 3 as usize];
-            //Color the given slice of pixels.
-            color_row(
-                c_real,
-                yresolution,
-                start_imag,
-                imag_distance,
-                real_delta,
-                imag_delta,
-                mirror,
-                ssaa,
-                one_over_ssaa,
-                pixel_row,
-            );
-        })
-        .collect();
+    let mut new_print: u32;
+    let mut previous_print: u32 = 0;
+
+    for x in (0..xresolution).into_iter().map(|real| {
+        //Compute the real part of c.
+        let c_real = start_real + real_distance * (real as f64) / (xresolution as f64);
+        //Create a mutable reference to a slice into the pixels that correspond
+        //to said real value of c.
+        let pixel_row: &mut [u8] = &mut pixels[real as usize * yresolution as usize * 3 as usize
+            ..yresolution as usize * (real as usize + 1 as usize) * 3 as usize];
+        //Color the given slice of pixels.
+        color_row(
+            c_real,
+            yresolution,
+            start_imag,
+            imag_distance,
+            real_delta,
+            imag_delta,
+            mirror,
+            ssaa,
+            one_over_ssaa,
+            pixel_row,
+        );
+        real
+    }) {
+        if verbose {
+            new_print = (100.0 * x as f64 / xresolution as f64) as u32;
+            if new_print != previous_print {
+                print!("\rCalculating: {}%", new_print);
+                flush();
+                previous_print = new_print;
+            }
+        }
+    }
 
     if verbose {
         print!("\rRendering image");
@@ -270,6 +280,10 @@ pub fn iterate(c_re: f64, c_im: f64, maxiterations: i64) -> f64 {
     let mut z_re_sqr = 0.0;
     let mut z_im_sqr = 0.0;
     let mut iterations = 0;
+    let mut old_re = 0.0;
+    let mut old_im = 0.0;
+    let mut period = 0;
+    let tol = 1e-8;
 
     //Iterates the mandelbrot function.
     //This loop uses only 3 multiplications, which is the minimum.
@@ -281,6 +295,17 @@ pub fn iterate(c_re: f64, c_im: f64, maxiterations: i64) -> f64 {
         z_re_sqr = z_re * z_re;
         z_im_sqr = z_im * z_im;
         iterations += 1;
+
+        if f64::abs(z_re - old_re) < tol && f64::abs(z_im - old_im) < tol {
+            return 0.0;
+        }
+
+        period += 1;
+        if period > 20 {
+            period = 0;
+            old_re = z_re;
+            old_im = z_im;
+        }
     }
 
     if iterations == maxiterations {
