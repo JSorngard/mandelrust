@@ -38,6 +38,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         println!(" ----");
     }
 
+    //Render the image
     let img = render(
         xresolution,
         yresolution,
