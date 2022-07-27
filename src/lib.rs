@@ -109,7 +109,7 @@ pub fn render(
     let mut pixels: Vec<u8> =
         Vec::with_capacity(xresolution as usize * yresolution as usize * 3 as usize);
     //Expand it to its full size so that we will not have to reallocate it again.
-    for _i in 0..(xresolution * yresolution * 3) {
+    for _i in 0..(xresolution as usize * yresolution as usize * 3 as usize) {
         pixels.push(0 as u8);
     }
 
