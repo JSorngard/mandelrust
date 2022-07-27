@@ -89,13 +89,6 @@ pub fn render(
     imag_distance: f64,
     verbose: bool,
 ) -> Result<RgbImage, std::io::Error> {
-    let one_over_ssaa: f64;
-    if ssaa == 0 {
-        one_over_ssaa = 0.0;
-    } else {
-        one_over_ssaa = 1.0 / (ssaa as f64);
-    }
-
     let real_delta = real_distance / (xresolution - 1) as f64;
     let imag_delta = imag_distance / (yresolution - 1) as f64;
 
@@ -137,7 +130,6 @@ pub fn render(
             imag_delta,
             mirror,
             ssaa,
-            one_over_ssaa,
             pixel_row,
         );
         real
@@ -181,17 +173,11 @@ fn color_row(
     imag_delta: f64,
     mirror: bool,
     ssaa: u32,
-    one_over_ssaa: f64,
     result: &mut [u8],
 ) {
     let mut c_imag: f64;
-    let mut escape_speed: f64;
-    let mut samples: u32;
-    let mut coloffset: f64;
-    let mut rowoffset: f64;
-    let mut esc: f64;
     let mut mirror_from = 0;
-    let depth = 255;
+    let depth: u64 = 255;
     for y in (0..yresolution * 3).step_by(3) {
         c_imag = start_imag + imag_distance * (y as f64) / (3.0 * yresolution as f64);
         //If we have rendered all the pixels with
@@ -203,52 +189,71 @@ fn color_row(
             result[y as usize + 2 as usize] = result[mirror_from as usize - 1 as usize];
             mirror_from -= 3;
         } else {
-            //Reset supersampling variables.
-            escape_speed = 0.0;
-            samples = 0;
+            let escape_speed = supersampled_iterate(ssaa, c_real, c_imag, real_delta, imag_delta, depth);
 
-            //Supersampling loop.
-            //Samples points in a grid around the intended point and averages
-            //the results together to get a smoother image.
-            for k in 1..=i64::pow(ssaa as i64, 2) {
-                coloffset = ((k % (ssaa as i64) - 1) as f64) * one_over_ssaa;
-                rowoffset = (((k - 1) as f64) / (ssaa as f64) - 1.0) * one_over_ssaa;
+            let colors = color_pixel(escape_speed, depth as f64);
 
-                //Compute escape speed of point.
-                esc = iterate(
-                    c_real + rowoffset * real_delta,
-                    c_imag + coloffset * imag_delta,
-                    depth as i64,
-                );
-                escape_speed += esc;
-                samples += 1;
+            result[y as usize] = colors[0];
+            result[y as usize + 1] = colors[1];
+            result[y as usize + 2] = colors[2];
 
-                //If we are far from the fractal we do not need to supersample.
-                if esc > 0.9 {
-                    //Uncomment the next line to only show supersampling region as non-black.
-                    //escape_speed = 0.0;
-                    break;
-                }
-            }
-            escape_speed /= samples as f64;
-            //Determine the color of the pixel. These color curves were found through experimentation.
-            result[y as usize] = (escape_speed
-                * f64::powf(depth as f64, 1.0 - f64::powf(escape_speed, 45.0) * 2.0))
-                as u8;
-            result[y as usize + 1 as usize] =
-                (escape_speed * 70.0 - (880.0 * f64::powf(escape_speed, 18.0))
-                    + (701.0 * f64::powf(escape_speed, 9.0))) as u8;
-            result[y as usize + 2 as usize] =
-                (escape_speed * 80.0 + (f64::powf(escape_speed, 9.0) * (depth as f64))
-                    - (950.0 * f64::powf(escape_speed, 99.0))) as u8;
+
+
             mirror_from += 3;
         }
     }
 }
 
+///Determines the color of a pixel. These color curves were found through experimentation.
+fn color_pixel(escape_speed: f64, depth: f64) -> [u8; 3] {
+    [(escape_speed * f64::powf(depth, 1.0 - f64::powf(escape_speed, 45.0) * 2.0)) as u8,
+    (escape_speed * 70.0 - (880.0 * f64::powf(escape_speed, 18.0)) + (701.0 * f64::powf(escape_speed, 9.0))) as u8,
+    (escape_speed * 80.0 + (f64::powf(escape_speed, 9.0) * depth) - (950.0 * f64::powf(escape_speed, 99.0))) as u8]
+}
+
 //Flushes the stdout buffer.
 fn flush() -> Result<(), std::io::Error>{
     std::io::stdout().flush()
+}
+
+fn supersampled_iterate(ssaa: u32, c_real: f64, c_imag: f64, real_delta: f64, imag_delta: f64, depth: u64) -> f64 {
+    let one_over_ssaa = if ssaa == 0 {
+        0.0
+    } else {
+        1.0 / (ssaa as f64)
+    };
+    
+    let mut samples: u32 = 0;
+    let mut escape_speed: f64 = 0.0;
+    let mut coloffset: f64;
+    let mut rowoffset: f64;
+    let mut esc: f64;
+    
+    //Supersampling loop.
+    //Samples points in a grid around the intended point and averages
+    //the results together to get a smoother image.
+    for k in 1..=i64::pow(ssaa as i64, 2) {
+        coloffset = ((k % (ssaa as i64) - 1) as f64) * one_over_ssaa;
+        rowoffset = (((k - 1) as f64) / (ssaa as f64) - 1.0) * one_over_ssaa;
+
+        //Compute escape speed of point.
+        esc = iterate(
+            c_real + rowoffset * real_delta,
+            c_imag + coloffset * imag_delta,
+            depth as i64,
+        );
+        escape_speed += esc;
+        samples += 1;
+
+        //If we are far from the fractal we do not need to supersample.
+        if esc > 0.9 {
+            //Uncomment the next line to only show supersampling region as non-black.
+            //escape_speed = 0.0;
+            break;
+        }
+    }
+    escape_speed /= samples as f64;
+    escape_speed
 }
 
 /*
