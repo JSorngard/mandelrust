@@ -4,65 +4,6 @@ use std::io::Write; //Needed for std::io::stdout() to exist in this scope
 
 use crate::config::Config;
 
-//Runs the main logic of the program and returns an error to
-//main if something goes wrong.
-pub fn run(config: Config) -> Result<(), Box<dyn Error>> {
-    let center_real = config.center_real;
-    let center_imag = config.center_imag;
-    let aspect_ratio = config.aspect_ratio;
-    let yresolution = config.resolution;
-    let save_result = config.save_result;
-    let xresolution = (aspect_ratio * (yresolution as f64)) as u32;
-    let zoom = config.zoom;
-    let imag_distance = config.imag_distance / zoom;
-    let real_distance = aspect_ratio * imag_distance;
-    let ssaa = config.ssaa;
-    let verbose = config.verbose;
-
-    //Output some basic information about what the program will be rendering.
-    if verbose {
-        print!("---- Generating a");
-        if ssaa != 1 {
-            print!(" {} times supersampled", u32::pow(ssaa, 2));
-        } else {
-            print!("n");
-        }
-        print!(
-            " image with a resolution of {}x{}",
-            xresolution, yresolution
-        );
-        if zoom != 1.0 {
-            print!("zoomed by a factor of {}", zoom);
-        }
-        println!(" ----");
-    }
-
-    let img = render(
-        xresolution,
-        yresolution,
-        ssaa,
-        center_real,
-        center_imag,
-        real_distance,
-        imag_distance,
-        verbose,
-    )?;
-
-    if save_result {
-        if verbose {
-            print!("\rEncoding and saving image    ");
-            flush()?;
-        }
-        img.save("m.png")?;
-    }
-    if verbose {
-        println!("\rDone                     ");
-    }
-
-    //Everything finished correctly!
-    Ok(())
-}
-
 /*
 Takes in variables describing where to render and at what resolution
 and produces an image of the Mandelbrot set.
@@ -207,10 +148,6 @@ fn color_pixel(escape_speed: f64, depth: f64) -> [u8; 3] {
     ]
 }
 
-//Flushes the stdout buffer.
-fn flush() -> Result<(), std::io::Error> {
-    std::io::stdout().flush()
-}
 
 fn supersampled_iterate(
     ssaa: u32,
