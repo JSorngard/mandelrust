@@ -88,7 +88,7 @@ pub fn render(
     real_distance: f64,
     imag_distance: f64,
     verbose: bool,
-) -> Result<RgbImage, Box<dyn Error>> {
+) -> Result<RgbImage, std::io::Error> {
     let one_over_ssaa: f64;
     if ssaa == 0 {
         one_over_ssaa = 0.0;
