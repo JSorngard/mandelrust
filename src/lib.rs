@@ -337,7 +337,7 @@ impl Config {
     struct if the arguments could be parsed correctly
     and an error otherwise.
     */
-    pub fn new() -> Result<Config, &'static str> {
+    pub fn new() -> Result<Config, Box<dyn Error>> {
         let mut center_real = "-0.75";
         let mut center_imag = "0.0";
         let mut aspect_ratio = "1.5";
@@ -427,57 +427,22 @@ impl Config {
             .get_matches();
 
         //Extract command line arguments
-        if let Some(cr) = matches.value_of("center_real") {
-            center_real = cr;
-        }
-        if let Some(ci) = matches.value_of("center_imag") {
-            center_imag = ci;
-        }
-        if let Some(ar) = matches.value_of("aspect_ratio") {
-            aspect_ratio = ar
-        }
-        if let Some(res) = matches.value_of("resolution") {
-            resolution = res;
-        }
-        if let Some(s) = matches.value_of("ssaa") {
-            ssaa = s;
-        }
+        center_real = matches.value_of("center_real").unwrap_or(center_real);
+        center_imag = matches.value_of("center_imag").unwrap_or(center_imag);
+        aspect_ratio = matches.value_of("aspect_ratio").unwrap_or(aspect_ratio);
+        resolution = matches.value_of("resolution").unwrap_or(resolution);
+        ssaa = matches.value_of("ssaa").unwrap_or(ssaa);
         let save_result = !matches.is_present("no_save");
         let verbose = matches.is_present("verbose");
-        if let Some(z) = matches.value_of("zoom") {
-            zoom = z;
-        }
-
+        zoom = matches.value_of("zoom").unwrap_or(zoom);
+        
         //Parse the inputs from strings into the appropriate types
-        let center_real: f64 = match center_real.trim().parse() {
-            Ok(num) => num,
-            Err(_) => return Err("could not interpret RE(CENTER) as a float"),
-        };
-
-        let center_imag: f64 = match center_imag.trim().parse() {
-            Ok(num) => num,
-            Err(_) => return Err("could not interpret IM(CENTER) as a float"),
-        };
-
-        let aspect_ratio: f64 = match aspect_ratio.trim().parse() {
-            Ok(num) => num,
-            Err(_) => return Err("could not interpret ASPECT RATIO as a float"),
-        };
-
-        let resolution: u32 = match resolution.trim().parse() {
-            Ok(num) => num,
-            Err(_) => return Err("could not interpret RESOLUTION as an integer"),
-        };
-
-        let ssaa: u32 = match ssaa.trim().parse() {
-            Ok(num) => num,
-            Err(_) => return Err("could not interpret SSAA as an integer"),
-        };
-
-        let zoom: f64 = match zoom.trim().parse() {
-            Ok(num) => num,
-            Err(_) => return Err("could not interpret ZOOM FACTOR as a float"),
-        };
+        let center_real: f64 = center_real.trim().parse()?;
+        let center_imag: f64 = center_imag.trim().parse()?;
+        let aspect_ratio: f64 = aspect_ratio.trim().parse()?;
+        let resolution: u32 = resolution.trim().parse()?;
+        let ssaa: u32 = ssaa.trim().parse()?;
+        let zoom: f64 = zoom.trim().parse()?;
 
         Ok(Config {
             center_real,
