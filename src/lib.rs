@@ -46,12 +46,12 @@ pub fn run(config: Config) -> Result<(), Box<dyn Error>> {
         real_distance,
         imag_distance,
         verbose,
-    );
+    )?;
 
     if save_result {
         if verbose {
             print!("\rEncoding and saving image    ");
-            flush();
+            flush()?;
         }
         img.save("m.png")?;
     }
@@ -88,7 +88,7 @@ pub fn render(
     real_distance: f64,
     imag_distance: f64,
     verbose: bool,
-) -> RgbImage {
+) -> Result<RgbImage, Box<dyn Error>> {
     let one_over_ssaa: f64;
     if ssaa == 0 {
         one_over_ssaa = 0.0;
@@ -146,7 +146,7 @@ pub fn render(
             new_print = (100.0 * x as f64 / xresolution as f64) as u32;
             if new_print != previous_print {
                 print!("\rCalculating: {}%", new_print);
-                flush();
+                flush()?;
                 previous_print = new_print;
             }
         }
@@ -154,7 +154,7 @@ pub fn render(
 
     if verbose {
         print!("\rRendering image");
-        flush();
+        flush()?;
     }
     let mut img =
         image::ImageBuffer::<image::Rgb<u8>, Vec<u8>>::from_vec(yresolution, xresolution, pixels)
@@ -162,14 +162,14 @@ pub fn render(
 
     if verbose {
         print!("\rProcessing image");
-        flush();
+        flush()?;
     }
     img = image::imageops::rotate270(&img);
     if mirror_sign == -1 {
         img = image::imageops::flip_vertical(&img);
     }
 
-    return img;
+    return Ok(img);
 }
 
 fn color_row(
@@ -247,11 +247,8 @@ fn color_row(
 }
 
 //Flushes the stdout buffer.
-fn flush() {
-    std::io::stdout()
-        .flush()
-        .ok()
-        .expect("could not flush stdout buffer");
+fn flush() -> Result<(), std::io::Error>{
+    std::io::stdout().flush()
 }
 
 /*
