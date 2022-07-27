@@ -1,7 +1,7 @@
 use std::error::Error;
 use std::io::Write; //Needed for std::io::stdout() to exist in this scope
 
-use clap::{Command, Arg};
+use clap::{Arg, Command};
 use image::RgbImage;
 
 //Runs the main logic of the program and returns an error to
@@ -189,16 +189,13 @@ fn color_row(
             result[y as usize + 2 as usize] = result[mirror_from as usize - 1 as usize];
             mirror_from -= 3;
         } else {
-            let escape_speed = supersampled_iterate(ssaa, c_real, c_imag, real_delta, imag_delta, depth);
-
-            let colors = color_pixel(escape_speed, depth as f64);
-
+            let colors = color_pixel(
+                supersampled_iterate(ssaa, c_real, c_imag, real_delta, imag_delta, depth),
+                depth as f64,
+            );
             result[y as usize] = colors[0];
             result[y as usize + 1] = colors[1];
             result[y as usize + 2] = colors[2];
-
-
-
             mirror_from += 3;
         }
     }
@@ -206,29 +203,36 @@ fn color_row(
 
 ///Determines the color of a pixel. These color curves were found through experimentation.
 fn color_pixel(escape_speed: f64, depth: f64) -> [u8; 3] {
-    [(escape_speed * f64::powf(depth, 1.0 - f64::powf(escape_speed, 45.0) * 2.0)) as u8,
-    (escape_speed * 70.0 - (880.0 * f64::powf(escape_speed, 18.0)) + (701.0 * f64::powf(escape_speed, 9.0))) as u8,
-    (escape_speed * 80.0 + (f64::powf(escape_speed, 9.0) * depth) - (950.0 * f64::powf(escape_speed, 99.0))) as u8]
+    [
+        (escape_speed * f64::powf(depth, 1.0 - f64::powf(escape_speed, 45.0) * 2.0)) as u8,
+        (escape_speed * 70.0 - (880.0 * f64::powf(escape_speed, 18.0))
+            + (701.0 * f64::powf(escape_speed, 9.0))) as u8,
+        (escape_speed * 80.0 + (f64::powf(escape_speed, 9.0) * depth)
+            - (950.0 * f64::powf(escape_speed, 99.0))) as u8,
+    ]
 }
 
 //Flushes the stdout buffer.
-fn flush() -> Result<(), std::io::Error>{
+fn flush() -> Result<(), std::io::Error> {
     std::io::stdout().flush()
 }
 
-fn supersampled_iterate(ssaa: u32, c_real: f64, c_imag: f64, real_delta: f64, imag_delta: f64, depth: u64) -> f64 {
-    let one_over_ssaa = if ssaa == 0 {
-        0.0
-    } else {
-        1.0 / (ssaa as f64)
-    };
-    
+fn supersampled_iterate(
+    ssaa: u32,
+    c_real: f64,
+    c_imag: f64,
+    real_delta: f64,
+    imag_delta: f64,
+    depth: u64,
+) -> f64 {
+    let one_over_ssaa = if ssaa == 0 { 0.0 } else { 1.0 / (ssaa as f64) };
+
     let mut samples: u32 = 0;
     let mut escape_speed: f64 = 0.0;
     let mut coloffset: f64;
     let mut rowoffset: f64;
     let mut esc: f64;
-    
+
     //Supersampling loop.
     //Samples points in a grid around the intended point and averages
     //the results together to get a smoother image.
