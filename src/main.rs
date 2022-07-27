@@ -1,6 +1,11 @@
 use std::error::Error;
+use crate::config::Config;
+use crate::mandelbrot::run;
+
+mod config;
+mod mandelbrot;
 
 fn main() -> Result<(), Box<dyn Error>> {
-    mandelrust::run(mandelrust::Config::new()?)?;
+    run(Config::new()?)?;
     Ok(())
 }
