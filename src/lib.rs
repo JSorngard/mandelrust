@@ -1,7 +1,7 @@
 use std::error::Error;
 use std::io::Write; //Needed for std::io::stdout() to exist in this scope
 
-use clap::{App, Arg};
+use clap::{Command, Arg};
 use image::RgbImage;
 
 //Runs the main logic of the program and returns an error to
@@ -337,7 +337,7 @@ impl Config {
         let mut zoom = "1";
         let mut ssaa = "3";
 
-        let matches = App::new("mandelrust")
+        let matches = Command::new("mandelrust")
             .version("1.1.0")
             .author("Johanna Sörngård, jsorngard@gmail.com")
             .about("Renders an image of the Mandelbrot set")
@@ -345,7 +345,7 @@ impl Config {
                 Arg::new("center_real")
                     .long("center-re")
                     .value_name("RE(CENTER)")
-                    .about("the real part of the center point of the image")
+                    .help("the real part of the center point of the image")
                     .takes_value(true)
                     .required(false)
                     .allow_hyphen_values(true)
@@ -355,7 +355,7 @@ impl Config {
                 Arg::new("center_imag")
                     .long("center-im")
                     .value_name("IM(CENTER)")
-                    .about("the imag part of the center point of the image")
+                    .help("the imag part of the center point of the image")
                     .takes_value(true)
                     .required(false)
                     .allow_hyphen_values(true)
@@ -366,7 +366,7 @@ impl Config {
                     .short('r')
                     .long("aspect-ratio")
                     .value_name("ASPECT RATIO")
-                    .about("the aspect ratio of the image")
+                    .help("the aspect ratio of the image")
                     .takes_value(true)
                     .required(false)
                     .default_value(aspect_ratio),
@@ -376,7 +376,7 @@ impl Config {
                     .short('n')
                     .long("number-of-points")
                     .value_name("RESOLUTION")
-                    .about("the number of points along the imaginary axis to evaluate")
+                    .help("the number of points along the imaginary axis to evaluate")
                     .takes_value(true)
                     .required(false)
                     .default_value(resolution),
@@ -384,7 +384,7 @@ impl Config {
             .arg(
                 Arg::new("no_save")
                     .short('x')
-                    .about("do not write the results to file")
+                    .help("do not write the results to file")
                     .takes_value(false)
                     .required(false),
             )
@@ -393,7 +393,7 @@ impl Config {
                     .short('z')
                     .long("zoom")
                     .value_name("ZOOM LEVEL")
-                    .about("how far in to zoom on the given center point")
+                    .help("how far in to zoom on the given center point")
                     .takes_value(true)
                     .required(false)
                     .default_value(zoom),
@@ -403,7 +403,7 @@ impl Config {
                     .short('s')
                     .long("ssaa")
                     .value_name("SSAA")
-                    .about("whether to supersample every pixel, and how much")
+                    .help("whether to supersample every pixel, and how much")
                     .takes_value(true)
                     .default_value(ssaa)
                     .required(false),
@@ -411,7 +411,7 @@ impl Config {
             .arg(
                 Arg::new("verbose")
                     .short('v')
-                    .about("print extra information")
+                    .help("print extra information")
                     .takes_value(false)
                     .required(false),
             )
