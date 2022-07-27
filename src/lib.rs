@@ -16,10 +16,7 @@ pub fn run(config: Config) -> Result<(), Box<dyn Error>> {
     let zoom = config.zoom;
     let imag_distance = config.imag_distance / zoom;
     let real_distance = aspect_ratio * imag_distance;
-    let depth = 255;
     let ssaa = config.ssaa;
-    let real_delta = real_distance / (xresolution - 1) as f64;
-    let imag_delta = imag_distance / (yresolution - 1) as f64;
     let verbose = config.verbose;
 
     //Output some basic information about what the program will be rendering.
@@ -46,11 +43,8 @@ pub fn run(config: Config) -> Result<(), Box<dyn Error>> {
         ssaa,
         center_real,
         center_imag,
-        real_delta,
-        imag_delta,
         real_distance,
         imag_distance,
-        depth,
         verbose,
     );
 
@@ -69,25 +63,41 @@ pub fn run(config: Config) -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
+/*
+Takes in variables describing where to render and at what resolution
+and produces an image of the Mandelbrot set.
+xresolution and yresolution is the resolution in pixels in the real
+and imaginary direction respectively.
+ssaa is the number of supersampled points along one direction. If ssaa
+is e.g. 3, then a supersampled pixel will be sampled 3^2 = 9 times.
+center_real and center_imag are the real and imaginary parts of the
+point at the center of the image.
+real_distance and imag_distance describe the size of the region in the
+complex plane to render. E.g. if real_distance = imag_distance = 1,
+xresolution = yresolution = 100 and center = 0+0i a square of size 1x1
+centered on the origin will be computed and rendered as a 100x100 pixel
+image.
+If verbose is true the function will print progress information to stdout.
+*/
 pub fn render(
     xresolution: u32,
     yresolution: u32,
     ssaa: u32,
     center_real: f64,
     center_imag: f64,
-    real_delta: f64,
-    imag_delta: f64,
     real_distance: f64,
     imag_distance: f64,
-    depth: u8,
     verbose: bool,
 ) -> RgbImage {
-    let invfactor: f64;
+    let one_over_ssaa: f64;
     if ssaa == 0 {
-        invfactor = 0.0;
+        one_over_ssaa = 0.0;
     } else {
-        invfactor = 1.0 / (ssaa as f64);
+        one_over_ssaa = 1.0 / (ssaa as f64);
     }
+
+    let real_delta = real_distance / (xresolution - 1) as f64;
+    let imag_delta = imag_distance / (yresolution - 1) as f64;
 
     let mirror = f64::abs(center_imag) < imag_distance; //True if the image contains the real axis, false otherwise.
     let mirror_sign: i32;
@@ -113,13 +123,17 @@ pub fn render(
         pixels.push(0 as u8);
     }
 
-    let mut previous_print: u32 = 0;
     let mut new_print: u32;
-    let mut c_real: f64;
-    for x in 0..xresolution {
-        c_real = start_real + real_distance * (x as f64) / (xresolution as f64);
-        let image_slice: &mut [u8] = &mut pixels[x as usize * yresolution as usize * 3 as usize
-            ..yresolution as usize * (x as usize + 1 as usize) * 3 as usize];
+    let mut previous_print: u32 = 0;
+
+    for x in (0..xresolution).into_iter().map(|real| {
+        //Compute the real part of c.
+        let c_real = start_real + real_distance * (real as f64) / (xresolution as f64);
+        //Create a mutable reference to a slice into the pixels that correspond
+        //to said real value of c.
+        let pixel_row: &mut [u8] = &mut pixels[real as usize * yresolution as usize * 3 as usize
+            ..yresolution as usize * (real as usize + 1 as usize) * 3 as usize];
+        //Color the given slice of pixels.
         color_row(
             c_real,
             yresolution,
@@ -129,15 +143,15 @@ pub fn render(
             imag_delta,
             mirror,
             ssaa,
-            invfactor,
-            depth,
-            image_slice,
+            one_over_ssaa,
+            pixel_row,
         );
+        real
+    }) {
         if verbose {
-            new_print = 100 * x / xresolution;
-            //Update progress only if we have something new to say.
+            new_print = (100.0 * x as f64 / xresolution as f64) as u32;
             if new_print != previous_print {
-                print!("\rComputing: {}%", new_print);
+                print!("\rCalculating: {}%", new_print);
                 flush();
                 previous_print = new_print;
             }
@@ -173,8 +187,7 @@ fn color_row(
     imag_delta: f64,
     mirror: bool,
     ssaa: u32,
-    invfactor: f64,
-    depth: u8,
+    one_over_ssaa: f64,
     result: &mut [u8],
 ) {
     let mut c_imag: f64;
@@ -184,6 +197,7 @@ fn color_row(
     let mut rowoffset: f64;
     let mut esc: f64;
     let mut mirror_from = 0;
+    let depth = 255;
     for y in (0..yresolution * 3).step_by(3) {
         c_imag = start_imag + imag_distance * (y as f64) / (3.0 * yresolution as f64);
         //If we have rendered all the pixels with
@@ -203,8 +217,8 @@ fn color_row(
             //Samples points in a grid around the intended point and averages
             //the results together to get a smoother image.
             for k in 1..=i64::pow(ssaa as i64, 2) {
-                coloffset = ((k % (ssaa as i64) - 1) as f64) * invfactor;
-                rowoffset = (((k - 1) as f64) / (ssaa as f64) - 1.0) * invfactor;
+                coloffset = ((k % (ssaa as i64) - 1) as f64) * one_over_ssaa;
+                rowoffset = (((k - 1) as f64) / (ssaa as f64) - 1.0) * one_over_ssaa;
 
                 //Compute escape speed of point.
                 esc = iterate(
@@ -212,9 +226,8 @@ fn color_row(
                     c_imag + coloffset * imag_delta,
                     depth as i64,
                 );
-
-                samples += 1;
                 escape_speed += esc;
+                samples += 1;
 
                 //If we are far from the fractal we do not need to supersample.
                 if esc > 0.9 {
@@ -267,6 +280,10 @@ pub fn iterate(c_re: f64, c_im: f64, maxiterations: i64) -> f64 {
     let mut z_re_sqr = 0.0;
     let mut z_im_sqr = 0.0;
     let mut iterations = 0;
+    let mut old_re = 0.0;
+    let mut old_im = 0.0;
+    let mut period = 0;
+    let tol = 1e-8;
 
     //Iterates the mandelbrot function.
     //This loop uses only 3 multiplications, which is the minimum.
@@ -278,6 +295,17 @@ pub fn iterate(c_re: f64, c_im: f64, maxiterations: i64) -> f64 {
         z_re_sqr = z_re * z_re;
         z_im_sqr = z_im * z_im;
         iterations += 1;
+
+        if f64::abs(z_re - old_re) < tol && f64::abs(z_im - old_im) < tol {
+            return 0.0;
+        }
+
+        period += 1;
+        if period > 10 {
+            period = 0;
+            old_re = z_re;
+            old_im = z_im;
+        }
     }
 
     if iterations == maxiterations {
