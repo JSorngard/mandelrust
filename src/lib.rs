@@ -93,22 +93,17 @@ pub fn render(
     let imag_delta = imag_distance / (yresolution - 1) as f64;
 
     let mirror = f64::abs(center_imag) < imag_distance; //True if the image contains the real axis, false otherwise.
-    let mirror_sign: i32;
-    //If the image contains the real axis we want to mirror
-    //the result of the largest half on to the smallest.
-    //One way of doing this is to always assume we are rendering
-    //in lower half of the complex plane. If the assumption is false
-    //we only need to flip the image vertically to get the
-    //correct result since it is symmetric under conjugation.
-    if center_imag >= 0.0 {
-        mirror_sign = -1;
-    } else {
-        mirror_sign = 1;
-    }
+                                                        //If the image contains the real axis we want to mirror
+                                                        //the result of the largest half on to the smallest.
+                                                        //One way of doing this is to always assume we are rendering
+                                                        //in lower half of the complex plane. If the assumption is false
+                                                        //we only need to flip the image vertically to get the
+                                                        //correct result since it is symmetric under conjugation.
+    let mirror_sign = if center_imag >= 0.0 { -1 } else { 1 };
     let start_real = center_real - real_distance / 2.0;
     let start_imag = (mirror_sign as f64) * center_imag - imag_distance / 2.0;
 
-    let mut pixels: Vec<u8> = vec![0; xresolution as usize * yresolution as usize * 3 as usize];
+    let mut pixels: Vec<u8> = vec![0; xresolution as usize * yresolution as usize * 3];
 
     let mut new_print: u32;
     let mut previous_print: u32 = 0;
@@ -118,8 +113,8 @@ pub fn render(
         let c_real = start_real + real_distance * (real as f64) / (xresolution as f64);
         //Create a mutable reference to a slice into the pixels that correspond
         //to said real value of c.
-        let pixel_row: &mut [u8] = &mut pixels[real as usize * yresolution as usize * 3 as usize
-            ..yresolution as usize * (real as usize + 1 as usize) * 3 as usize];
+        let pixel_row: &mut [u8] = &mut pixels[real as usize * yresolution as usize * 3
+            ..yresolution as usize * (real as usize + 1) * 3];
         //Color the given slice of pixels.
         color_row(
             c_real,
@@ -161,7 +156,7 @@ pub fn render(
         img = image::imageops::flip_vertical(&img);
     }
 
-    return Ok(img);
+    Ok(img)
 }
 
 fn color_row(
@@ -185,8 +180,8 @@ fn color_row(
         //part we mirror this pixel
         if mirror && c_imag > 0.0 {
             result[y as usize] = result[(mirror_from - 3) as usize];
-            result[y as usize + 1 as usize] = result[mirror_from as usize - 2 as usize];
-            result[y as usize + 2 as usize] = result[mirror_from as usize - 1 as usize];
+            result[y as usize + 1] = result[mirror_from as usize - 2];
+            result[y as usize + 2] = result[mirror_from as usize - 1];
             mirror_from -= 3;
         } else {
             let colors = color_pixel(
@@ -435,7 +430,7 @@ impl Config {
         let save_result = !matches.is_present("no_save");
         let verbose = matches.is_present("verbose");
         zoom = matches.value_of("zoom").unwrap_or(zoom);
-        
+
         //Parse the inputs from strings into the appropriate types
         let center_real: f64 = center_real.trim().parse()?;
         let center_imag: f64 = center_imag.trim().parse()?;
