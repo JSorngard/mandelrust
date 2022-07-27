@@ -1,6 +1,6 @@
-use std::error::Error;
 use crate::config::Config;
 use crate::mandelbrot::run;
+use std::error::Error;
 
 mod config;
 mod mandelbrot;

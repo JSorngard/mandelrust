@@ -1,5 +1,6 @@
 use clap::{Arg, Command};
 use std::error::Error;
+
 //A struct containing the runtime specified configuration
 //of the program.
 pub struct Config {
@@ -119,7 +120,7 @@ impl Config {
         let save_result = !matches.is_present("no_save");
         let verbose = matches.is_present("verbose");
         zoom = matches.value_of("zoom").unwrap_or(zoom);
-        
+
         //Parse the inputs from strings into the appropriate types
         let center_real: f64 = center_real.trim().parse()?;
         let center_imag: f64 = center_imag.trim().parse()?;

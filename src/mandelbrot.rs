@@ -1,6 +1,6 @@
+use image::RgbImage;
 use std::error::Error;
 use std::io::Write; //Needed for std::io::stdout() to exist in this scope
-use image::RgbImage;
 
 use crate::config::Config;
 
@@ -93,17 +93,13 @@ pub fn render(
     let imag_delta = imag_distance / (yresolution - 1) as f64;
 
     let mirror = f64::abs(center_imag) < imag_distance; //True if the image contains the real axis, false otherwise.
-    //If the image contains the real axis we want to mirror
-    //the result of the largest half on to the smallest.
-    //One way of doing this is to always assume we are rendering
-    //in lower half of the complex plane. If the assumption is false
-    //we only need to flip the image vertically to get the
-    //correct result since it is symmetric under conjugation.
-    let mirror_sign = if center_imag >= 0.0 {
-        -1
-    } else {
-        1
-    };
+                                                        //If the image contains the real axis we want to mirror
+                                                        //the result of the largest half on to the smallest.
+                                                        //One way of doing this is to always assume we are rendering
+                                                        //in lower half of the complex plane. If the assumption is false
+                                                        //we only need to flip the image vertically to get the
+                                                        //correct result since it is symmetric under conjugation.
+    let mirror_sign = if center_imag >= 0.0 { -1 } else { 1 };
     let start_real = center_real - real_distance / 2.0;
     let start_imag = (mirror_sign as f64) * center_imag - imag_distance / 2.0;
 
