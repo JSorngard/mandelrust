@@ -53,7 +53,7 @@ pub fn run(config: Config) -> Result<(), Box<dyn Error>> {
             print!("\rEncoding and saving image    ");
             flush();
         }
-        img.save("m.png").unwrap();
+        img.save("m.png")?;
     }
     if verbose {
         println!("\rDone                     ");
@@ -115,13 +115,7 @@ pub fn render(
     let start_real = center_real - real_distance / 2.0;
     let start_imag = (mirror_sign as f64) * center_imag - imag_distance / 2.0;
 
-    //We create a vector of u8's that will store the pixel information
-    let mut pixels: Vec<u8> =
-        Vec::with_capacity(xresolution as usize * yresolution as usize * 3 as usize);
-    //Expand it to its full size so that we will not have to reallocate it again.
-    for _i in 0..(xresolution as usize * yresolution as usize * 3 as usize) {
-        pixels.push(0 as u8);
-    }
+    let mut pixels: Vec<u8> = vec![0; xresolution as usize * yresolution as usize * 3 as usize];
 
     let mut new_print: u32;
     let mut previous_print: u32 = 0;
