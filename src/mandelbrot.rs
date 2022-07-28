@@ -46,11 +46,11 @@ pub fn render(
     let pixel_bytes: Vec<u8> = vec![0; xresolution as usize * yresolution as usize * 3];
     let pixel_ptr = Arc::new(Mutex::new(pixel_bytes));
 
-
-
+    //Make a parallel iterator over all the real values with rayon and for each
     (0..xresolution).into_par_iter().progress_count(xresolution.into()).map(|real| {
-        //Compute the real part of c.
+        //compute the real part of c.
         let c_real = start_real + real_distance * (real as f64) / (xresolution as f64);
+        //color every pixel with that real value
         color_column(
             c_real,
             xresolution,
@@ -63,9 +63,7 @@ pub fn render(
             ssaa,
             pixel_ptr.clone(),
         );
-        real
-    }).for_each(|_| ());
-
+    }).for_each(|_| ());//evaluate the iterator
     
     print!("\rRendering image");
     stdout().flush()?;
