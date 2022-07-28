@@ -52,7 +52,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     if save_result {
         if verbose {
-            print!("\rEncoding and saving image    ");
+            print!("\rEncoding and saving image");
             stdout().flush()?;
         }
         img.save("m.png")?;

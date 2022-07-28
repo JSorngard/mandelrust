@@ -4,7 +4,7 @@ use std::error::Error;
 
 use image::RgbImage;
 use rayon::prelude::*;
-
+use indicatif::ParallelProgressIterator;
 
 ///Takes in variables describing where to render and at what resolution
 ///and produces an image of the Mandelbrot set.
@@ -44,17 +44,14 @@ pub fn render(
     let start_real = center_real - real_distance / 2.0;
     let start_imag = (mirror_sign as f64) * center_imag - imag_distance / 2.0;
 
-    let mut pixel_bytes: Vec<u8> = vec![0; xresolution as usize * yresolution as usize * 3];
-    let mut pixel_ptr = Arc::new(Mutex::new(pixel_bytes));
+    let pixel_bytes: Vec<u8> = vec![0; xresolution as usize * yresolution as usize * 3];
+    let pixel_ptr = Arc::new(Mutex::new(pixel_bytes));
 
-    (0..xresolution).into_par_iter().map(|real| {
+
+
+    (0..xresolution).into_par_iter().progress_count(xresolution.into()).map(|real| {
         //Compute the real part of c.
         let c_real = start_real + real_distance * (real as f64) / (xresolution as f64);
-        //Create a mutable reference to a slice into the pixels that correspond
-        //to said real value of c.
-        //let pixel_row: &mut [u8] = &mut pixels[real as usize * yresolution as usize * 3
-        //    ..yresolution as usize * (real as usize + 1) * 3];
-        //Color the given slice of pixels.
         color_column(
             c_real,
             xresolution,
@@ -82,6 +79,7 @@ pub fn render(
         print!("\rProcessing image");
         stdout().flush()?;
     }
+
     img = image::imageops::rotate270(&img);
     if mirror_sign == -1 {
         img = image::imageops::flip_vertical(&img);
@@ -90,6 +88,7 @@ pub fn render(
     Ok(img)
 }
 
+///Computes the colors of the pixels in a column of the image of the mandelbrot set.
 fn color_column(
     c_real: f64,
     xresolution: u32,
@@ -108,13 +107,14 @@ fn color_column(
     let real_delta = real_distance / (xresolution - 1) as f64;
     let imag_delta = imag_distance / (yresolution - 1) as f64;
 
+    //Create a temporary vector to hold the results for this row of pixels
     let mut result = vec![0; usize::try_from(yresolution*3).unwrap()];
 
     for y in (0..yresolution * 3).step_by(3) {
         c_imag = start_imag + imag_distance * (y as f64) / (3.0 * yresolution as f64);
         //If we have rendered all the pixels with
         //negative imaginary part for this real
-        //part we mirror this pixel
+        //part we just mirror this pixel
         if mirror && c_imag > 0.0 {
             result[y as usize] = result[(mirror_from - 3) as usize];
             result[y as usize + 1] = result[mirror_from as usize - 2];
@@ -131,11 +131,12 @@ fn color_column(
             mirror_from += 3;
         }
     }
+
+    //Unlock the mutex for the image pixels
     let mut pixels = image.lock().unwrap();
-    let mut j = 0;
-    for i in xindex * yresolution as usize * 3..yresolution as usize * (xindex + 1) * 3 {
+    for (j, i) in (xindex * yresolution as usize * 3..yresolution as usize * (xindex + 1) * 3).enumerate() {
+        //and copy the results into it
         pixels[i] = result[j];
-        j += 1;
     }
 }
 
