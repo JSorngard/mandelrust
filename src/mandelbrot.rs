@@ -111,6 +111,7 @@ fn color_column(
     let mut result = vec![0; usize::try_from(yresolution*3).unwrap()];
 
     for y in (0..yresolution * 3).step_by(3) {
+        //Compute the imaginary part at this pixel
         c_imag = start_imag + imag_distance * (y as f64) / (3.0 * yresolution as f64);
         //If we have rendered all the pixels with
         //negative imaginary part for this real
