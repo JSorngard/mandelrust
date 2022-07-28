@@ -82,7 +82,7 @@ pub fn render(
     img = image::imageops::rotate270(&img);
     if mirror_sign == -1 {
         //flip in vertically if we need to due to mirroring
-        img = image::imageops::flip_vertical(&img);
+        image::imageops::flip_vertical_in_place(&mut img);
     }
 
     Ok(img)
