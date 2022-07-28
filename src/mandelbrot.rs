@@ -69,15 +69,19 @@ pub fn render(
     print!("\rRendering image");
     stdout().flush()?;
     
-    let finished_pixel_data = pixel_ptr.lock().unwrap();
+    //Extract the data from the mutex
+    let finished_pixel_data = (*pixel_ptr.lock().unwrap()).clone();
+    //and place it in an image buffer
     let mut img =
-        image::ImageBuffer::<image::Rgb<u8>, Vec<u8>>::from_vec(yresolution, xresolution, (*finished_pixel_data).clone()).unwrap();
+        image::ImageBuffer::<image::Rgb<u8>, Vec<u8>>::from_vec(yresolution, xresolution, finished_pixel_data).unwrap();
 
     print!("\rProcessing image");
     stdout().flush()?;
 
+    //Manipulate it to be the right side up and
     img = image::imageops::rotate270(&img);
     if mirror_sign == -1 {
+        //flip in vertically if we need to due to mirroring
         img = image::imageops::flip_vertical(&img);
     }
 
