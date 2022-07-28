@@ -1,7 +1,7 @@
 use crate::config::Config;
 use crate::mandelbrot::render;
 use std::error::Error;
-use std::io::Write;
+use std::io::{Write, stdout};
 
 mod config;
 mod mandelbrot;
@@ -53,7 +53,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     if save_result {
         if verbose {
             print!("\rEncoding and saving image    ");
-            flush()?;
+            stdout().flush()?;
         }
         img.save("m.png")?;
     }
@@ -63,9 +63,4 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     //Everything finished correctly!
     Ok(())
-}
-
-//Flushes the stdout buffer.
-fn flush() -> Result<(), std::io::Error> {
-    std::io::stdout().flush()
 }

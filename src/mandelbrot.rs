@@ -1,25 +1,25 @@
-use image::RgbImage;
+use std::io::{Write, stdout};
+use std::sync::{Mutex, Arc};
 use std::error::Error;
-use std::io::Write; //Needed for std::io::stdout() to exist in this scope
 
-use crate::config::Config;
+use image::RgbImage;
+use rayon::prelude::*;
 
-/*
-Takes in variables describing where to render and at what resolution
-and produces an image of the Mandelbrot set.
-xresolution and yresolution is the resolution in pixels in the real
-and imaginary direction respectively.
-ssaa is the number of supersampled points along one direction. If ssaa
-is e.g. 3, then a supersampled pixel will be sampled 3^2 = 9 times.
-center_real and center_imag are the real and imaginary parts of the
-point at the center of the image.
-real_distance and imag_distance describe the size of the region in the
-complex plane to render. E.g. if real_distance = imag_distance = 1,
-xresolution = yresolution = 100 and center = 0+0i a square of size 1x1
-centered on the origin will be computed and rendered as a 100x100 pixel
-image.
-If verbose is true the function will print progress information to stdout.
-*/
+
+///Takes in variables describing where to render and at what resolution
+///and produces an image of the Mandelbrot set.
+///xresolution and yresolution is the resolution in pixels in the real
+///and imaginary direction respectively.
+///ssaa is the number of supersampled points along one direction. If ssaa
+///is e.g. 3, then a supersampled pixel will be sampled 3^2 = 9 times.
+///center_real and center_imag are the real and imaginary parts of the
+///point at the center of the image.
+///real_distance and imag_distance describe the size of the region in the
+///complex plane to render. E.g. if real_distance = imag_distance = 1,
+///xresolution = yresolution = 100 and center = 0+0i a square of size 1x1
+///centered on the origin will be computed and rendered as a 100x100 pixel
+///image.
+///If verbose is true the function will print progress information to stdout.
 pub fn render(
     xresolution: u32,
     yresolution: u32,
@@ -29,9 +29,7 @@ pub fn render(
     real_distance: f64,
     imag_distance: f64,
     verbose: bool,
-) -> Result<RgbImage, std::io::Error> {
-    let real_delta = real_distance / (xresolution - 1) as f64;
-    let imag_delta = imag_distance / (yresolution - 1) as f64;
+) -> Result<RgbImage, Box<dyn Error>> {
 
     //True if the image contains the real axis, false otherwise.
     //If the image contains the real axis we want to mirror
@@ -46,53 +44,43 @@ pub fn render(
     let start_real = center_real - real_distance / 2.0;
     let start_imag = (mirror_sign as f64) * center_imag - imag_distance / 2.0;
 
-    let mut pixels: Vec<u8> = vec![0; xresolution as usize * yresolution as usize * 3];
+    let mut pixel_bytes: Vec<u8> = vec![0; xresolution as usize * yresolution as usize * 3];
+    let mut pixel_ptr = Arc::new(Mutex::new(pixel_bytes));
 
-    let mut new_print: u32;
-    let mut previous_print: u32 = 0;
-
-    for x in (0..xresolution).into_iter().map(|real| {
+    (0..xresolution).into_par_iter().map(|real| {
         //Compute the real part of c.
         let c_real = start_real + real_distance * (real as f64) / (xresolution as f64);
         //Create a mutable reference to a slice into the pixels that correspond
         //to said real value of c.
-        let pixel_row: &mut [u8] = &mut pixels[real as usize * yresolution as usize * 3
-            ..yresolution as usize * (real as usize + 1) * 3];
+        //let pixel_row: &mut [u8] = &mut pixels[real as usize * yresolution as usize * 3
+        //    ..yresolution as usize * (real as usize + 1) * 3];
         //Color the given slice of pixels.
         color_column(
             c_real,
             xresolution,
             yresolution,
+            real as usize,
             real_distance,
             imag_distance,
             start_imag,
             mirror,
             ssaa,
-            pixel_row,
+            pixel_ptr.clone(),
         );
         real
-    }) {
-        if verbose {
-            new_print = (100.0 * x as f64 / xresolution as f64) as u32;
-            if new_print != previous_print {
-                print!("\rCalculating: {}%", new_print);
-                flush()?;
-                previous_print = new_print;
-            }
-        }
-    }
+    }).for_each(|_| ());
 
     if verbose {
         print!("\rRendering image");
-        flush()?;
+        stdout().flush()?;
     }
+    let finished_pixel_data = pixel_ptr.lock().unwrap();
     let mut img =
-        image::ImageBuffer::<image::Rgb<u8>, Vec<u8>>::from_vec(yresolution, xresolution, pixels)
-            .unwrap();
+        image::ImageBuffer::<image::Rgb<u8>, Vec<u8>>::from_vec(yresolution, xresolution, (*finished_pixel_data).clone()).unwrap();
 
     if verbose {
         print!("\rProcessing image");
-        flush()?;
+        stdout().flush()?;
     }
     img = image::imageops::rotate270(&img);
     if mirror_sign == -1 {
@@ -104,20 +92,23 @@ pub fn render(
 
 fn color_column(
     c_real: f64,
-    xresolution: f64,
+    xresolution: u32,
     yresolution: u32,
+    xindex: usize,
     real_distance: f64,
     imag_distance: f64,
     start_imag: f64,
     mirror: bool,
     ssaa: u32,
-    result: &mut [u8],
+    image: Arc<Mutex<Vec<u8>>>,
 ) {
     let mut c_imag: f64;
     let mut mirror_from = 0;
     let depth: u64 = 255;
     let real_delta = real_distance / (xresolution - 1) as f64;
     let imag_delta = imag_distance / (yresolution - 1) as f64;
+
+    let mut result = vec![0; usize::try_from(yresolution*3).unwrap()];
 
     for y in (0..yresolution * 3).step_by(3) {
         c_imag = start_imag + imag_distance * (y as f64) / (3.0 * yresolution as f64);
@@ -139,6 +130,12 @@ fn color_column(
             result[y as usize + 2] = colors[2];
             mirror_from += 3;
         }
+    }
+    let mut pixels = image.lock().unwrap();
+    let mut j = 0;
+    for i in xindex * yresolution as usize * 3..yresolution as usize * (xindex + 1) * 3 {
+        pixels[i] = result[j];
+        j += 1;
     }
 }
 
