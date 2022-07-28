@@ -28,7 +28,6 @@ pub fn render(
     center_imag: f64,
     real_distance: f64,
     imag_distance: f64,
-    verbose: bool,
 ) -> Result<RgbImage, Box<dyn Error>> {
 
     //True if the image contains the real axis, false otherwise.
@@ -67,18 +66,16 @@ pub fn render(
         real
     }).for_each(|_| ());
 
-    if verbose {
-        print!("\rRendering image");
-        stdout().flush()?;
-    }
+    
+    print!("\rRendering image");
+    stdout().flush()?;
+    
     let finished_pixel_data = pixel_ptr.lock().unwrap();
     let mut img =
         image::ImageBuffer::<image::Rgb<u8>, Vec<u8>>::from_vec(yresolution, xresolution, (*finished_pixel_data).clone()).unwrap();
 
-    if verbose {
-        print!("\rProcessing image");
-        stdout().flush()?;
-    }
+    print!("\rProcessing image");
+    stdout().flush()?;
 
     img = image::imageops::rotate270(&img);
     if mirror_sign == -1 {

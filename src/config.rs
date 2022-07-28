@@ -12,7 +12,6 @@ pub struct Config {
     pub ssaa: u32,
     pub save_result: bool,
     pub zoom: f64,
-    pub verbose: bool,
 }
 
 //Implementation of the Config struct.
@@ -102,13 +101,6 @@ impl Config {
                     .default_value(ssaa)
                     .required(false),
             )
-            .arg(
-                Arg::new("verbose")
-                    .short('v')
-                    .help("print extra information")
-                    .takes_value(false)
-                    .required(false),
-            )
             .get_matches();
 
         //Extract command line arguments
@@ -118,7 +110,6 @@ impl Config {
         resolution = matches.value_of("resolution").unwrap_or(resolution);
         ssaa = matches.value_of("ssaa").unwrap_or(ssaa);
         let save_result = !matches.is_present("no_save");
-        let verbose = matches.is_present("verbose");
         zoom = matches.value_of("zoom").unwrap_or(zoom);
 
         //Parse the inputs from strings into the appropriate types
@@ -138,7 +129,6 @@ impl Config {
             ssaa,
             save_result,
             zoom,
-            verbose,
         })
     }
 }
