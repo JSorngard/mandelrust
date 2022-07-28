@@ -64,6 +64,7 @@ pub fn render(
             pixel_ptr.clone(),
         );
     }).for_each(|_| ());//evaluate the iterator
+    //A for loop can not be used as `rayon::iter::Map<ProgressBarIter<rayon::range::Iter<u32>>>` is not an iterator
     
     print!("\rRendering image");
     stdout().flush()?;
