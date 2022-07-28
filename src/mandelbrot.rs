@@ -33,13 +33,15 @@ pub fn render(
     let real_delta = real_distance / (xresolution - 1) as f64;
     let imag_delta = imag_distance / (yresolution - 1) as f64;
 
-    let mirror = f64::abs(center_imag) < imag_distance; //True if the image contains the real axis, false otherwise.
-                                                        //If the image contains the real axis we want to mirror
-                                                        //the result of the largest half on to the smallest.
-                                                        //One way of doing this is to always assume we are rendering
-                                                        //in lower half of the complex plane. If the assumption is false
-                                                        //we only need to flip the image vertically to get the
-                                                        //correct result since it is symmetric under conjugation.
+    //True if the image contains the real axis, false otherwise.
+    //If the image contains the real axis we want to mirror
+    //the result of the largest half on to the smallest.
+    //One way of doing this is to always assume we are rendering
+    //in lower half of the complex plane. If the assumption is false
+    //we only need to flip the image vertically to get the
+    //correct result since it is symmetric under conjugation.
+    let mirror = f64::abs(center_imag) < imag_distance;
+
     let mirror_sign = if center_imag >= 0.0 { -1 } else { 1 };
     let start_real = center_real - real_distance / 2.0;
     let start_imag = (mirror_sign as f64) * center_imag - imag_distance / 2.0;
@@ -57,13 +59,13 @@ pub fn render(
         let pixel_row: &mut [u8] = &mut pixels[real as usize * yresolution as usize * 3
             ..yresolution as usize * (real as usize + 1) * 3];
         //Color the given slice of pixels.
-        color_row(
+        color_column(
             c_real,
+            xresolution,
             yresolution,
-            start_imag,
+            real_distance,
             imag_distance,
-            real_delta,
-            imag_delta,
+            start_imag,
             mirror,
             ssaa,
             pixel_row,
@@ -100,13 +102,13 @@ pub fn render(
     Ok(img)
 }
 
-fn color_row(
+fn color_column(
     c_real: f64,
+    xresolution: f64,
     yresolution: u32,
-    start_imag: f64,
+    real_distance: f64,
     imag_distance: f64,
-    real_delta: f64,
-    imag_delta: f64,
+    start_imag: f64,
     mirror: bool,
     ssaa: u32,
     result: &mut [u8],
@@ -114,6 +116,9 @@ fn color_row(
     let mut c_imag: f64;
     let mut mirror_from = 0;
     let depth: u64 = 255;
+    let real_delta = real_distance / (xresolution - 1) as f64;
+    let imag_delta = imag_distance / (yresolution - 1) as f64;
+
     for y in (0..yresolution * 3).step_by(3) {
         c_imag = start_imag + imag_distance * (y as f64) / (3.0 * yresolution as f64);
         //If we have rendered all the pixels with
@@ -127,7 +132,7 @@ fn color_row(
         } else {
             let colors = color_pixel(
                 supersampled_iterate(ssaa, c_real, c_imag, real_delta, imag_delta, depth),
-                depth as f64,
+                depth,
             );
             result[y as usize] = colors[0];
             result[y as usize + 1] = colors[1];
@@ -138,16 +143,15 @@ fn color_row(
 }
 
 ///Determines the color of a pixel. These color curves were found through experimentation.
-fn color_pixel(escape_speed: f64, depth: f64) -> [u8; 3] {
+fn color_pixel(escape_speed: f64, depth: u64) -> [u8; 3] {
     [
-        (escape_speed * f64::powf(depth, 1.0 - f64::powf(escape_speed, 45.0) * 2.0)) as u8,
+        (escape_speed * f64::powf(depth as f64, 1.0 - f64::powf(escape_speed, 45.0) * 2.0)) as u8,
         (escape_speed * 70.0 - (880.0 * f64::powf(escape_speed, 18.0))
             + (701.0 * f64::powf(escape_speed, 9.0))) as u8,
-        (escape_speed * 80.0 + (f64::powf(escape_speed, 9.0) * depth)
+        (escape_speed * 80.0 + (f64::powf(escape_speed, 9.0) * (depth as f64))
             - (950.0 * f64::powf(escape_speed, 99.0))) as u8,
     ]
 }
-
 
 fn supersampled_iterate(
     ssaa: u32,
