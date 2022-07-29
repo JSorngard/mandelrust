@@ -1,7 +1,7 @@
 use crate::config::Config;
 use crate::mandelbrot::render;
 use std::error::Error;
-use std::io::{Write, stdout};
+use std::io::{stdout, Write};
 
 mod config;
 mod mandelbrot;

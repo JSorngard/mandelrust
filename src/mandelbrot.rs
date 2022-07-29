@@ -1,10 +1,10 @@
-use std::io::{Write, stdout};
-use std::sync::{Mutex, Arc};
 use std::error::Error;
+use std::io::{stdout, Write};
+use std::sync::{Arc, Mutex};
 
 use image::RgbImage;
-use rayon::prelude::*;
 use indicatif::ParallelProgressIterator;
+use rayon::prelude::*;
 
 ///Takes in variables describing where to render and at what resolution
 ///and produces an image of the Mandelbrot set.
@@ -28,7 +28,6 @@ pub fn render(
     real_distance: f64,
     imag_distance: f64,
 ) -> Result<RgbImage, Box<dyn Error>> {
-
     //True if the image contains the real axis, false otherwise.
     //If the image contains the real axis we want to mirror
     //the result of the largest half on to the smallest.
@@ -46,32 +45,39 @@ pub fn render(
     let pixel_ptr = Arc::new(Mutex::new(pixel_bytes));
 
     //Make a parallel iterator over all the real values with rayon and for each
-    (0..xresolution).into_par_iter().progress_count(xresolution.into()).for_each(|real| {
-        //compute the real part of c.
-        let c_real = start_real + real_distance * (real as f64) / (xresolution as f64);
-        //color every pixel with that real value
-        color_column(
-            c_real,
-            xresolution,
-            yresolution,
-            real as usize,
-            real_distance,
-            imag_distance,
-            start_imag,
-            mirror,
-            ssaa,
-            pixel_ptr.clone(),
-        );
-    });
-    
+    (0..xresolution)
+        .into_par_iter()
+        .progress_count(xresolution.into())
+        .for_each(|real| {
+            //compute the real part of c.
+            let c_real = start_real + real_distance * (real as f64) / (xresolution as f64);
+            //color every pixel with that real value
+            color_column(
+                c_real,
+                xresolution,
+                yresolution,
+                real as usize,
+                real_distance,
+                imag_distance,
+                start_imag,
+                mirror,
+                ssaa,
+                pixel_ptr.clone(),
+            );
+        });
+
     print!("\rRendering image");
     stdout().flush()?;
-    
+
     //Extract the data from the mutex
     let finished_pixel_data = (*pixel_ptr.lock().unwrap()).clone();
     //and place it in an image buffer
-    let mut img =
-        image::ImageBuffer::<image::Rgb<u8>, Vec<u8>>::from_vec(yresolution, xresolution, finished_pixel_data).unwrap();
+    let mut img = image::ImageBuffer::<image::Rgb<u8>, Vec<u8>>::from_vec(
+        yresolution,
+        xresolution,
+        finished_pixel_data,
+    )
+    .unwrap();
 
     print!("\rProcessing image");
     stdout().flush()?;
@@ -106,7 +112,7 @@ fn color_column(
     let imag_delta = imag_distance / (yresolution - 1) as f64;
 
     //Create a temporary vector to hold the results for this row of pixels
-    let mut result = vec![0; usize::try_from(yresolution*3).unwrap()];
+    let mut result = vec![0; usize::try_from(yresolution * 3).unwrap()];
 
     for y in (0..yresolution * 3).step_by(3) {
         //Compute the imaginary part at this pixel
@@ -133,7 +139,9 @@ fn color_column(
 
     //Unlock the mutex for the image pixels
     let mut pixels = image.lock().unwrap();
-    for (j, i) in (xindex * yresolution as usize * 3..yresolution as usize * (xindex + 1) * 3).enumerate() {
+    for (j, i) in
+        (xindex * yresolution as usize * 3..yresolution as usize * (xindex + 1) * 3).enumerate()
+    {
         //and copy the results into it
         pixels[i] = result[j];
     }
@@ -142,11 +150,11 @@ fn color_column(
 ///Determines the color of a pixel. These color curves were found through experimentation.
 fn color_pixel(escape_speed: f64, depth: u64) -> [u8; 3] {
     [
-        (escape_speed * f64::powf(depth as f64, 1.0 - f64::powf(escape_speed, 45.0) * 2.0)) as u8,
-        (escape_speed * 70.0 - (880.0 * f64::powf(escape_speed, 18.0))
-            + (701.0 * f64::powf(escape_speed, 9.0))) as u8,
-        (escape_speed * 80.0 + (f64::powf(escape_speed, 9.0) * (depth as f64))
-            - (950.0 * f64::powf(escape_speed, 99.0))) as u8,
+        (escape_speed * (depth as f64).powf(1.0 - 2.0 * escape_speed.powf(45.0))) as u8,
+        (escape_speed * 70.0 - (880.0 * escape_speed.powf(18.0)) + (701.0 * escape_speed.powf(9.0)))
+            as u8,
+        (escape_speed * 80.0 + (escape_speed.powf(9.0) * (depth as f64))
+            - (950.0 * escape_speed.powf(99.0))) as u8,
     ]
 }
 
