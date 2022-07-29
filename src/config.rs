@@ -11,6 +11,7 @@ pub struct Config {
     pub resolution: u32,
     pub ssaa: u32,
     pub save_result: bool,
+    pub record_params: bool,
     pub zoom: f64,
 }
 
@@ -38,7 +39,7 @@ impl Config {
                 Arg::new("center_real")
                     .long("center-re")
                     .value_name("RE(CENTER)")
-                    .help("the real part of the center point of the image")
+                    .help("The real part of the center point of the image")
                     .takes_value(true)
                     .required(false)
                     .allow_hyphen_values(true)
@@ -48,7 +49,7 @@ impl Config {
                 Arg::new("center_imag")
                     .long("center-im")
                     .value_name("IM(CENTER)")
-                    .help("the imag part of the center point of the image")
+                    .help("The imaginary part of the center point of the image")
                     .takes_value(true)
                     .required(false)
                     .allow_hyphen_values(true)
@@ -59,7 +60,7 @@ impl Config {
                     .short('r')
                     .long("aspect-ratio")
                     .value_name("ASPECT RATIO")
-                    .help("the aspect ratio of the image")
+                    .help("The aspect ratio of the image")
                     .takes_value(true)
                     .required(false)
                     .default_value(aspect_ratio),
@@ -69,7 +70,7 @@ impl Config {
                     .short('n')
                     .long("number-of-points")
                     .value_name("RESOLUTION")
-                    .help("the number of points along the imaginary axis to evaluate")
+                    .help("The number of points along the imaginary axis to evaluate")
                     .takes_value(true)
                     .required(false)
                     .default_value(resolution),
@@ -77,7 +78,7 @@ impl Config {
             .arg(
                 Arg::new("no_save")
                     .short('x')
-                    .help("do not write the results to file")
+                    .help("Do not write the results to file")
                     .takes_value(false)
                     .required(false),
             )
@@ -86,17 +87,24 @@ impl Config {
                     .short('z')
                     .long("zoom")
                     .value_name("ZOOM LEVEL")
-                    .help("how far in to zoom on the given center point")
+                    .help("How far in to zoom on the given center point")
                     .takes_value(true)
                     .required(false)
                     .default_value(zoom),
+            )
+            .arg(
+                Arg::new("record_params")
+                    .long("record-params")
+                    .help("Whether to save information about the location in the complex plane that the image shows in the file name")
+                    .takes_value(false)
+                    .required(false)
             )
             .arg(
                 Arg::new("ssaa")
                     .short('s')
                     .long("ssaa")
                     .value_name("SSAA")
-                    .help("whether to supersample every pixel, and how much")
+                    .help("How many samples to compute for each pixel (along one direction, the actual number of samples is the square of this number)")
                     .takes_value(true)
                     .default_value(ssaa)
                     .required(false),
@@ -110,6 +118,7 @@ impl Config {
         resolution = matches.value_of("resolution").unwrap_or(resolution);
         ssaa = matches.value_of("ssaa").unwrap_or(ssaa);
         let save_result = !matches.is_present("no_save");
+        let record_params = matches.is_present("record_params");
         zoom = matches.value_of("zoom").unwrap_or(zoom);
 
         //Parse the inputs from strings into the appropriate types
@@ -128,6 +137,7 @@ impl Config {
             resolution,
             ssaa,
             save_result,
+            record_params,
             zoom,
         })
     }

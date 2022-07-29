@@ -13,6 +13,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     let aspect_ratio = config.aspect_ratio;
     let yresolution = config.resolution;
     let save_result = config.save_result;
+    let record_params = config.record_params;
     let xresolution = (aspect_ratio * (yresolution as f64)) as u32;
     let zoom = config.zoom;
     let imag_distance = config.imag_distance / zoom;
@@ -31,7 +32,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         xresolution, yresolution
     );
     if zoom != 1.0 {
-        print!("zoomed by a factor of {}", zoom);
+        print!(" zoomed by a factor of {}", zoom);
     }
     println!(" ----");
 
@@ -49,7 +50,12 @@ fn main() -> Result<(), Box<dyn Error>> {
     if save_result {
         print!("\rEncoding and saving image");
         stdout().flush()?;
-        img.save("m.png")?;
+        let image_name = if record_params {
+            format!("re_{center_real}_im_{center_imag}_zoom_{zoom}.png")
+        } else {
+            "m.png".to_owned()
+        };
+        img.save(image_name)?;
     }
     println!("\rDone                     ");
 
