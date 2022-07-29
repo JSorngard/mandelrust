@@ -19,7 +19,6 @@ use indicatif::ParallelProgressIterator;
 ///xresolution = yresolution = 100 and center = 0+0i a square of size 1x1
 ///centered on the origin will be computed and rendered as a 100x100 pixel
 ///image.
-///If verbose is true the function will print progress information to stdout.
 pub fn render(
     xresolution: u32,
     yresolution: u32,
