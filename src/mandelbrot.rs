@@ -47,7 +47,7 @@ pub fn render(
     let pixel_ptr = Arc::new(Mutex::new(pixel_bytes));
 
     //Make a parallel iterator over all the real values with rayon and for each
-    (0..xresolution).into_par_iter().progress_count(xresolution.into()).map(|real| {
+    (0..xresolution).into_par_iter().progress_count(xresolution.into()).for_each(|real| {
         //compute the real part of c.
         let c_real = start_real + real_distance * (real as f64) / (xresolution as f64);
         //color every pixel with that real value
@@ -63,8 +63,7 @@ pub fn render(
             ssaa,
             pixel_ptr.clone(),
         );
-    }).for_each(|_| ());//evaluate the iterator
-    //A for loop can not be used as `rayon::iter::Map<ProgressBarIter<rayon::range::Iter<u32>>>` is not an iterator
+    });
     
     print!("\rRendering image");
     stdout().flush()?;
