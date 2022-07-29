@@ -6,27 +6,52 @@ use image::RgbImage;
 use indicatif::ParallelProgressIterator;
 use rayon::prelude::*;
 
+#[derive(Clone, Copy, Debug, Default)]
+pub struct Frame {
+    center_real: f64,
+    center_imag: f64,
+    real_distance: f64,
+    imag_distance: f64,
+}
+
+impl Frame {
+    pub fn new(center_real: f64, center_imag: f64, real_distance: f64, imag_distance: f64) -> Self {
+        Frame {
+            center_real,
+            center_imag,
+            real_distance,
+            imag_distance,
+        }
+    }
+}
+
 ///Takes in variables describing where to render and at what resolution
 ///and produces an image of the Mandelbrot set.
 ///xresolution and yresolution is the resolution in pixels in the real
 ///and imaginary direction respectively.
 ///ssaa is the number of supersampled points along one direction. If ssaa
 ///is e.g. 3, then a supersampled pixel will be sampled 3^2 = 9 times.
-///center_real and center_imag are the real and imaginary parts of the
-///point at the center of the image.
-///real_distance and imag_distance describe the size of the region in the
-///complex plane to render. E.g. if real_distance = imag_distance = 1,
-///xresolution = yresolution = 100 and center = 0+0i a square of size 1x1
-///centered on the origin will be computed and rendered as a 100x100 pixel
-///image.
+///region contains:
+/// center_real and center_imag are the real and imaginary parts of the
+/// point at the center of the image.
+/// real_distance and imag_distance describe the size of the region in the
+/// complex plane to render.
+///            real_distance
+/// |------------------------------|
+/// |                              |
+/// |   center_real+center_imag*i  | imag_distance
+/// |                              |
+/// |------------------------------|
+///
+///If real_distance = imag_distance = 1,
+///xresolution = yresolution = 100 and center_real=center_imag = 0 a square
+///of size 1x1 centered on the origin will be computed and rendered as a
+///100x100 pixel image.
 pub fn render(
     xresolution: u32,
     yresolution: u32,
     ssaa: u32,
-    center_real: f64,
-    center_imag: f64,
-    real_distance: f64,
-    imag_distance: f64,
+    draw_region: Frame,
 ) -> Result<RgbImage, Box<dyn Error>> {
     //True if the image contains the real axis, false otherwise.
     //If the image contains the real axis we want to mirror
@@ -35,11 +60,16 @@ pub fn render(
     //in lower half of the complex plane. If the assumption is false
     //we only need to flip the image vertically to get the
     //correct result since it is symmetric under conjugation.
-    let mirror = f64::abs(center_imag) < imag_distance;
+    let mirror = f64::abs(draw_region.center_imag) < draw_region.imag_distance;
 
-    let mirror_sign = if center_imag >= 0.0 { -1 } else { 1 };
-    let start_real = center_real - real_distance / 2.0;
-    let start_imag = (mirror_sign as f64) * center_imag - imag_distance / 2.0;
+    let mirror_sign = if draw_region.center_imag >= 0.0 {
+        -1
+    } else {
+        1
+    };
+    let start_real = draw_region.center_real - draw_region.real_distance / 2.0;
+    let start_imag =
+        (mirror_sign as f64) * draw_region.center_imag - draw_region.imag_distance / 2.0;
 
     let pixel_bytes: Vec<u8> = vec![0; xresolution as usize * yresolution as usize * 3];
     let pixel_ptr = Arc::new(Mutex::new(pixel_bytes));
@@ -49,16 +79,16 @@ pub fn render(
         .into_par_iter()
         .progress_count(xresolution.into())
         .for_each(|real| {
-            //compute the real part of c.
-            let c_real = start_real + real_distance * (real as f64) / (xresolution as f64);
+            //compute the real part of c and
+            let c_real =
+                start_real + draw_region.real_distance * (real as f64) / (xresolution as f64);
             //color every pixel with that real value
             color_column(
                 c_real,
                 xresolution,
                 yresolution,
                 real as usize,
-                real_distance,
-                imag_distance,
+                draw_region,
                 start_imag,
                 mirror,
                 ssaa,
@@ -98,8 +128,7 @@ fn color_column(
     xresolution: u32,
     yresolution: u32,
     xindex: usize,
-    real_distance: f64,
-    imag_distance: f64,
+    draw_region: Frame,
     start_imag: f64,
     mirror: bool,
     ssaa: u32,
@@ -108,15 +137,15 @@ fn color_column(
     let mut c_imag: f64;
     let mut mirror_from = 0;
     let depth: u64 = 255;
-    let real_delta = real_distance / (xresolution - 1) as f64;
-    let imag_delta = imag_distance / (yresolution - 1) as f64;
+    let real_delta = draw_region.real_distance / (xresolution - 1) as f64;
+    let imag_delta = draw_region.imag_distance / (yresolution - 1) as f64;
 
     //Create a temporary vector to hold the results for this row of pixels
     let mut result = vec![0; usize::try_from(yresolution * 3).unwrap()];
 
     for y in (0..yresolution * 3).step_by(3) {
         //Compute the imaginary part at this pixel
-        c_imag = start_imag + imag_distance * (y as f64) / (3.0 * yresolution as f64);
+        c_imag = start_imag + draw_region.imag_distance * (y as f64) / (3.0 * yresolution as f64);
         //If we have rendered all the pixels with
         //negative imaginary part for this real
         //part we just mirror this pixel

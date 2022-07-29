@@ -1,5 +1,5 @@
 use crate::config::Config;
-use crate::mandelbrot::render;
+use crate::mandelbrot::{render, Frame};
 use std::error::Error;
 use std::io::{stdout, Write};
 
@@ -36,16 +36,10 @@ fn main() -> Result<(), Box<dyn Error>> {
     }
     println!(" ----");
 
+    let draw_region = Frame::new(center_real, center_imag, real_distance, imag_distance);
+
     //Render the image
-    let img = render(
-        xresolution,
-        yresolution,
-        ssaa,
-        center_real,
-        center_imag,
-        real_distance,
-        imag_distance,
-    )?;
+    let img = render(xresolution, yresolution, ssaa, draw_region)?;
 
     if save_result {
         print!("\rEncoding and saving image");
