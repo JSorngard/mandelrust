@@ -5,7 +5,7 @@ use clap::Parser;
 #[clap(author, version, about, long_about = None)]
 pub struct Args {
     //This struct contains the runtime specified configuration of the program.
-    #[clap(short, long, value_parser, value_name = "RE(CENTER)", default_value_t = -0.75, help= "The real part of the center point of the image")]
+    #[clap(short, long, value_parser, value_name = "RE(CENTER)", default_value_t = -0.75, help= "The real part of the center point of the image", allow_hyphen_values = true)]
     pub real_center: f64,
 
     #[clap(
@@ -14,7 +14,8 @@ pub struct Args {
         value_parser,
         value_name = "IM(CENTER)",
         default_value_t = 0.0,
-        help = "The imaginary part of the center point of the image"
+        help = "The imaginary part of the center point of the image",
+        allow_hyphen_values = true
     )]
     pub imag_center: f64,
 
