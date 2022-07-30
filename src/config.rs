@@ -127,6 +127,9 @@ impl Config {
         let aspect_ratio: f64 = aspect_ratio.trim().parse()?;
         let resolution: u32 = resolution.trim().parse()?;
         let ssaa: u32 = ssaa.trim().parse()?;
+        if ssaa == 0 {
+            return Err("SSAA factor must be larger than 0".into());
+        }
         let zoom: f64 = zoom.trim().parse()?;
 
         Ok(Config {
