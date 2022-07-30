@@ -190,7 +190,7 @@ fn color_pixel(escape_speed: f64, depth: u64) -> [u8; 3] {
 ///Computes the number of iterations needed for the values in a small region
 ///around the given value to escape and returns their average.
 ///If x is the location of c_real + c_imag*i and ssaa = 3,
-///then the periods are also sampled:
+///then the dots are also sampled:
 ///
 ///   real_delta
 ///    -------
