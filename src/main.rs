@@ -23,7 +23,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     let xresolution = (args.aspect_ratio * (yresolution as f64)) as u32;
     let imag_distance = 8.0 / (3.0 * zoom);
     let real_distance = args.aspect_ratio * imag_distance;
-    
+
     if ssaa == 0 {
         return Err("SSAA factor must be larger than 0".into());
     }
