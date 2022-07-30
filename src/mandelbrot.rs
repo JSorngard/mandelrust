@@ -214,7 +214,7 @@ fn supersampled_iterate(
         esc = iterate(
             c_real + rowoffset * real_delta,
             c_imag + coloffset * imag_delta,
-            depth as i64,
+            depth as u64,
         );
         escape_speed += esc;
         samples += 1;
@@ -234,12 +234,12 @@ fn supersampled_iterate(
 Iterates the mandelbrot function on the input number until
 it either escapes or exceeds the maximum number of iterations.
 */
-pub fn iterate(c_re: f64, c_im: f64, maxiterations: i64) -> f64 {
+pub fn iterate(c_re: f64, c_im: f64, maxiterations: u64) -> f64 {
     let c_imag_sqr = c_im * c_im;
     let mag_sqr = c_re * c_re + c_imag_sqr;
 
     //Check whether the point is within the main cardioid or period 2 bulb.
-    if f64::powf(c_re + 1.0, 2.0) + c_imag_sqr <= 0.0625
+    if (c_re + 1.0).powf(2.0) + c_imag_sqr <= 0.0625
         || mag_sqr * (8.0 * mag_sqr - 3.0) <= 0.09375 - c_re
     {
         return 0.0;
@@ -266,7 +266,7 @@ pub fn iterate(c_re: f64, c_im: f64, maxiterations: i64) -> f64 {
         z_im_sqr = z_im * z_im;
         iterations += 1;
 
-        if f64::abs(z_re - old_re) < tol && f64::abs(z_im - old_im) < tol {
+        if (z_re - old_re).abs() < tol && (z_im - old_im).abs() < tol {
             return 0.0;
         }
 
@@ -282,6 +282,6 @@ pub fn iterate(c_re: f64, c_im: f64, maxiterations: i64) -> f64 {
         return 0.0;
     }
 
-    ((maxiterations - iterations) as f64 - 4.0 * f64::powf((z_re_sqr + z_im_sqr).sqrt(), -0.4))
+    ((maxiterations - iterations) as f64 - 4.0 * (z_re_sqr + z_im_sqr).sqrt().powf(-0.4))
         / (maxiterations as f64)
 }
