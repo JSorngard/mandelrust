@@ -187,6 +187,16 @@ fn color_pixel(escape_speed: f64, depth: u64) -> [u8; 3] {
     ]
 }
 
+///Computes the number of iterations needed for the values in a small region
+///around the given value to escape and returns their average.
+///If x is the location of c_real + c_imag*i and ssaa = 3,
+///then the periods are also sampled:
+///
+///   real_delta
+///    -------
+///    .  .  .  |
+///    .  x  .  | imag_delta
+///    .  .  .  |
 fn supersampled_iterate(
     ssaa: u32,
     c_real: f64,
@@ -204,8 +214,6 @@ fn supersampled_iterate(
     let mut esc: f64;
 
     //Supersampling loop.
-    //Samples points in a grid around the intended point and averages
-    //the results together to get a smoother image.
     for k in 1..=i64::pow(ssaa as i64, 2) {
         coloffset = ((k % (ssaa as i64) - 1) as f64) * one_over_ssaa;
         rowoffset = (((k - 1) as f64) / (ssaa as f64) - 1.0) * one_over_ssaa;
@@ -230,10 +238,9 @@ fn supersampled_iterate(
     escape_speed
 }
 
-/*
-Iterates the mandelbrot function on the input number until
-it either escapes or exceeds the maximum number of iterations.
-*/
+
+///Iterates the mandelbrot function on the input number until
+///it either escapes or exceeds the maximum number of iterations.
 pub fn iterate(c_re: f64, c_im: f64, maxiterations: u64) -> f64 {
     let c_imag_sqr = c_im * c_im;
     let mag_sqr = c_re * c_re + c_imag_sqr;
@@ -266,10 +273,11 @@ pub fn iterate(c_re: f64, c_im: f64, maxiterations: u64) -> f64 {
         z_im_sqr = z_im * z_im;
         iterations += 1;
 
+        //If we have seen this value before we are in a cycle.
+        //They are always in the set, so we return 0.0
         if (z_re - old_re).abs() < tol && (z_im - old_im).abs() < tol {
             return 0.0;
         }
-
         period += 1;
         if period > 10 {
             period = 0;
