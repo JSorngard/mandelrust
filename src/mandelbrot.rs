@@ -238,7 +238,6 @@ fn supersampled_iterate(
     escape_speed
 }
 
-
 ///Iterates the mandelbrot function on the input number until
 ///it either escapes or exceeds the maximum number of iterations.
 pub fn iterate(c_re: f64, c_im: f64, maxiterations: u64) -> f64 {
