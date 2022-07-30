@@ -12,19 +12,18 @@ mod config;
 mod mandelbrot;
 
 fn main() -> Result<(), Box<dyn Error>> {
-    let config = Args::parse();
+    let args = Args::parse();
 
-    let center_real = config.real_center;
-    let center_imag = config.imag_center;
-    let aspect_ratio = config.aspect_ratio;
-    let yresolution = config.pixels;
-    let record_params = config.record_params;
-    let xresolution = (aspect_ratio * (yresolution as f64)) as u32;
-    let zoom = config.zoom;
+    let center_real = args.real_center;
+    let center_imag = args.imag_center;
+    let yresolution = args.pixels;
+    let zoom = args.zoom;
+    let ssaa = args.ssaa;
+
+    let xresolution = (args.aspect_ratio * (yresolution as f64)) as u32;
     let imag_distance = 8.0 / (3.0 * zoom);
-    let real_distance = aspect_ratio * imag_distance;
-    let ssaa = config.ssaa;
-
+    let real_distance = args.aspect_ratio * imag_distance;
+    
     if ssaa == 0 {
         return Err("SSAA factor must be larger than 0".into());
     }
@@ -49,7 +48,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     print!("\rEncoding and saving image");
     stdout().flush()?;
-    let image_name = if record_params {
+    let image_name = if args.record_params {
         format!("re_{center_real}_im_{center_imag}_zoom_{zoom}.png")
     } else {
         "m.png".to_owned()
