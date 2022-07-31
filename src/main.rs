@@ -3,7 +3,7 @@ use std::io::{stdout, Write};
 
 use crate::{
     config::Args,
-    mandelbrot::{render, Frame},
+    mandelbrot::{render, Frame, RenderParameters},
 };
 
 use clap::Parser;
@@ -43,8 +43,10 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     let draw_region = Frame::new(center_real, center_imag, real_distance, imag_distance);
 
+    let render_parameters = RenderParameters::new(xresolution, yresolution, ssaa, args.grayscale);
+
     //Render the image
-    let img = render(xresolution, yresolution, draw_region, ssaa, args.grayscale)?;
+    let img = render(render_parameters, draw_region)?;
 
     print!("\rEncoding and saving image");
     stdout().flush()?;

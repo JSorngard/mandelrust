@@ -25,6 +25,25 @@ impl Frame {
     }
 }
 
+#[derive(Clone, Copy, Debug, Default)]
+pub struct RenderParameters {
+    x_resolution: usize,
+    y_resolution: usize,
+    ssaa: u32,
+    grayscale: bool,
+}
+
+impl RenderParameters {
+    pub fn new(x_resolution: usize, y_resolution: usize, ssaa: u32, grayscale: bool) -> Self {
+        RenderParameters {
+            x_resolution,
+            y_resolution,
+            ssaa,
+            grayscale,
+        }
+    }
+}
+
 ///Takes in variables describing where to render and at what resolution
 ///and produces an image of the Mandelbrot set.
 ///xresolution and yresolution is the resolution in pixels in the real
@@ -49,11 +68,8 @@ impl Frame {
 ///of size 1x1 centered on the origin will be computed and rendered as a
 ///100x100 pixel image.
 pub fn render(
-    xresolution: usize,
-    yresolution: usize,
+    render_parameters: RenderParameters,
     draw_region: Frame,
-    ssaa: u32,
-    grayscale: bool,
 ) -> Result<RgbImage, Box<dyn Error>> {
     //True if the image contains the real axis, false otherwise.
     //If the image contains the real axis we want to mirror
@@ -72,6 +88,9 @@ pub fn render(
     let start_real = draw_region.center_real - draw_region.real_distance / 2.0;
     let start_imag = mirror_sign * draw_region.center_imag - draw_region.imag_distance / 2.0;
 
+    let xresolution = render_parameters.x_resolution;
+    let yresolution = render_parameters.y_resolution;
+
     let pixel_bytes: Vec<u8> = vec![0; xresolution * yresolution * 3];
     let pixel_ptr = Arc::new(Mutex::new(pixel_bytes));
 
@@ -86,14 +105,11 @@ pub fn render(
             //color every pixel with that real value
             color_column(
                 c_real,
-                xresolution,
-                yresolution,
-                real as usize,
+                render_parameters,
                 draw_region,
+                real as usize,
                 start_imag,
                 mirror,
-                ssaa,
-                grayscale,
                 pixel_ptr.clone(),
             );
         });
@@ -127,17 +143,16 @@ pub fn render(
 ///Computes the colors of the pixels in a column of the image of the mandelbrot set.
 fn color_column(
     c_real: f64,
-    xresolution: usize,
-    yresolution: usize,
-    xindex: usize,
+    render_parameters: RenderParameters,
     draw_region: Frame,
+    xindex: usize,
     start_imag: f64,
     mirror: bool,
-    ssaa: u32,
-    grayscale: bool,
     image: Arc<Mutex<Vec<u8>>>,
 ) {
-    let mut c_imag: f64;
+    let xresolution = render_parameters.x_resolution;
+    let yresolution = render_parameters.y_resolution;
+
     let mut mirror_from: usize = 0;
     let depth: u64 = 255;
     let real_delta = draw_region.real_distance / (xresolution - 1) as f64;
@@ -145,7 +160,7 @@ fn color_column(
 
     //Create a temporary vector to hold the results for this row of pixels
     let mut result = vec![0; yresolution * 3];
-
+    let mut c_imag: f64;
     for y in (0..yresolution * 3).step_by(3) {
         //Compute the imaginary part at this pixel
         c_imag = start_imag + draw_region.imag_distance * (y as f64) / (3.0 * yresolution as f64);
@@ -159,8 +174,16 @@ fn color_column(
             mirror_from -= 3;
         } else {
             let colors = color_pixel(
-                supersampled_iterate(ssaa, c_real, c_imag, real_delta, imag_delta, depth),
-                depth, grayscale,
+                supersampled_iterate(
+                    render_parameters.ssaa,
+                    c_real,
+                    c_imag,
+                    real_delta,
+                    imag_delta,
+                    depth,
+                ),
+                depth,
+                render_parameters.grayscale,
             );
             result[y] = colors[0];
             result[y + 1] = colors[1];
@@ -180,12 +203,12 @@ fn color_column(
 ///Determines the color of a pixel. These color curves were found through experimentation.
 fn color_pixel(escape_speed: f64, depth: u64, grayscale: bool) -> [u8; 3] {
     if grayscale {
-        [(escape_speed*(depth as f64)) as u8; 3]
+        [(escape_speed * (depth as f64)) as u8; 3]
     } else {
         [
             (escape_speed * (depth as f64).powf(1.0 - 2.0 * escape_speed.powf(45.0))) as u8,
-            (escape_speed * 70.0 - (880.0 * escape_speed.powf(18.0)) + (701.0 * escape_speed.powf(9.0)))
-                as u8,
+            (escape_speed * 70.0 - (880.0 * escape_speed.powf(18.0))
+                + (701.0 * escape_speed.powf(9.0))) as u8,
             (escape_speed * 80.0 + (escape_speed.powf(9.0) * (depth as f64))
                 - (950.0 * escape_speed.powf(99.0))) as u8,
         ]
