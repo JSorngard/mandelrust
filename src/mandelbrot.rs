@@ -36,6 +36,7 @@ impl Frame {
 /// point at the center of the image.
 /// real_distance and imag_distance describe the size of the region in the
 /// complex plane to render.
+///
 ///            real_distance
 /// |------------------------------|
 /// |                              |
