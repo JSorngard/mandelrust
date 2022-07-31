@@ -45,7 +45,7 @@ impl Frame {
 /// |------------------------------|
 ///
 ///If real_distance = imag_distance = 1,
-///xresolution = yresolution = 100 and center_real=center_imag = 0 a square
+///xresolution = yresolution = 100 and center_real = center_imag = 0 a square
 ///of size 1x1 centered on the origin will be computed and rendered as a
 ///100x100 pixel image.
 pub fn render(
