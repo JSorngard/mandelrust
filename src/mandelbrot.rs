@@ -4,7 +4,7 @@ use std::sync::{Arc, Mutex};
 
 use crate::lib::{Frame, RenderParameters};
 
-use image::RgbImage;
+use image::DynamicImage;
 use indicatif::ParallelProgressIterator;
 use rayon::prelude::*;
 
@@ -34,7 +34,7 @@ use rayon::prelude::*;
 pub fn render(
     render_parameters: RenderParameters,
     draw_region: Frame,
-) -> Result<RgbImage, Box<dyn Error>> {
+) -> Result<DynamicImage, Box<dyn Error>> {
     //True if the image contains the real axis, false otherwise.
     //If the image contains the real axis we want to mirror
     //the result of the largest half on to the smallest.
@@ -101,7 +101,11 @@ pub fn render(
         image::imageops::flip_vertical_in_place(&mut img);
     }
 
-    Ok(img)
+    if render_parameters.grayscale {
+        Ok(DynamicImage::ImageLuma8(image::imageops::grayscale(&img)))
+    } else {
+        Ok(DynamicImage::ImageRgb8(img))
+    }
 }
 
 ///Computes the colors of the pixels in a column of the image of the mandelbrot set.
