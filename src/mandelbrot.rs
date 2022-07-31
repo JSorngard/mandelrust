@@ -48,8 +48,8 @@ impl Frame {
 ///of size 1x1 centered on the origin will be computed and rendered as a
 ///100x100 pixel image.
 pub fn render(
-    xresolution: u32,
-    yresolution: u32,
+    xresolution: usize,
+    yresolution: usize,
     ssaa: u32,
     draw_region: Frame,
 ) -> Result<RgbImage, Box<dyn Error>> {
@@ -60,24 +60,23 @@ pub fn render(
     //in lower half of the complex plane. If the assumption is false
     //we only need to flip the image vertically to get the
     //correct result since it is symmetric under conjugation.
-    let mirror = f64::abs(draw_region.center_imag) < draw_region.imag_distance;
+    let mirror = draw_region.center_imag.abs() < draw_region.imag_distance;
 
     let mirror_sign = if draw_region.center_imag >= 0.0 {
-        -1
+        -1.0
     } else {
-        1
+        1.0
     };
     let start_real = draw_region.center_real - draw_region.real_distance / 2.0;
-    let start_imag =
-        (mirror_sign as f64) * draw_region.center_imag - draw_region.imag_distance / 2.0;
+    let start_imag = mirror_sign * draw_region.center_imag - draw_region.imag_distance / 2.0;
 
-    let pixel_bytes: Vec<u8> = vec![0; xresolution as usize * yresolution as usize * 3];
+    let pixel_bytes: Vec<u8> = vec![0; xresolution * yresolution * 3];
     let pixel_ptr = Arc::new(Mutex::new(pixel_bytes));
 
     //Make a parallel iterator over all the real values with rayon and for each
     (0..xresolution)
         .into_par_iter()
-        .progress_count(xresolution.into())
+        .progress_count(xresolution.try_into().unwrap())
         .for_each(|real| {
             //compute the real part of c and
             let c_real =
@@ -103,8 +102,8 @@ pub fn render(
     let finished_pixel_data = (*pixel_ptr.lock().unwrap()).clone();
     //and place it in an image buffer
     let mut img = image::ImageBuffer::<image::Rgb<u8>, Vec<u8>>::from_vec(
-        yresolution,
-        xresolution,
+        yresolution.try_into().unwrap(),
+        xresolution.try_into().unwrap(),
         finished_pixel_data,
     )
     .unwrap();
@@ -114,7 +113,7 @@ pub fn render(
 
     //Manipulate it to be the right side up and
     img = image::imageops::rotate270(&img);
-    if mirror_sign == -1 {
+    if mirror_sign == -1.0 {
         //flip in vertically if we need to due to mirroring
         image::imageops::flip_vertical_in_place(&mut img);
     }
@@ -125,8 +124,8 @@ pub fn render(
 ///Computes the colors of the pixels in a column of the image of the mandelbrot set.
 fn color_column(
     c_real: f64,
-    xresolution: u32,
-    yresolution: u32,
+    xresolution: usize,
+    yresolution: usize,
     xindex: usize,
     draw_region: Frame,
     start_imag: f64,
@@ -135,13 +134,13 @@ fn color_column(
     image: Arc<Mutex<Vec<u8>>>,
 ) {
     let mut c_imag: f64;
-    let mut mirror_from = 0;
+    let mut mirror_from: usize = 0;
     let depth: u64 = 255;
     let real_delta = draw_region.real_distance / (xresolution - 1) as f64;
     let imag_delta = draw_region.imag_distance / (yresolution - 1) as f64;
 
     //Create a temporary vector to hold the results for this row of pixels
-    let mut result = vec![0; usize::try_from(yresolution * 3).unwrap()];
+    let mut result = vec![0; yresolution * 3];
 
     for y in (0..yresolution * 3).step_by(3) {
         //Compute the imaginary part at this pixel
@@ -150,27 +149,25 @@ fn color_column(
         //negative imaginary part for this real
         //part we just mirror this pixel
         if mirror && c_imag > 0.0 {
-            result[y as usize] = result[(mirror_from - 3) as usize];
-            result[y as usize + 1] = result[mirror_from as usize - 2];
-            result[y as usize + 2] = result[mirror_from as usize - 1];
+            result[y] = result[mirror_from - 3];
+            result[y + 1] = result[mirror_from - 2];
+            result[y + 2] = result[mirror_from - 1];
             mirror_from -= 3;
         } else {
             let colors = color_pixel(
                 supersampled_iterate(ssaa, c_real, c_imag, real_delta, imag_delta, depth),
                 depth,
             );
-            result[y as usize] = colors[0];
-            result[y as usize + 1] = colors[1];
-            result[y as usize + 2] = colors[2];
+            result[y] = colors[0];
+            result[y + 1] = colors[1];
+            result[y + 2] = colors[2];
             mirror_from += 3;
         }
     }
 
     //Unlock the mutex for the image pixels
     let mut pixels = image.lock().unwrap();
-    for (j, i) in
-        (xindex * yresolution as usize * 3..yresolution as usize * (xindex + 1) * 3).enumerate()
-    {
+    for (j, i) in (xindex * yresolution * 3..yresolution * (xindex + 1) * 3).enumerate() {
         //and copy the results into it
         pixels[i] = result[j];
     }

@@ -20,7 +20,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     let zoom = args.zoom;
     let ssaa = args.ssaa;
 
-    let xresolution = (args.aspect_ratio * (yresolution as f64)) as u32;
+    let xresolution = (args.aspect_ratio * (yresolution as f64)) as usize;
     let imag_distance = 8.0 / (3.0 * zoom);
     let real_distance = args.aspect_ratio * imag_distance;
 

@@ -35,7 +35,7 @@ pub struct Args {
         default_value_t = 2160,
         help = "The number of pixels along the y-axis of the image"
     )]
-    pub pixels: u32,
+    pub pixels: usize,
 
     #[clap(
         short,
