@@ -2,47 +2,11 @@ use std::error::Error;
 use std::io::{stdout, Write};
 use std::sync::{Arc, Mutex};
 
+use crate::lib::{Frame, RenderParameters};
+
 use image::RgbImage;
 use indicatif::ParallelProgressIterator;
 use rayon::prelude::*;
-
-#[derive(Clone, Copy, Debug, Default)]
-pub struct Frame {
-    center_real: f64,
-    center_imag: f64,
-    real_distance: f64,
-    imag_distance: f64,
-}
-
-impl Frame {
-    pub fn new(center_real: f64, center_imag: f64, real_distance: f64, imag_distance: f64) -> Self {
-        Frame {
-            center_real,
-            center_imag,
-            real_distance,
-            imag_distance,
-        }
-    }
-}
-
-#[derive(Clone, Copy, Debug, Default)]
-pub struct RenderParameters {
-    x_resolution: usize,
-    y_resolution: usize,
-    ssaa: u32,
-    grayscale: bool,
-}
-
-impl RenderParameters {
-    pub fn new(x_resolution: usize, y_resolution: usize, ssaa: u32, grayscale: bool) -> Self {
-        RenderParameters {
-            x_resolution,
-            y_resolution,
-            ssaa,
-            grayscale,
-        }
-    }
-}
 
 ///Takes in variables describing where to render and at what resolution
 ///and produces an image of the Mandelbrot set.

@@ -3,12 +3,14 @@ use std::io::{stdout, Write};
 
 use crate::{
     config::Args,
-    mandelbrot::{render, Frame, RenderParameters},
+    lib::{Frame, RenderParameters},
+    mandelbrot::render,
 };
 
 use clap::Parser;
 
 mod config;
+mod lib;
 mod mandelbrot;
 
 fn main() -> Result<(), Box<dyn Error>> {
