@@ -44,7 +44,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     let draw_region = Frame::new(center_real, center_imag, real_distance, imag_distance);
 
     //Render the image
-    let img = render(xresolution, yresolution, ssaa, draw_region)?;
+    let img = render(xresolution, yresolution, draw_region, ssaa, args.grayscale)?;
 
     print!("\rEncoding and saving image");
     stdout().flush()?;

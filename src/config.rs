@@ -47,9 +47,12 @@ pub struct Args {
     )]
     pub ssaa: u32,
 
+    #[clap(long, help = "Output the image in grayscale instead of color")]
+    pub grayscale: bool,
+
     #[clap(
         long,
-        help = "Whether to save information about the location in the complex plane that the image shows in the file name"
+        help = "Save information about the location in the complex plane that the image shows in the file name"
     )]
     pub record_params: bool,
 

@@ -51,8 +51,9 @@ impl Frame {
 pub fn render(
     xresolution: usize,
     yresolution: usize,
-    ssaa: u32,
     draw_region: Frame,
+    ssaa: u32,
+    grayscale: bool,
 ) -> Result<RgbImage, Box<dyn Error>> {
     //True if the image contains the real axis, false otherwise.
     //If the image contains the real axis we want to mirror
@@ -92,6 +93,7 @@ pub fn render(
                 start_imag,
                 mirror,
                 ssaa,
+                grayscale,
                 pixel_ptr.clone(),
             );
         });
@@ -132,6 +134,7 @@ fn color_column(
     start_imag: f64,
     mirror: bool,
     ssaa: u32,
+    grayscale: bool,
     image: Arc<Mutex<Vec<u8>>>,
 ) {
     let mut c_imag: f64;
@@ -157,7 +160,7 @@ fn color_column(
         } else {
             let colors = color_pixel(
                 supersampled_iterate(ssaa, c_real, c_imag, real_delta, imag_delta, depth),
-                depth,
+                depth, grayscale,
             );
             result[y] = colors[0];
             result[y + 1] = colors[1];
@@ -175,14 +178,18 @@ fn color_column(
 }
 
 ///Determines the color of a pixel. These color curves were found through experimentation.
-fn color_pixel(escape_speed: f64, depth: u64) -> [u8; 3] {
-    [
-        (escape_speed * (depth as f64).powf(1.0 - 2.0 * escape_speed.powf(45.0))) as u8,
-        (escape_speed * 70.0 - (880.0 * escape_speed.powf(18.0)) + (701.0 * escape_speed.powf(9.0)))
-            as u8,
-        (escape_speed * 80.0 + (escape_speed.powf(9.0) * (depth as f64))
-            - (950.0 * escape_speed.powf(99.0))) as u8,
-    ]
+fn color_pixel(escape_speed: f64, depth: u64, grayscale: bool) -> [u8; 3] {
+    if grayscale {
+        [(escape_speed*(depth as f64)) as u8; 3]
+    } else {
+        [
+            (escape_speed * (depth as f64).powf(1.0 - 2.0 * escape_speed.powf(45.0))) as u8,
+            (escape_speed * 70.0 - (880.0 * escape_speed.powf(18.0)) + (701.0 * escape_speed.powf(9.0)))
+                as u8,
+            (escape_speed * 80.0 + (escape_speed.powf(9.0) * (depth as f64))
+                - (950.0 * escape_speed.powf(99.0))) as u8,
+        ]
+    }
 }
 
 ///Computes the number of iterations needed for the values in a small region
