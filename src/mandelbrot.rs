@@ -167,12 +167,12 @@ fn color_column(
 }
 
 ///Determines the color of a pixel. These color curves were found through experimentation.
-fn color_pixel(escape_speed: f64, depth: u32) -> [u8; 3] {
+fn color_pixel(escape_speed: f64, iterations: u32) -> [u8; 3] {
     [
-        (escape_speed * (depth as f64).powf(1.0 - 2.0 * escape_speed.powf(45.0))) as u8,
+        (escape_speed * f64::from(iterations).powf(1.0 - 2.0 * escape_speed.powf(45.0))) as u8,
         (escape_speed * 70.0 - (880.0 * escape_speed.powf(18.0)) + (701.0 * escape_speed.powf(9.0)))
             as u8,
-        (escape_speed * 80.0 + (escape_speed.powf(9.0) * (depth as f64))
+        (escape_speed * 80.0 + (escape_speed.powf(9.0) * f64::from(iterations))
             - (950.0 * escape_speed.powf(99.0))) as u8,
     ]
 }
@@ -267,6 +267,6 @@ pub fn iterate(c_re: f64, c_im: f64, maxiterations: u32) -> f64 {
         return 0.0;
     }
 
-    ((maxiterations - iterations) as f64 - 4.0 * (z_re_sqr + z_im_sqr).sqrt().powf(-0.4))
-        / (maxiterations as f64)
+    (f64::from(maxiterations - iterations) - 4.0 * (z_re_sqr + z_im_sqr).sqrt().powf(-0.4))
+        / f64::from(maxiterations)
 }
