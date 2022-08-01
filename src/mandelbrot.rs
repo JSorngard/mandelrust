@@ -193,7 +193,7 @@ fn supersampled_iterate(
     c_imag: f64,
     real_delta: f64,
     imag_delta: f64,
-    depth: u32,
+    iterations: u32,
 ) -> f64 {
     let one_over_ssaa = if ssaa == 0 { 0.0 } else { 1.0 / f64::from(ssaa) };
 
@@ -212,7 +212,7 @@ fn supersampled_iterate(
         esc = iterate(
             c_real + rowoffset * real_delta,
             c_imag + coloffset * imag_delta,
-            depth,
+            iterations,
         );
         escape_speed += esc;
         samples += 1;
