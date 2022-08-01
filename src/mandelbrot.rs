@@ -71,7 +71,7 @@ pub fn render(
                 c_real,
                 render_parameters,
                 draw_region,
-                real as usize,
+                real,
                 start_imag,
                 mirror,
                 pixel_ptr.clone(),
