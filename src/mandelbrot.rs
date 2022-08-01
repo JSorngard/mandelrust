@@ -268,9 +268,9 @@ pub fn iterate(c_re: f64, c_im: f64, maxiterations: u32) -> f64 {
     }
 
     if iterations == maxiterations {
-        return 0.0;
+        0.0
+    } else {
+        (f64::from(maxiterations - iterations) - 4.0 * (z_re_sqr + z_im_sqr).sqrt().powf(-0.4))
+            / f64::from(maxiterations)
     }
-
-    (f64::from(maxiterations - iterations) - 4.0 * (z_re_sqr + z_im_sqr).sqrt().powf(-0.4))
-        / f64::from(maxiterations)
 }
