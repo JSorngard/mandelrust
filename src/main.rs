@@ -54,9 +54,9 @@ fn main() -> Result<(), Box<dyn Error>> {
     print!("\rEncoding and saving image");
     stdout().flush()?;
     let image_name = if args.record_params {
-        format!("re_{center_real}_im_{center_imag}_zoom_{zoom}.png")
+        format!("mandelbrot_set_at_re_{center_real}_im_{center_imag}_zoom_{zoom}.png")
     } else {
-        "m.png".to_owned()
+        "mandelbrot_set.png".to_owned()
     };
     img.save(&image_name)?;
     println!("\rSaved image as {image_name}          ");
