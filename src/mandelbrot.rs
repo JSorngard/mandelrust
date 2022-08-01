@@ -237,7 +237,7 @@ pub fn iterate(c_re: f64, c_im: f64, maxiterations: u64) -> f64 {
     let mag_sqr = c_re * c_re + c_imag_sqr;
 
     //Check whether the point is within the main cardioid or period 2 bulb.
-    if (c_re + 1.0).powf(2.0) + c_imag_sqr <= 0.0625
+    if (c_re + 1.0) * (c_re + 1.0) + c_imag_sqr <= 0.0625
         || mag_sqr * (8.0 * mag_sqr - 3.0) <= 0.09375 - c_re
     {
         return 0.0;
@@ -247,11 +247,11 @@ pub fn iterate(c_re: f64, c_im: f64, maxiterations: u64) -> f64 {
     let mut z_im = c_im;
     let mut z_re_sqr = c_re * c_re;
     let mut z_im_sqr = c_im * c_im;
-    
+
     //We have effectively performed one iteration of the function
     //by setting the starting values as above.
     let mut iterations = 1;
-    
+
     //Iterates the mandelbrot function.
     //This loop uses only 3 multiplications, which is the minimum.
     while iterations < maxiterations && z_re_sqr + z_im_sqr <= 36.0 {
