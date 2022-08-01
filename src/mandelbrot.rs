@@ -213,7 +213,7 @@ fn supersampled_iterate(
         esc = iterate(
             c_real + rowoffset * real_delta,
             c_imag + coloffset * imag_delta,
-            depth as u64,
+            depth,
         );
         escape_speed += esc;
         samples += 1;
@@ -243,16 +243,15 @@ pub fn iterate(c_re: f64, c_im: f64, maxiterations: u64) -> f64 {
         return 0.0;
     }
 
-    let mut z_re = 0.0;
-    let mut z_im = 0.0;
-    let mut z_re_sqr = 0.0;
-    let mut z_im_sqr = 0.0;
-    let mut iterations = 0;
-    let mut old_re = 0.0;
-    let mut old_im = 0.0;
-    let mut period = 0;
-    let tol = 1e-8;
-
+    let mut z_re = c_re;
+    let mut z_im = c_im;
+    let mut z_re_sqr = c_re * c_re;
+    let mut z_im_sqr = c_im * c_im;
+    
+    //We have effectively performed one iteration of the function
+    //by setting the starting value as above
+    let mut iterations = 1;
+    
     //Iterates the mandelbrot function.
     //This loop uses only 3 multiplications, which is the minimum.
     while iterations < maxiterations && z_re_sqr + z_im_sqr <= 36.0 {
@@ -263,18 +262,6 @@ pub fn iterate(c_re: f64, c_im: f64, maxiterations: u64) -> f64 {
         z_re_sqr = z_re * z_re;
         z_im_sqr = z_im * z_im;
         iterations += 1;
-
-        //If we have seen this value before we are in a cycle.
-        //They are always in the set, so we return 0.0
-        if (z_re - old_re).abs() < tol && (z_im - old_im).abs() < tol {
-            return 0.0;
-        }
-        period += 1;
-        if period > 10 {
-            period = 0;
-            old_re = z_re;
-            old_im = z_im;
-        }
     }
 
     if iterations == maxiterations {
