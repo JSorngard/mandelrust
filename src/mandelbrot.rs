@@ -249,7 +249,7 @@ pub fn iterate(c_re: f64, c_im: f64, maxiterations: u64) -> f64 {
     let mut z_im_sqr = c_im * c_im;
     
     //We have effectively performed one iteration of the function
-    //by setting the starting values as above
+    //by setting the starting values as above.
     let mut iterations = 1;
     
     //Iterates the mandelbrot function.
