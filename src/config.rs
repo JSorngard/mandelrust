@@ -45,7 +45,7 @@ pub struct Args {
         default_value_t = 3,
         help = "How many samples to compute for each pixel (along one direction, the actual number of samples is the square of this number)"
     )]
-    pub ssaa: u32,
+    pub ssaa: u8,
 
     #[clap(long, help = "Output the image in grayscale instead of color")]
     pub grayscale: bool,

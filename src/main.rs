@@ -45,7 +45,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     let draw_region = Frame::new(center_real, center_imag, real_distance, imag_distance);
 
-    let render_parameters = RenderParameters::new(xresolution, yresolution, ssaa, args.grayscale);
+    let render_parameters = RenderParameters::new(xresolution, yresolution, 255, ssaa, args.grayscale);
 
     //Render the image
     let img = render(render_parameters, draw_region)?;

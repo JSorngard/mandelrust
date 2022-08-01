@@ -21,15 +21,17 @@ impl Frame {
 pub struct RenderParameters {
     pub x_resolution: usize,
     pub y_resolution: usize,
-    pub ssaa: u32,
+    pub iterations: u32,
+    pub ssaa: u8,
     pub grayscale: bool,
 }
 
 impl RenderParameters {
-    pub fn new(x_resolution: usize, y_resolution: usize, ssaa: u32, grayscale: bool) -> Self {
+    pub fn new(x_resolution: usize, y_resolution: usize, iterations: u32, ssaa: u8, grayscale: bool) -> Self {
         RenderParameters {
             x_resolution,
             y_resolution,
+            iterations,
             ssaa,
             grayscale,
         }

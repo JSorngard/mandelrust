@@ -122,7 +122,6 @@ fn color_column(
     let yresolution = render_parameters.y_resolution;
 
     let mut mirror_from: usize = 0;
-    let depth: u64 = 255;
     let real_delta = draw_region.real_distance / (xresolution - 1) as f64;
     let imag_delta = draw_region.imag_distance / (yresolution - 1) as f64;
 
@@ -148,9 +147,9 @@ fn color_column(
                     c_imag,
                     real_delta,
                     imag_delta,
-                    depth,
+                    render_parameters.iterations,
                 ),
-                depth,
+                render_parameters.iterations,
             );
             result[y] = colors[0];
             result[y + 1] = colors[1];
@@ -168,7 +167,7 @@ fn color_column(
 }
 
 ///Determines the color of a pixel. These color curves were found through experimentation.
-fn color_pixel(escape_speed: f64, depth: u64) -> [u8; 3] {
+fn color_pixel(escape_speed: f64, depth: u32) -> [u8; 3] {
     [
         (escape_speed * (depth as f64).powf(1.0 - 2.0 * escape_speed.powf(45.0))) as u8,
         (escape_speed * 70.0 - (880.0 * escape_speed.powf(18.0)) + (701.0 * escape_speed.powf(9.0)))
@@ -189,14 +188,14 @@ fn color_pixel(escape_speed: f64, depth: u64) -> [u8; 3] {
 ///    .  x  .  | imag_delta
 ///    .  .  .  |
 fn supersampled_iterate(
-    ssaa: u32,
+    ssaa: u8,
     c_real: f64,
     c_imag: f64,
     real_delta: f64,
     imag_delta: f64,
-    depth: u64,
+    depth: u32,
 ) -> f64 {
-    let one_over_ssaa = if ssaa == 0 { 0.0 } else { 1.0 / (ssaa as f64) };
+    let one_over_ssaa = if ssaa == 0 { 0.0 } else { 1.0 / f64::from(ssaa) };
 
     let mut samples: u32 = 0;
     let mut escape_speed: f64 = 0.0;
@@ -205,9 +204,9 @@ fn supersampled_iterate(
     let mut esc: f64;
 
     //Supersampling loop.
-    for k in 1..=i64::pow(ssaa as i64, 2) {
-        coloffset = ((k % (ssaa as i64) - 1) as f64) * one_over_ssaa;
-        rowoffset = (((k - 1) as f64) / (ssaa as f64) - 1.0) * one_over_ssaa;
+    for k in 1..=i32::from(ssaa).pow(2) {
+        coloffset = (f64::from(k % i32::from(ssaa) - 1)) * one_over_ssaa;
+        rowoffset = (f64::from(k - 1) / f64::from(ssaa) - 1.0) * one_over_ssaa;
 
         //Compute escape speed of point.
         esc = iterate(
@@ -225,14 +224,14 @@ fn supersampled_iterate(
             break;
         }
     }
-    escape_speed /= samples as f64;
+    escape_speed /= f64::from(samples);
     escape_speed
 }
 
 ///Iterates the Mandelbrot function (z_(n+1) = z_n^2 + c) on
 ///the given c starting with z_0 = 0 until it either escapes
 ///or the loop exceeds the maximum number of iterations.
-pub fn iterate(c_re: f64, c_im: f64, maxiterations: u64) -> f64 {
+pub fn iterate(c_re: f64, c_im: f64, maxiterations: u32) -> f64 {
     let c_imag_sqr = c_im * c_im;
     let mag_sqr = c_re * c_re + c_imag_sqr;
 
