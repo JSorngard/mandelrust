@@ -37,7 +37,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     } else {
         print!("n");
     }
-    print!(" image with a resolution of {xresolution}x{yresolution}");
+    print!(" image with a resolution of {xresolution}x{yresolution} pixels");
     if zoom != 1.0 {
         print!(" zoomed by a factor of {zoom}");
     }
