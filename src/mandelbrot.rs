@@ -193,9 +193,13 @@ fn supersampled_iterate(
     c_imag: f64,
     real_delta: f64,
     imag_delta: f64,
-    iterations: u32,
+    maxiterations: u32,
 ) -> f64 {
-    let one_over_ssaa = if ssaa == 0 { 0.0 } else { 1.0 / f64::from(ssaa) };
+    let one_over_ssaa = if ssaa == 0 {
+        0.0
+    } else {
+        1.0 / f64::from(ssaa)
+    };
 
     let mut samples: u32 = 0;
     let mut escape_speed: f64 = 0.0;
@@ -204,7 +208,7 @@ fn supersampled_iterate(
     let mut esc: f64;
 
     //Supersampling loop.
-    for k in 1..=i32::from(ssaa).pow(2) {
+    for k in 1..=i32::from(ssaa) * i32::from(ssaa) {
         coloffset = (f64::from(k % i32::from(ssaa) - 1)) * one_over_ssaa;
         rowoffset = (f64::from(k - 1) / f64::from(ssaa) - 1.0) * one_over_ssaa;
 
@@ -212,7 +216,7 @@ fn supersampled_iterate(
         esc = iterate(
             c_real + rowoffset * real_delta,
             c_imag + coloffset * imag_delta,
-            iterations,
+            maxiterations,
         );
         escape_speed += esc;
         samples += 1;

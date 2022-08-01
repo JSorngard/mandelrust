@@ -27,7 +27,13 @@ pub struct RenderParameters {
 }
 
 impl RenderParameters {
-    pub fn new(x_resolution: usize, y_resolution: usize, iterations: u32, ssaa: u8, grayscale: bool) -> Self {
+    pub fn new(
+        x_resolution: usize,
+        y_resolution: usize,
+        iterations: u32,
+        ssaa: u8,
+        grayscale: bool,
+    ) -> Self {
         RenderParameters {
             x_resolution,
             y_resolution,
