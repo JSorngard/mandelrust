@@ -245,8 +245,8 @@ pub fn iterate(c_re: f64, c_im: f64, maxiterations: u64) -> f64 {
 
     let mut z_re = c_re;
     let mut z_im = c_im;
-    let mut z_re_sqr = c_re * c_re;
-    let mut z_im_sqr = c_im * c_im;
+    let mut z_re_sqr = mag_sqr - c_imag_sqr;
+    let mut z_im_sqr = c_imag_sqr;
 
     //We have effectively performed one iteration of the function
     //by setting the starting values as above.
