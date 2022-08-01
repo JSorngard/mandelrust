@@ -58,8 +58,8 @@ fn main() -> Result<(), Box<dyn Error>> {
     } else {
         "m.png".to_owned()
     };
-    img.save(image_name)?;
-    println!("\rDone                     ");
+    img.save(&image_name)?;
+    println!("\rSaved image as {image_name}          ");
 
     //Everything finished correctly!
     Ok(())
