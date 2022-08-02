@@ -52,7 +52,7 @@ pub struct Args {
 
     #[clap(
         long,
-        help = "Save information about the location in the complex plane that the image shows in the file name"
+        help = "Save information about the image location in the complex plane in the file name"
     )]
     pub record_params: bool,
 
