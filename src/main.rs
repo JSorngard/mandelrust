@@ -30,23 +30,27 @@ fn main() -> Result<(), Box<dyn Error>> {
         return Err("SSAA factor must be larger than 0".into());
     }
 
-    //Output some basic information about what the program will be rendering.
-    print!("---- Generating a");
-    if ssaa != 1 {
-        print!(" {} times supersampled", ssaa * ssaa);
-    } else {
-        print!("n");
-    }
-    print!(" image with a resolution of {xresolution}x{yresolution} pixels");
-    if zoom != 1.0 {
-        print!(" zoomed by a factor of {zoom}");
-    }
-    println!(" ----");
-
     let draw_region = Frame::new(center_real, center_imag, real_distance, imag_distance);
 
     let render_parameters =
         RenderParameters::new(xresolution, yresolution, 255, ssaa, args.grayscale);
+
+    //Output some basic information about what the program will be rendering.
+    let mut header: String = "---- Generating a".to_owned();
+    if ssaa != 1 {
+        header.push_str(&format!(" {} times supersampled", ssaa * ssaa));
+    } else {
+        header.push_str("n");
+    }
+    header.push_str(&format!(
+        " image with a resolution of {xresolution} by {yresolution} pixels"
+    ));
+    if zoom != 1.0 {
+        header.push_str(&format!(" zoomed by a factor of {zoom}"));
+    }
+    header.push_str(" ----");
+
+    println!("{header}");
 
     //Render the image
     let img = render(render_parameters, draw_region)?;
