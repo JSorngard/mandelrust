@@ -36,21 +36,23 @@ fn main() -> Result<(), Box<dyn Error>> {
         RenderParameters::new(xresolution, yresolution, 255, ssaa, args.grayscale);
 
     //Output some basic information about what the program will be rendering.
-    let mut header: String = "---- Generating a".to_owned();
+    let mut header = Vec::new();
+    write!(&mut header, "---- Generating a")?;
     if ssaa != 1 {
-        header.push_str(&format!(" {} times supersampled", ssaa * ssaa));
+        write!(&mut header, " {} times supersampled", ssaa * ssaa)?;
     } else {
-        header.push_str("n");
+        write!(&mut header, "n")?;
     }
-    header.push_str(&format!(
+    write!(
+        &mut header,
         " image with a resolution of {xresolution} by {yresolution} pixels"
-    ));
+    )?;
     if zoom != 1.0 {
-        header.push_str(&format!(" zoomed by a factor of {zoom}"));
+        write!(&mut header, " zoomed by a factor of {zoom}")?;
     }
-    header.push_str(" ----");
+    write!(&mut header, " ----")?;
 
-    println!("{header}");
+    println!("{}", std::str::from_utf8(&header)?);
 
     //Render the image
     let img = render(render_parameters, draw_region)?;
