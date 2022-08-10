@@ -37,16 +37,16 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     //Output some basic information about what the program will be rendering.
     let mut header = Vec::new();
     write!(&mut header, "---- Generating a")?;
-    if ssaa != 1 {
-        write!(&mut header, " {} times supersampled", ssaa * ssaa)?;
-    } else {
+    if ssaa == 1 {
         write!(&mut header, "n")?;
+    } else {
+        write!(&mut header, " {} times supersampled", ssaa * ssaa)?;
     }
     write!(
         &mut header,
         " image with a resolution of {xresolution} by {yresolution} pixels"
     )?;
-    if zoom != 1.0 {
+    if (zoom - 1.0).abs() > f64::EPSILON {
         write!(&mut header, " zoomed by a factor of {zoom}")?;
     }
     write!(&mut header, " ----")?;
