@@ -10,25 +10,25 @@ use rayon::prelude::*;
 
 ///Takes in variables describing where to render and at what resolution
 ///and produces an image of the Mandelbrot set.
-///xresolution and yresolution is the resolution in pixels in the real
+///`xresolution` and `yresolution` is the resolution in pixels in the real
 ///and imaginary direction respectively.
-///ssaa is the number of supersampled points along one direction. If ssaa
+///`ssaa` is the number of supersampled points along one direction. If `ssaa`
 ///is e.g. 3, then a supersampled pixel will be sampled 3^2 = 9 times.
 ///region contains:
-/// center_real and center_imag are the real and imaginary parts of the
+/// `center_real` and `center_imag` are the real and imaginary parts of the
 /// point at the center of the image.
-/// real_distance and imag_distance describe the size of the region in the
+/// `real_distance` and `imag_distance` describe the size of the region in the
 /// complex plane to render.
 ///
-///            real_distance
+///           `real_distance`
 /// |------------------------------|
 /// |                              |
-/// |   center_real+center_imag*i  | imag_distance
+/// |`center_real`+`center_imag`*i | `imag_distance`
 /// |                              |
 /// |------------------------------|
 ///
-///If real_distance = imag_distance = 1,
-///xresolution = yresolution = 100 and center_real = center_imag = 0 a square
+///If `real_distance` = `imag_distance` = 1,
+///`xresolution` = `yresolution` = 100 and `center_real` = `center_imag` = 0 a square
 ///of size 1x1 centered on the origin will be computed and rendered as a
 ///100x100 pixel image.
 pub fn render(
@@ -179,13 +179,13 @@ fn color_pixel(escape_speed: f64, maxiterations: u32) -> [u8; 3] {
 
 ///Computes the number of iterations needed for the values in a small region
 ///around the given value to escape and returns their average.
-///If x is the location of c_real + c_imag*i and ssaa = 3,
+///If x is the location of `c_real` + `c_imag`*i and `ssaa` = 3,
 ///then the dots are also sampled:
 ///
-///   real_delta
+///   `real_delta`
 ///    -------
 ///    .  .  .  |
-///    .  x  .  | imag_delta
+///    .  x  .  | `imag_delta`
 ///    .  .  .  |
 fn supersampled_iterate(
     ssaa: u8,
@@ -232,8 +232,9 @@ fn supersampled_iterate(
     escape_speed
 }
 
-///Iterates the Mandelbrot function (z_(n+1) = z_n^2 + c) on
-///the given c starting with z_0 = 0 until it either escapes
+///Iterates the Mandelbrot function
+/// z_(n+1) = z_n^2 + c
+///on the given c starting with z_0 = 0 until it either escapes
 ///or the loop exceeds the maximum number of iterations.
 pub fn iterate(c_re: f64, c_im: f64, maxiterations: u32) -> f64 {
     let c_imag_sqr = c_im * c_im;
