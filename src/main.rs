@@ -1,4 +1,3 @@
-use std::error::Error;
 use std::io::{stdout, Write};
 
 use crate::{
@@ -13,7 +12,7 @@ mod config;
 mod lib;
 mod mandelbrot;
 
-fn main() -> Result<(), Box<dyn Error>> {
+fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args = Args::parse();
 
     let center_real = args.real_center;
