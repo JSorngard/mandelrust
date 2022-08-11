@@ -187,7 +187,7 @@ fn color_pixel(escape_speed: f64, maxiterations: u32) -> [u8; 3] {
 ///    .  .  .  |
 ///    .  x  .  | `imag_delta`
 ///    .  .  .  |
-fn supersampled_iterate(
+pub fn supersampled_iterate(
     ssaa: u8,
     c_real: f64,
     c_imag: f64,
