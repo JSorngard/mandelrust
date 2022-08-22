@@ -89,7 +89,7 @@ pub fn render(
         xresolution.try_into().unwrap(),
         finished_pixel_data,
     )
-    .unwrap();
+    .ok_or("unable to construct image buffer from generated data")?;
 
     print!("\rProcessing image");
     stdout().flush()?;
