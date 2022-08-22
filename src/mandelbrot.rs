@@ -164,6 +164,7 @@ fn color_column(
         //and copy the results into it
         pixels[i] = result[j];
     }
+    //unlock the mutex here by dropping the `MutexGuard` as it goes out of scope.
 }
 
 ///Determines the color of a pixel. These color curves were found through experimentation.
