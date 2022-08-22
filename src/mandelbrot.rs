@@ -159,7 +159,7 @@ fn color_column(
     }
 
     //Unlock the mutex for the image pixels
-    let mut pixels = image.lock().unwrap();
+    let mut pixels = image.lock().expect("mutex was poisoned, aborting");
     for (j, i) in (xindex * yresolution * 3..yresolution * (xindex + 1) * 3).enumerate() {
         //and copy the results into it
         pixels[i] = result[j];
