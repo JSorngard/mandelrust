@@ -82,11 +82,12 @@ pub fn render(
     stdout().flush()?;
 
     //Extract the data from the mutex
-    let finished_pixel_data = (*pixel_ptr.lock().unwrap()).clone();
+    let finished_pixel_data =
+        (*pixel_ptr.lock().expect("the mutex was poisoned, aborting")).clone();
     //and place it in an image buffer
     let mut img = image::ImageBuffer::<image::Rgb<u8>, Vec<u8>>::from_vec(
-        yresolution.try_into().unwrap(),
-        xresolution.try_into().unwrap(),
+        yresolution.try_into()?,
+        xresolution.try_into()?,
         finished_pixel_data,
     )
     .ok_or("unable to construct image buffer from generated data")?;
