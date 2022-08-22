@@ -158,13 +158,13 @@ fn color_column(
         }
     }
 
-    //Unlock the mutex for the image pixels
+    //Lock the mutex for the image pixels
     let mut pixels = image.lock().expect("mutex was poisoned, aborting");
     for (j, i) in (xindex * yresolution * 3..yresolution * (xindex + 1) * 3).enumerate() {
         //and copy the results into it
         pixels[i] = result[j];
     }
-    //unlock the mutex here by dropping the `MutexGuard` as it goes out of scope.
+    //Unlock the mutex here by dropping the `MutexGuard` as it goes out of scope.
 }
 
 ///Determines the color of a pixel. These color curves were found through experimentation.
