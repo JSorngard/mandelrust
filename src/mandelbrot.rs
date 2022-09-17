@@ -2,7 +2,7 @@ use std::error::Error;
 use std::io::{stdout, Write};
 use std::sync::{Arc, Mutex};
 
-use crate::lib::{Frame, RenderParameters};
+use crate::structs::{Frame, RenderParameters};
 
 use image::DynamicImage;
 use indicatif::ParallelProgressIterator;
