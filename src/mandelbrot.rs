@@ -152,12 +152,9 @@ fn color_column(
                 render_parameters.iterations,
             );
             let colors: [u8; 3] = if grayscale {
-                [(255.0*distance) as u8; 3]
+                [(255.0 * distance) as u8; 3]
             } else {
-                color_pixel(
-                    distance,
-                    render_parameters.iterations,
-                )
+                color_pixel(distance, render_parameters.iterations)
             };
             result[y] = colors[0];
             result[y + 1] = colors[1];

@@ -2,15 +2,15 @@ use std::io::{stdout, Write};
 
 use crate::{
     config::Args,
-    structs::{Frame, RenderParameters},
     mandelbrot::render,
+    structs::{Frame, RenderParameters},
 };
 
 use clap::Parser;
 
 mod config;
-mod structs;
 mod mandelbrot;
+mod structs;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args = Args::parse();
