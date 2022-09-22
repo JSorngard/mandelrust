@@ -152,7 +152,7 @@ fn color_column(
                 imag_delta,
                 iterations,
             );
-            let colors: [u8; 3] = if grayscale {
+            let colors = if grayscale {
                 [(iterations as f64 * distance) as u8; 3]
             } else {
                 color_pixel(distance, iterations)
