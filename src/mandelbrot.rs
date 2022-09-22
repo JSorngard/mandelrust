@@ -122,6 +122,8 @@ fn color_column(
     let xresolution = render_parameters.x_resolution;
     let yresolution = render_parameters.y_resolution;
 
+    let grayscale = render_parameters.grayscale;
+
     let mut mirror_from: usize = 0;
     let real_delta = draw_region.real_distance / (xresolution - 1) as f64;
     let imag_delta = draw_region.imag_distance / (yresolution - 1) as f64;
@@ -141,17 +143,22 @@ fn color_column(
             result[y + 2] = result[mirror_from - 1];
             mirror_from -= 3;
         } else {
-            let colors = color_pixel(
-                supersampled_iterate(
-                    render_parameters.ssaa,
-                    c_real,
-                    c_imag,
-                    real_delta,
-                    imag_delta,
-                    render_parameters.iterations,
-                ),
+            let distance = supersampled_iterate(
+                render_parameters.ssaa,
+                c_real,
+                c_imag,
+                real_delta,
+                imag_delta,
                 render_parameters.iterations,
             );
+            let colors: [u8; 3] = if grayscale {
+                [(255.0*distance) as u8; 3]
+            } else {
+                color_pixel(
+                    distance,
+                    render_parameters.iterations,
+                )
+            };
             result[y] = colors[0];
             result[y + 1] = colors[1];
             result[y + 2] = colors[2];
