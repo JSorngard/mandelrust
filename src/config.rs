@@ -68,6 +68,7 @@ pub struct Args {
     pub zoom: f64,
 }
 
+/// Tries to parse the input string slice into an f64 > 0.
 fn positive_double(s: &str) -> Result<f64, String> {
     let x: f64 = s.parse().map_err(|e: ParseFloatError| e.to_string())?;
 
