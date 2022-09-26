@@ -1,4 +1,5 @@
 use clap::Parser;
+use std::num::{NonZeroU8, NonZeroUsize, ParseFloatError};
 
 ///Renders an image of the Mandelbrot set
 #[derive(Parser, Debug)]
@@ -22,7 +23,7 @@ pub struct Args {
     #[clap(
         short,
         long,
-        value_parser,
+        value_parser(positive_double),
         default_value_t = 1.5,
         help = "The aspect ratio of the image"
     )]
@@ -32,20 +33,20 @@ pub struct Args {
         short,
         long,
         value_parser,
-        default_value_t = 2160,
+        default_value_t = NonZeroUsize::new(2160).unwrap(),
         help = "The number of pixels along the y-axis of the image"
     )]
-    pub pixels: usize,
+    pub pixels: NonZeroUsize,
 
     #[clap(
         short,
         long,
         value_parser,
         value_name = "SQRT(SSAA FACTOR)",
-        default_value_t = 3,
+        default_value_t = NonZeroU8::new(3).unwrap(),
         help = "How many samples to compute for each pixel (along one direction, the actual number of samples is the square of this number)"
     )]
-    pub ssaa: u8,
+    pub ssaa: NonZeroU8,
 
     #[clap(long, help = "Output the image in grayscale instead of color")]
     pub grayscale: bool,
@@ -59,10 +60,20 @@ pub struct Args {
     #[clap(
         short,
         long,
-        value_parser,
+        value_parser(positive_double),
         value_name = "ZOOM LEVEL",
         default_value_t = 1.0,
         help = "How far in to zoom on the given center point"
     )]
     pub zoom: f64,
+}
+
+fn positive_double(s: &str) -> Result<f64, String> {
+    let x: f64 = s.parse().map_err(|e: ParseFloatError| e.to_string())?;
+
+    if x > 0.0 {
+        Ok(x)
+    } else {
+        Err("the value must be positive".into())
+    }
 }

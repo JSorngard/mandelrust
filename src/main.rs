@@ -1,4 +1,7 @@
-use std::io::{stdout, Write};
+use std::{
+    error::Error,
+    io::{stdout, Write},
+};
 
 use crate::{
     config::Args,
@@ -12,22 +15,19 @@ mod config;
 mod mandelbrot;
 mod structs;
 
-fn main() -> Result<(), Box<dyn std::error::Error>> {
+fn main() -> Result<(), Box<dyn Error>> {
     let args = Args::parse();
 
     let center_real = args.real_center;
     let center_imag = args.imag_center;
-    let yresolution = args.pixels;
+    let yresolution = args.pixels.get();
     let zoom = args.zoom;
-    let ssaa = args.ssaa;
+    let ssaa = args.ssaa.get();
+    let aspect_ratio = args.aspect_ratio;
 
-    let xresolution = (args.aspect_ratio * (yresolution as f64)) as usize;
+    let xresolution = (aspect_ratio * (yresolution as f64)) as usize;
     let imag_distance = 8.0 / (3.0 * zoom);
     let real_distance = args.aspect_ratio * imag_distance;
-
-    if ssaa == 0 {
-        return Err("SSAA factor must be larger than 0".into());
-    }
 
     let draw_region = Frame::new(center_real, center_imag, real_distance, imag_distance);
 
