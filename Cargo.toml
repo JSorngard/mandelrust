@@ -1,16 +1,16 @@
 [package]
 name = "mandelrust"
-version = "2.1.1"
+version = "3.0.0"
 authors = ["Johanna Sörngård (jsorngard@gmail.com)"]
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-clap = { version = "3.2.17", features = ["derive"] }
-image = "0.24.3"
-rayon = "1.5.3"
-indicatif = { version = "0.16.2", features = ["rayon"] }
+clap = { version = "3.2", features = ["derive"] }
+image = "0.24"
+rayon = "1.5"
+indicatif = { version = "0.16", features = ["rayon"] }
 
 [profile.release]
 lto = "fat"
