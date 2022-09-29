@@ -8,29 +8,32 @@ use image::DynamicImage;
 use indicatif::ParallelProgressIterator;
 use rayon::prelude::*;
 
-///Takes in variables describing where to render and at what resolution
-///and produces an image of the Mandelbrot set.
-///`xresolution` and `yresolution` is the resolution in pixels in the real
-///and imaginary direction respectively.
-///`ssaa` is the number of supersampled points along one direction. If `ssaa`
-///is e.g. 3, then a supersampled pixel will be sampled 3^2 = 9 times.
-///region contains:
+/// Takes in variables describing where to render and at what resolution
+/// and produces an image of the Mandelbrot set.
+/// `xresolution` and `yresolution` is the resolution in pixels in the real
+/// and imaginary direction respectively.
+/// `ssaa` is the number of supersampled points along one direction. If `ssaa`
+/// is e.g. 3, then a supersampled pixel will be sampled 3^2 = 9 times.
+/// region contains:
+/// 
 /// `center_real` and `center_imag` are the real and imaginary parts of the
 /// point at the center of the image.
+/// 
 /// `real_distance` and `imag_distance` describe the size of the region in the
 /// complex plane to render.
-///```text
+/// 
+/// ```text
 ///           real_distance
-/// |------------------------------|
-/// |                              |
-/// | center_real + center_imag *i |  imag_distance
-/// |                              |
-/// |------------------------------|
-///```
-///If `real_distance` = `imag_distance` = 1,
-///`xresolution` = `yresolution` = 100 and `center_real` = `center_imag` = 0 a square
-///of size 1x1 centered on the origin will be computed and rendered as a
-///100x100 pixel image.
+/// |-------------------------------|
+/// |                               |
+/// |              x                |  imag_distance
+/// |  center_real + center_imag*i  |
+/// |-------------------------------|
+/// ```
+/// If `real_distance` = `imag_distance` = 1,
+/// `xresolution` = `yresolution` = 100 and `center_real` = `center_imag` = 0 a square
+/// of size 1x1 centered on the origin will be computed and rendered as a
+/// 100x100 pixel image.
 pub fn render(
     render_parameters: RenderParameters,
     draw_region: Frame,
@@ -109,7 +112,7 @@ pub fn render(
     }
 }
 
-///Computes the colors of the pixels in a column of the image of the mandelbrot set.
+/// Computes the colors of the pixels in a column of the image of the mandelbrot set.
 fn color_column(
     c_real: f64,
     render_parameters: RenderParameters,
@@ -184,11 +187,11 @@ fn color_pixel(escape_speed: f64, maxiterations: u32) -> [u8; 3] {
     ]
 }
 
-///Computes the number of iterations needed for the values in a small region
-///around the given value to escape and returns their average.
-///If x is the location of `c_real` + `c_imag`*i and `ssaa` = 3,
-///then the dots are also sampled:
-///```text
+/// Computes the number of iterations needed for the values in a small region
+/// around the given value to escape and returns their average.
+/// If x is the location of `c_real` + `c_imag`*i and `ssaa` = 3,
+/// then the dots are also sampled:
+/// ```text
 ///   real_delta
 ///    -------
 ///    .  .  .  |
