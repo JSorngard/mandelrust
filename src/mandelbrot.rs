@@ -19,14 +19,14 @@ use rayon::prelude::*;
 /// point at the center of the image.
 /// `real_distance` and `imag_distance` describe the size of the region in the
 /// complex plane to render.
-///
-///           `real_distance`
+///```text
+///           real_distance
 /// |------------------------------|
 /// |                              |
-/// |`center_real`+`center_imag`*i | `imag_distance`
+/// | center_real + center_imag *i |  imag_distance
 /// |                              |
 /// |------------------------------|
-///
+///```
 ///If `real_distance` = `imag_distance` = 1,
 ///`xresolution` = `yresolution` = 100 and `center_real` = `center_imag` = 0 a square
 ///of size 1x1 centered on the origin will be computed and rendered as a
@@ -188,12 +188,13 @@ fn color_pixel(escape_speed: f64, maxiterations: u32) -> [u8; 3] {
 ///around the given value to escape and returns their average.
 ///If x is the location of `c_real` + `c_imag`*i and `ssaa` = 3,
 ///then the dots are also sampled:
-///
-///   `real_delta`
+///```text
+///   real_delta
 ///    -------
 ///    .  .  .  |
-///    .  x  .  | `imag_delta`
+///    .  x  .  | imag_delta
 ///    .  .  .  |
+/// ```
 pub fn supersampled_iterate(
     ssaa: u8,
     c_real: f64,
