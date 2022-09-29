@@ -4,7 +4,7 @@ use std::{
 };
 
 use crate::{
-    config::Args,
+    config::Cli,
     mandelbrot::render,
     structs::{Frame, RenderParameters},
 };
@@ -16,7 +16,7 @@ mod mandelbrot;
 mod structs;
 
 fn main() -> Result<(), Box<dyn Error>> {
-    let args = Args::parse();
+    let args = Cli::parse();
 
     let center_real = args.real_center;
     let center_imag = args.imag_center;

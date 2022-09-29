@@ -1,70 +1,64 @@
 use clap::Parser;
 use std::num::{NonZeroU8, NonZeroUsize, ParseFloatError};
 
-///Renders an image of the Mandelbrot set
 #[derive(Parser, Debug)]
-#[clap(author, version, about, long_about = None)]
-pub struct Args {
+#[command(author, version, about, long_about = None)]
+/// Renders an image of the Mandelbrot set
+pub struct Cli {
     //This struct contains the runtime specified configuration of the program.
-    #[clap(short, long, value_parser, value_name = "RE(CENTER)", default_value_t = -0.75, help= "The real part of the center point of the image", allow_hyphen_values = true)]
+    #[arg(short, long, value_name = "RE(CENTER)", default_value_t = -0.75, allow_hyphen_values = true)]
+    /// The real part of the center point of the image
     pub real_center: f64,
 
-    #[clap(
+    #[arg(
         short,
         long,
-        value_parser,
         value_name = "IM(CENTER)",
         default_value_t = 0.0,
-        help = "The imaginary part of the center point of the image",
         allow_hyphen_values = true
     )]
+    /// The imaginary part of the center point of the image
     pub imag_center: f64,
 
-    #[clap(
-        short,
-        long,
-        value_parser(positive_double),
-        default_value_t = 1.5,
-        help = "The aspect ratio of the image"
-    )]
+    #[arg(short, long, value_parser(positive_double), default_value_t = 1.5)]
+    /// The aspect ratio of the image
     pub aspect_ratio: f64,
 
-    #[clap(
+    #[arg(
         short,
         long,
-        value_parser,
-        default_value_t = NonZeroUsize::new(2160).unwrap(),
-        help = "The number of pixels along the y-axis of the image"
+        //unwrap is okay because 2160 is not 0.
+        default_value_t = NonZeroUsize::new(2160).unwrap()
     )]
+    /// The number of pixels along the y-axis of the image
     pub pixels: NonZeroUsize,
 
-    #[clap(
+    #[arg(
         short,
         long,
-        value_parser,
         value_name = "SQRT(SSAA FACTOR)",
-        default_value_t = NonZeroU8::new(3).unwrap(),
-        help = "How many samples to compute for each pixel (along one direction, the actual number of samples is the square of this number)"
+        //unwrap is okay because 3 is not 0.
+        default_value_t = NonZeroU8::new(3).unwrap()
     )]
+    /// How many samples to compute for each pixel (along one direction, the actual number of samples is the square of this number)
     pub ssaa: NonZeroU8,
 
-    #[clap(long, help = "Output the image in grayscale instead of color")]
+    #[arg(long)]
+    /// Output the image in grayscale instead of color
     pub grayscale: bool,
 
-    #[clap(
-        long,
-        help = "Save information about the image location in the complex plane in the file name"
-    )]
+    #[arg(long)]
+    /// Save information about the image location in the complex plane in the file name
     pub record_params: bool,
 
-    #[clap(
+    #[arg(
         short,
         long,
         value_parser(positive_double),
         value_name = "ZOOM LEVEL",
-        default_value_t = 1.0,
-        help = "How far in to zoom on the given center point"
+        default_value_t = 1.0
     )]
+    /// How far in to zoom on the given center point
     pub zoom: f64,
 }
 
@@ -77,4 +71,10 @@ fn positive_double(s: &str) -> Result<f64, String> {
     } else {
         Err("the value must be positive".into())
     }
+}
+
+#[test]
+fn verify_cli() {
+    use clap::CommandFactory;
+    Cli::command().debug_assert()
 }
