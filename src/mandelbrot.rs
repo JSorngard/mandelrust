@@ -198,8 +198,8 @@ fn color_pixel(escape_speed: f64, maxiterations: u32) -> [u8; 3] {
     ]
 }
 
-/// Computes the number of iterations needed for the values in a small region
-/// around the given value to escape and returns their average.
+/// Computes the escape speed for the values in a small region
+/// around the given value and returns their average.
 /// If x is the location of `c_real` + `c_imag`*i and `ssaa` = 3,
 /// then the dots are also sampled:
 /// ```text
