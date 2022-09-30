@@ -5,7 +5,7 @@ use clap::{ArgGroup, Parser};
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
 #[clap(group(
-    ArgGroup::new("nondefault_iteration").args(&["max_iterations"]).requires("grayscale")
+    ArgGroup::new("nondefault_iteration").arg("max_iterations").requires("grayscale")
 ))]
 /// Renders an image of the Mandelbrot set
 pub struct Cli {
