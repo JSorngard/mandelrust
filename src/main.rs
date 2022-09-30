@@ -23,6 +23,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     let yresolution = args.pixels.get();
     let zoom = args.zoom;
     let ssaa = args.ssaa.get();
+    let max_iterations = args.max_iterations.get();
     let aspect_ratio = args.aspect_ratio;
 
     let xresolution = (aspect_ratio * (yresolution as f64)) as usize;
@@ -31,8 +32,13 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     let draw_region = Frame::new(center_real, center_imag, real_distance, imag_distance);
 
-    let render_parameters =
-        RenderParameters::new(xresolution, yresolution, 255, ssaa, args.grayscale);
+    let render_parameters = RenderParameters::new(
+        xresolution,
+        yresolution,
+        max_iterations,
+        ssaa,
+        args.grayscale,
+    );
 
     //Output some basic information about what the program will be rendering.
     let mut header = Vec::new();
@@ -59,7 +65,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     print!("\rEncoding and saving image");
     stdout().flush()?;
     let image_name = if args.record_params {
-        format!("mandelbrot_set_at_re_{center_real}_im_{center_imag}_zoom_{zoom}.png")
+        format!("mandelbrot_set_at_re_{center_real}_im_{center_imag}_zoom_{zoom}_maxiters_{max_iterations}.png")
     } else {
         "mandelbrot_set.png".to_owned()
     };
