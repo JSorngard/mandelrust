@@ -149,6 +149,7 @@ fn color_column(
     for y in (0..yresolution * 3).step_by(3) {
         //Compute the imaginary part at this pixel
         c_imag = start_imag + draw_region.imag_distance * (y as f64) / (3.0 * yresolution as f64);
+
         //If we have rendered all the pixels with
         //negative imaginary part for this real
         //part we just mirror this pixel
@@ -166,11 +167,13 @@ fn color_column(
                 imag_delta,
                 max_iterations,
             );
+
             let colors = if grayscale {
                 [(255.0 * distance) as u8; 3]
             } else {
                 color_pixel(distance, max_iterations)
             };
+
             result[y] = colors[0];
             result[y + 1] = colors[1];
             result[y + 2] = colors[2];
