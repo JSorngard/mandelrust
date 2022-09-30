@@ -10,6 +10,11 @@ use rayon::prelude::*;
 
 /// Takes in variables describing where to render and at what resolution
 /// and produces an image of the Mandelbrot set.
+/// 
+/// `render_parameters` contains `xresolution`, `yresolution`, `iterations`, `ssaa` and `grayscale`.
+/// 
+/// `draw_region` contains `center_real`, `centar_imag`, `real_distance` and `imag_distance`.
+/// 
 /// `xresolution` and `yresolution` is the resolution in pixels in the real
 /// and imaginary direction respectively.
 /// `ssaa` is the number of supersampled points along one direction. If `ssaa`
@@ -34,6 +39,12 @@ use rayon::prelude::*;
 /// `xresolution` = `yresolution` = 100 and `center_real` = `center_imag` = 0 a square
 /// of size 1x1 centered on the origin will be computed and rendered as a
 /// 100x100 pixel image.
+/// 
+/// `iterations` is the maximum number of iterations to compute for each pixel sample before labeling
+/// a point as part of the set. If this is set to anything other than 255, the grayscale option should probably be
+/// enabled for the best looking results, as the color curves were chosen under that assumption.
+/// 
+/// If `grayscale` is true the image is rendered in grayscale instead of color.
 pub fn render(
     render_parameters: RenderParameters,
     draw_region: Frame,
@@ -41,12 +52,12 @@ pub fn render(
     //True if the image contains the real axis, false otherwise.
     //If the image contains the real axis we want to mirror
     //the result of the largest half on to the smallest.
+    let mirror = draw_region.center_imag.abs() < draw_region.imag_distance;
+
     //One way of doing this is to always assume we are rendering
     //in lower half of the complex plane. If the assumption is false
     //we only need to flip the image vertically to get the
     //correct result since it is symmetric under conjugation.
-    let mirror = draw_region.center_imag.abs() < draw_region.imag_distance;
-
     let mirror_sign = if draw_region.center_imag >= 0.0 {
         -1.0
     } else {
