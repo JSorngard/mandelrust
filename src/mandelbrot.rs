@@ -2,31 +2,31 @@ use std::error::Error;
 use std::io::{stdout, Write};
 use std::sync::{Arc, Mutex};
 
-use crate::structs::{Frame, RenderParameters};
-
 use image::DynamicImage;
 use indicatif::ParallelProgressIterator;
 use rayon::prelude::*;
 
+use crate::structs::{Frame, RenderParameters};
+
 /// Takes in variables describing where to render and at what resolution
 /// and produces an image of the Mandelbrot set.
-/// 
+///
 /// `render_parameters` contains `xresolution`, `yresolution`, `iterations`, `ssaa` and `grayscale`.
-/// 
+///
 /// `draw_region` contains `center_real`, `centar_imag`, `real_distance` and `imag_distance`.
-/// 
+///
 /// `xresolution` and `yresolution` is the resolution in pixels in the real
 /// and imaginary direction respectively.
 /// `ssaa` is the number of supersampled points along one direction. If `ssaa`
 /// is e.g. 3, then a supersampled pixel will be sampled 3^2 = 9 times.
 /// region contains:
-/// 
+///
 /// `center_real` and `center_imag` are the real and imaginary parts of the
 /// point at the center of the image.
-/// 
+///
 /// `real_distance` and `imag_distance` describe the size of the region in the
 /// complex plane to render.
-/// 
+///
 /// ```text
 ///           real_distance
 /// |-------------------------------|
@@ -39,11 +39,11 @@ use rayon::prelude::*;
 /// `xresolution` = `yresolution` = 100 and `center_real` = `center_imag` = 0 a square
 /// of size 1x1 centered on the origin will be computed and rendered as a
 /// 100x100 pixel image.
-/// 
+///
 /// `iterations` is the maximum number of iterations to compute for each pixel sample before labeling
 /// a point as part of the set. If this is set to anything other than 255, the grayscale option should probably be
 /// enabled for the best looking results, as the color curves were chosen under that assumption.
-/// 
+///
 /// If `grayscale` is true the image is rendered in grayscale instead of color.
 pub fn render(
     render_parameters: RenderParameters,

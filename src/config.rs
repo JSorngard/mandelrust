@@ -1,5 +1,6 @@
-use clap::{ArgGroup, Parser};
 use std::num::{NonZeroU32, NonZeroU8, NonZeroUsize, ParseFloatError};
+
+use clap::{ArgGroup, Parser};
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]

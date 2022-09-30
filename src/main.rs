@@ -3,13 +3,13 @@ use std::{
     io::{stdout, Write},
 };
 
+use clap::Parser;
+
 use crate::{
     config::Cli,
     mandelbrot::render,
     structs::{Frame, RenderParameters},
 };
-
-use clap::Parser;
 
 mod config;
 mod mandelbrot;
