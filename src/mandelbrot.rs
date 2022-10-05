@@ -159,7 +159,7 @@ fn color_column(
             result[y + 2] = result[mirror_from - 1];
             mirror_from -= 3;
         } else {
-            let distance = supersampled_iterate(
+            let escape_speed = supersampled_iterate(
                 render_parameters.ssaa,
                 c_real,
                 c_imag,
@@ -169,9 +169,9 @@ fn color_column(
             );
 
             let colors = if grayscale {
-                [(255.0 * distance) as u8; 3]
+                [(255.0 * escape_speed) as u8; 3]
             } else {
-                map_luma_to_color(distance)
+                map_luma_to_color(escape_speed)
             };
 
             result[y] = colors[0];
