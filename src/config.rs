@@ -70,7 +70,7 @@ pub struct Cli {
     pub max_iterations: NonZeroU32,
 
     #[arg(long)]
-    /// Output the image in grayscale instead of color
+    /// Output the image in grayscale by linearly mapping the escape speed of each pixel to a luma value between 0 and 255.
     pub grayscale: bool,
 
     #[arg(long)]
