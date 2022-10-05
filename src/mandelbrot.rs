@@ -239,7 +239,7 @@ pub fn supersampled_iterate(
     let mut esc: f64;
 
     //Supersampling loop.
-    for k in 1..=i32::from(ssaa) * i32::from(ssaa) {
+    for k in 1..i32::from(ssaa) * i32::from(ssaa) + 1 {
         coloffset = (f64::from(k % i32::from(ssaa) - 1)) * one_over_ssaa;
         rowoffset = (f64::from(k - 1) / f64::from(ssaa) - 1.0) * one_over_ssaa;
 
