@@ -264,8 +264,10 @@ pub fn supersampled_iterate(
 }
 
 /// Iterates the Mandelbrot function
+/// 
 /// z_(n+1) = z_n^2 + c
-/// on the given c starting with z_0 = 0 until it either escapes
+/// 
+/// on the given c starting with z_0 = c until it either escapes
 /// or the loop exceeds the maximum number of iterations.
 /// Returns the escape speed of the point as a number between 0 and 1.
 pub fn iterate(c_re: f64, c_im: f64, maxiterations: u32) -> f64 {
