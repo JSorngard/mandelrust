@@ -64,6 +64,7 @@ pub struct Cli {
         short,
         long,
         value_name = "MAX ITERATIONS",
+        // unwrap is okay because 255 is not 0
         default_value_t = NonZeroU32::new(255).unwrap(),
     )]
     /// The maximum number of iterations for each pixel sample.
