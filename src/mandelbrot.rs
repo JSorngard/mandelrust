@@ -171,7 +171,7 @@ fn color_column(
             let colors = if grayscale {
                 [(255.0 * distance) as u8; 3]
             } else {
-                color_pixel(distance)
+                map_luma_to_color(distance)
             };
 
             result[y] = colors[0];
@@ -190,23 +190,20 @@ fn color_column(
     //Unlock the mutex here by dropping the `MutexGuard` as it goes out of scope.
 }
 
-
 /// Determines the color of a pixel. The color map that this function uses was taken from the python code in
 /// [this](https://preshing.com/20110926/high-resolution-mandelbrot-in-obfuscated-python/) blog post.
-/// 
+///
 /// As the input increases from 0 to 1 the color transitions as
-/// 
+///
 /// black -> brown -> orange -> yellow -> cyan -> blue -> dark blue -> black.
-/// 
-/// The color map is cyclic, so points that are very far from the set
-/// will be given the same color as points inside the set.
-fn color_pixel(escape_speed: f64) -> [u8; 3] {
+///
+/// The function has not been tested for inputs outside the range \[0, 1\]
+/// and makes no guarantees about the output in that case.
+fn map_luma_to_color(luma: f64) -> [u8; 3] {
     [
-        (escape_speed * 255.0_f64.powf(1.0 - 2.0 * escape_speed.powf(45.0))) as u8,
-        (escape_speed * 70.0 - (880.0 * escape_speed.powf(18.0)) + (701.0 * escape_speed.powf(9.0)))
-            as u8,
-        (escape_speed * 80.0 + (escape_speed.powf(9.0) * 255.0)
-            - (950.0 * escape_speed.powf(99.0))) as u8,
+        (luma * 255.0_f64.powf(1.0 - 2.0 * luma.powf(45.0))) as u8,
+        (luma * 70.0 - (880.0 * luma.powf(18.0)) + (701.0 * luma.powf(9.0))) as u8,
+        (luma * 80.0 + (luma.powf(9.0) * 255.0) - (950.0 * luma.powf(99.0))) as u8,
     ]
 }
 
