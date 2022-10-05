@@ -190,7 +190,16 @@ fn color_column(
     //Unlock the mutex here by dropping the `MutexGuard` as it goes out of scope.
 }
 
-///Determines the color of a pixel. These color curves were found through experimentation.
+
+/// Determines the color of a pixel. The color map that this function uses was taken from the python code in
+/// [this](https://preshing.com/20110926/high-resolution-mandelbrot-in-obfuscated-python/) blog post.
+/// 
+/// As the input increases from 0 to 1 the color transitions as
+/// 
+/// black -> brown -> orange -> yellow -> cyan -> blue -> dark blue -> black.
+/// 
+/// The color map is cyclic, so points that are very far from the set
+/// will be given the same color as points inside the set.
 fn color_pixel(escape_speed: f64) -> [u8; 3] {
     [
         (escape_speed * 255.0_f64.powf(1.0 - 2.0 * escape_speed.powf(45.0))) as u8,
