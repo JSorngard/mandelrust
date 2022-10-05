@@ -1,12 +1,9 @@
 use std::num::{NonZeroU32, NonZeroU8, NonZeroUsize, ParseFloatError};
 
-use clap::{ArgGroup, Parser};
+use clap::Parser;
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
-#[clap(group(
-    ArgGroup::new("nondefault_iteration").arg("max_iterations").requires("grayscale")
-))]
 /// Renders an image of the Mandelbrot set
 pub struct Cli {
     //This struct contains the runtime specified configuration of the program.
@@ -70,8 +67,6 @@ pub struct Cli {
         default_value_t = NonZeroU32::new(255).unwrap(),
     )]
     /// The maximum number of iterations for each pixel sample.
-    /// If this option is set to anything other than the default
-    /// the grayscale option must also be on.
     pub max_iterations: NonZeroU32,
 
     #[arg(long)]

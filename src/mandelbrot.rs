@@ -171,7 +171,7 @@ fn color_column(
             let colors = if grayscale {
                 [(255.0 * distance) as u8; 3]
             } else {
-                color_pixel(distance, max_iterations)
+                color_pixel(distance)
             };
 
             result[y] = colors[0];
@@ -191,12 +191,12 @@ fn color_column(
 }
 
 ///Determines the color of a pixel. These color curves were found through experimentation.
-fn color_pixel(escape_speed: f64, maxiterations: u32) -> [u8; 3] {
+fn color_pixel(escape_speed: f64) -> [u8; 3] {
     [
-        (escape_speed * f64::from(maxiterations).powf(1.0 - 2.0 * escape_speed.powf(45.0))) as u8,
+        (escape_speed * 255.0_f64.powf(1.0 - 2.0 * escape_speed.powf(45.0))) as u8,
         (escape_speed * 70.0 - (880.0 * escape_speed.powf(18.0)) + (701.0 * escape_speed.powf(9.0)))
             as u8,
-        (escape_speed * 80.0 + (escape_speed.powf(9.0) * f64::from(maxiterations))
+        (escape_speed * 80.0 + (escape_speed.powf(9.0) * 255.0)
             - (950.0 * escape_speed.powf(99.0))) as u8,
     ]
 }
