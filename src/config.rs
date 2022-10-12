@@ -6,7 +6,7 @@ use clap::Parser;
 #[command(author, version, about, long_about = None)]
 /// Renders an image of the Mandelbrot set
 pub struct Cli {
-    //This struct contains the runtime specified configuration of the program.
+    // This struct contains the runtime specified configuration of the program.
     #[arg(
         short,
         long,
@@ -34,7 +34,7 @@ pub struct Cli {
     #[arg(
         short,
         long,
-        //unwrap is okay because 2160 is not 0.
+        // unwrap is okay because 2160 is not 0.
         default_value_t = NonZeroUsize::new(2160).unwrap(),
     )]
     /// The number of pixels along the y-axis of the image
@@ -44,7 +44,7 @@ pub struct Cli {
         short,
         long,
         value_name = "SQRT(SSAA FACTOR)",
-        //unwrap is okay because 3 is not 0.
+        // unwrap is okay because 3 is not 0.
         default_value_t = NonZeroU8::new(3).unwrap(),
     )]
     /// How many samples to compute for each pixel (along one direction, the actual number of samples is the square of this number). If this is set to 1, supersampling is turned off.

@@ -40,7 +40,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         args.grayscale,
     );
 
-    //Output some basic information about what the program will be rendering.
+    // Output some basic information about what the program will be rendering.
     let mut header = Vec::new();
     write!(&mut header, "---- Generating a")?;
     if ssaa == 1 {
@@ -59,7 +59,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     println!("{}", std::str::from_utf8(&header)?);
 
-    //Render the image
+    // Render the image
     let img = render(render_parameters, draw_region)?;
 
     print!("\rEncoding and saving image");
@@ -72,6 +72,6 @@ fn main() -> Result<(), Box<dyn Error>> {
     img.save(&image_name)?;
     println!("\rSaved image as {image_name}          ");
 
-    //Everything finished correctly!
+    // Everything finished correctly!
     Ok(())
 }
