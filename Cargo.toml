@@ -13,5 +13,6 @@ rayon = "1.5"
 indicatif = { version = "0.16", features = ["rayon"] }
 
 [profile.release]
+opt-level = 3
 lto = "fat"
 codegen-units = 1
