@@ -113,7 +113,7 @@ pub fn render(
     // Manipulate it to be the right side up and
     img = image::imageops::rotate270(&img);
     if mirror_sign == -1.0 {
-        // flip in vertically if we need to due to mirroring
+        // flip it vertically if we need to due to mirroring
         image::imageops::flip_vertical_in_place(&mut img);
     }
 
