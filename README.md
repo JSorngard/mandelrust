@@ -14,7 +14,7 @@ I have tried to make the program faster over time. Some of the techniques used a
  6. [Link time optimization](https://doc.rust-lang.org/rustc/codegen-options/index.html#lto) has been enabled, and the number of [codegen units](https://doc.rust-lang.org/rustc/codegen-options/index.html#codegen-units) set to 1.  
  7. Cargo is set to enable optimization with every instruction set available [on the compiling CPU](https://rust-lang.github.io/packed_simd/perf-guide/target-feature/rustflags.html#target-cpu).
 
-The program can render a nine times supersampled 8k image of the set in just over four seconds on my laptop with a quad core i7-7500U CPU, while a non-supersampled 1080p image finishes in 200 ms.
+The program can render a nine times supersampled 8k image of the set in just over four seconds on my laptop with a quad core i7-7500U CPU, while a non-supersampled 1080p image finishes in ~230 ms.
 
 # How to use this program
  0. Install Rust
