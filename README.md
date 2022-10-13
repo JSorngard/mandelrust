@@ -8,7 +8,7 @@ I have tried to make the program faster over time. Some of the techniques used a
 
  1. If the image contains the real axis, split the image there and only render the larger half. Then mirror the smaller half from it.  
  2. There are [closed form expressions](https://en.wikipedia.org/wiki/Mandelbrot_set#Main_cardioid_and_period_bulbs) for checking if a point is inside the main cardioid or the period 2 bulb, these are used to skip a large amount of iteration.  
- 3. Rayon is used to parallelize the rendering.  
+ 3. [Rayon](https://docs.rs/rayon/latest/rayon/) is used to parallelize the rendering.  
  4. Supersampling is done only close to the border of the set.  
  5. The iteration loop has been restructured to use the minimum number of multiplications.  
  6. Link time optimization has been enabled, and the number of codegen units set to 1.  
