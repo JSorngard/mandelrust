@@ -29,6 +29,16 @@ pub struct Cli {
     /// The imaginary part of the center point of the image
     pub imag_center: f64,
 
+    #[arg(
+        short,
+        long,
+        value_parser(positive_double),
+        value_name = "ZOOM LEVEL",
+        default_value_t = 1.0
+    )]
+    /// How far in to zoom on the given center point
+    pub zoom: f64,
+
     #[arg(short, long, value_parser(positive_double), default_value_t = 1.5)]
     /// The aspect ratio of the image
     pub aspect_ratio: f64,
@@ -52,16 +62,6 @@ pub struct Cli {
     /// How many samples to compute for each pixel (along one direction, the actual number of samples is the square of this number).
     /// Supersampling can be turned off by setting this to 1
     pub ssaa: NonZeroU8,
-
-    #[arg(
-        short,
-        long,
-        value_parser(positive_double),
-        value_name = "ZOOM LEVEL",
-        default_value_t = 1.0
-    )]
-    /// How far in to zoom on the given center point
-    pub zoom: f64,
 
     #[arg(
         short,
