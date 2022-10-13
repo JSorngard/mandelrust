@@ -7,18 +7,16 @@ use image::DynamicImage;
 use indicatif::ParallelProgressIterator;
 use rayon::prelude::*;
 
-use crate::structs::{Frame, RenderParameters};
-
 /// Takes in variables describing where to render and at what resolution
 /// and produces an image of the Mandelbrot set.
 ///
-/// `render_parameters` contains `xresolution`, `yresolution`, `iterations`, `ssaa` and `grayscale`.
+/// `render_parameters` contains `xresolution`, `yresolution`, `iterations`, `sqrt_samples_per_pixel` and `grayscale`.
 ///
 /// `draw_region` contains `center_real`, `centar_imag`, `real_distance` and `imag_distance`.
 ///
 /// `xresolution` and `yresolution` is the resolution in pixels in the real
 /// and imaginary direction respectively.
-/// `ssaa` is the number of supersampled points along one direction. If `ssaa`
+/// `sqrt_samples_per_pixel` is the number of supersampled points along one direction. If it
 /// is e.g. 3, then a supersampled pixel will be sampled 3^2 = 9 times.
 /// region contains:
 ///
@@ -209,7 +207,7 @@ fn map_luma_to_color(luma: f64) -> [u8; 3] {
 
 /// Computes the escape speed for the values in a small region
 /// around the given value and returns their average.
-/// If x is the location of `c_real` + `c_imag`*i and `ssaa` = 3,
+/// If x is the location of `c_real` + `c_imag`*i and `sqrt_samples_per_pixel` = 3,
 /// then the dots are also sampled:
 /// ```text
 ///   real_delta
@@ -314,5 +312,51 @@ pub fn iterate(c_re: f64, c_im: f64, maxiterations: u32) -> f64 {
         // -4*x^(-0.4) is an approximation of
         // ln(ln(x))/ln(2) - 2.8
         // that works well in the range 6 < x < 36, which is what's relevant for this implementation.
+    }
+}
+
+#[derive(Clone, Copy, Debug, Default)]
+pub struct Frame {
+    pub center_real: f64,
+    pub center_imag: f64,
+    pub real_distance: f64,
+    pub imag_distance: f64,
+}
+
+impl Frame {
+    pub fn new(center_real: f64, center_imag: f64, real_distance: f64, imag_distance: f64) -> Self {
+        Frame {
+            center_real,
+            center_imag,
+            real_distance,
+            imag_distance,
+        }
+    }
+}
+
+#[derive(Clone, Copy, Debug)]
+pub struct RenderParameters {
+    pub x_resolution: usize,
+    pub y_resolution: usize,
+    pub iterations: u32,
+    pub sqrt_samples_per_pixel: NonZeroU8,
+    pub grayscale: bool,
+}
+
+impl RenderParameters {
+    pub fn new(
+        x_resolution: usize,
+        y_resolution: usize,
+        iterations: u32,
+        sqrt_samples_per_pixel: NonZeroU8,
+        grayscale: bool,
+    ) -> Self {
+        RenderParameters {
+            x_resolution,
+            y_resolution,
+            iterations,
+            sqrt_samples_per_pixel,
+            grayscale,
+        }
     }
 }

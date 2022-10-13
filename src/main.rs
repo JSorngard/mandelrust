@@ -8,13 +8,11 @@ use clap::Parser;
 
 use crate::{
     config::Cli,
-    mandelbrot::render,
-    structs::{Frame, RenderParameters},
+    mandelbrot::{render, Frame, RenderParameters},
 };
 
 mod config;
 mod mandelbrot;
-mod structs;
 
 fn main() -> Result<(), Box<dyn Error>> {
     let args = Cli::parse();
