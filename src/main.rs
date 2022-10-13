@@ -79,7 +79,6 @@ fn main() -> Result<(), Box<dyn Error>> {
         std::fs::create_dir(&out_path)?;
     }
     out_path.push(image_name);
-    //unwrap is okay because the user supplied the file name as a valid utf-8 string.
 
     img.save(&out_path)?;
     println!("\rSaved image as {}", out_path.display());
