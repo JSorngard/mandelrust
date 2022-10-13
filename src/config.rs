@@ -85,7 +85,7 @@ pub struct Cli {
     /// Save information about the image location in the complex plane in the file name
     pub record_params: bool,
 
-    #[arg(short, long, default_value = "renders")]
+    #[arg(short, long, default_value = "renders", value_name = "OUTPUT FOLDER")]
     /// The folder in which to save the resulting image
     pub output_folder: String,
 }
