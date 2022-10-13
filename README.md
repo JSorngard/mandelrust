@@ -24,6 +24,6 @@ The program can render a nine times supersampled 8k image of the set in just ove
 
 # Example images
 ![Full set](/examples/mandelbrot_set.png)
-![Zoomed detail](/examples/mandelbrot_set_at_re_-0.23_im_-0.72_zoom_85_maxiters_255.png)
-![Deep zoomed detail](/examples/mandelbrot_set_at_re_-0.2345_im_-0.7178_zoom_6000_maxiters_1000.png)
+![Zoomed detail_without_changing_max_iterations](/examples/mandelbrot_set_at_re_-0.23_im_-0.72_zoom_85_maxiters_255.png)
+![Deep zoomed detail_with_changed_max_iterations](/examples/mandelbrot_set_at_re_-0.2345_im_-0.7178_zoom_6000_maxiters_1000.png)
 ![Grayscale example](/examples/mandelbrot_set_at_re_-0.728_im_-0.212_zoom_85_maxiters_1000.png)
