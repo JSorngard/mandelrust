@@ -47,7 +47,7 @@ pub struct Cli {
         // unwrap is okay because 3 is not 0.
         default_value_t = NonZeroU8::new(3).unwrap(),
     )]
-    /// How many samples to compute for each pixel (along one direction, the actual number of samples is the square of this number). If this is set to 1, supersampling is turned off.
+    /// How many samples to compute for each pixel (along one direction, the actual number of samples is the square of this number). Supersampling can be turned off by setting this to 1
     pub ssaa: NonZeroU8,
 
     #[arg(
