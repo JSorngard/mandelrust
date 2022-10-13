@@ -36,12 +36,10 @@ pub struct Cli {
         value_name = "ZOOM LEVEL",
         default_value_t = 1.0
     )]
-    /// How far in to zoom on the given center point
+    /// How far in to zoom on the given center point. If this is 2 the image is zoomed by a factor of 2,
+    /// meaning the vertical and horizontal distance that the image covers in the complex plane is halved.
+    /// In general these distances scale as 1/zoom
     pub zoom: f64,
-
-    #[arg(short, long, value_parser(positive_double), default_value_t = 1.5)]
-    /// The aspect ratio of the image
-    pub aspect_ratio: f64,
 
     #[arg(
         short,
@@ -52,6 +50,11 @@ pub struct Cli {
     /// The number of pixels along the y-axis of the image
     pub pixels: NonZeroUsize,
 
+    #[arg(short, long, value_parser(positive_double), default_value_t = 1.5)]
+    /// The aspect ratio of the image. The horizontal pixel resolution is calculated by multiplying the
+    /// vertical pixel resolution by this number
+    pub aspect_ratio: f64,
+
     #[arg(
         short,
         long,
@@ -61,7 +64,7 @@ pub struct Cli {
         value_parser(nonzero_square_byte),
     )]
     /// How many samples to compute for each pixel (along one direction, the actual number of samples is the square of this number).
-    /// The valid values are 1 to 15, where 1 means that supersampling is off.
+    /// The valid values are 1 to 15, where 1 means that supersampling is off
     pub ssaa: NonZeroU8,
 
     #[arg(
@@ -71,11 +74,11 @@ pub struct Cli {
         // unwrap is okay because 255 is not 0
         default_value_t = NonZeroU32::new(255).unwrap(),
     )]
-    /// The maximum number of iterations for each pixel sample.
+    /// The maximum number of iterations for each pixel sample
     pub max_iterations: NonZeroU32,
 
     #[arg(long)]
-    /// Output the image in grayscale by linearly mapping the escape speed of each pixel to a luma value between 0 and 255.
+    /// Output the image in grayscale by linearly mapping the escape speed of each pixel to a luma value between 0 and 255
     pub grayscale: bool,
 
     #[arg(long)]
@@ -94,7 +97,7 @@ fn positive_double(s: &str) -> Result<f64, String> {
     }
 }
 
-/// Tries to parse the input string into a `NonZeroU8` < sqrt(255).
+/// Tries to parse the input string into a `NonZeroU8` < sqrt(u8::MAX).
 fn nonzero_square_byte(s: &str) -> Result<NonZeroU8, String> {
     let x: NonZeroU8 = s.parse().map_err(|e: ParseIntError| e.to_string())?;
 
