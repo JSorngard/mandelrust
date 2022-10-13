@@ -1,6 +1,6 @@
 [package]
 name = "mandelrust"
-version = "4.0.1"
+version = "5.0.0"
 authors = ["Johanna Sörngård (jsorngard@gmail.com)"]
 edition = "2021"
 
