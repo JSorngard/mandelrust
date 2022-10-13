@@ -1,5 +1,6 @@
 use std::error::Error;
 use std::io::{stdout, Write};
+use std::num::NonZeroU8;
 use std::sync::{Arc, Mutex};
 
 use image::DynamicImage;
@@ -160,7 +161,7 @@ fn color_column(
             mirror_from -= 3;
         } else {
             let escape_speed = supersampled_iterate(
-                render_parameters.ssaa,
+                render_parameters.sqrt_samples_per_pixel,
                 c_real,
                 c_imag,
                 real_delta,
@@ -219,14 +220,16 @@ fn map_luma_to_color(luma: f64) -> [u8; 3] {
 ///    .  .  .  |
 /// ```
 pub fn supersampled_iterate(
-    ssaa: u8,
+    sqrt_samples_per_pixel: NonZeroU8,
     c_real: f64,
     c_imag: f64,
     real_delta: f64,
     imag_delta: f64,
     maxiterations: u32,
 ) -> f64 {
-    let one_over_ssaa = if ssaa == 0 || ssaa == 1 {
+    let ssaa = sqrt_samples_per_pixel.get();
+
+    let one_over_ssaa = if ssaa == 1 {
         0.0
     } else {
         1.0 / f64::from(ssaa)

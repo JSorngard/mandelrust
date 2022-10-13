@@ -22,7 +22,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     let center_imag = args.imag_center;
     let yresolution = args.pixels.get();
     let zoom = args.zoom;
-    let ssaa = args.ssaa.get();
+    let ssaa_fact = args.ssaa.get();
     let max_iterations = args.max_iterations.get();
     let aspect_ratio = args.aspect_ratio;
 
@@ -36,17 +36,17 @@ fn main() -> Result<(), Box<dyn Error>> {
         xresolution,
         yresolution,
         max_iterations,
-        ssaa,
+        args.ssaa,
         args.grayscale,
     );
 
     // Output some basic information about what the program will be rendering.
     let mut header = Vec::new();
     write!(&mut header, "---- Generating a")?;
-    if ssaa == 1 {
+    if ssaa_fact == 1 {
         write!(&mut header, "n")?;
     } else {
-        write!(&mut header, " {} times supersampled", ssaa * ssaa)?;
+        write!(&mut header, " {} times supersampled", ssaa_fact * ssaa_fact)?;
     }
     write!(
         &mut header,
