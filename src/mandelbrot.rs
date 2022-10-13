@@ -226,7 +226,7 @@ pub fn supersampled_iterate(
     imag_delta: f64,
     maxiterations: u32,
 ) -> f64 {
-    let one_over_ssaa = if ssaa == 0 ||ssaa == 1 {
+    let one_over_ssaa = if ssaa == 0 || ssaa == 1 {
         0.0
     } else {
         1.0 / f64::from(ssaa)
