@@ -3,7 +3,7 @@ Renders a supersampled image of the Mandelbrot set to a png file. It is possible
 
 This was one of my first projects to learn rust. It contains some file manipulation and concurrency.
 
-# Speeding up the program
+# Faster mandelbrot rendering
 I have tried to make the program faster over time. Some of the techniques used are
 
  1. If the image contains the real axis, split the image there and only render the larger half. Then mirror the smaller half from it.  
