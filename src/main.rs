@@ -1,6 +1,7 @@
 use std::{
     error::Error,
     io::{stdout, Write},
+    path::PathBuf,
 };
 
 use clap::Parser;
@@ -69,8 +70,19 @@ fn main() -> Result<(), Box<dyn Error>> {
     } else {
         "mandelbrot_set.png".to_owned()
     };
-    img.save(&image_name)?;
-    println!("\rSaved image as {image_name}          ");
+
+    let mut out_path = PathBuf::new();
+    out_path.push(args.output_folder);
+
+    // If the output folder does not exist, we create it
+    if !out_path.is_dir() {
+        std::fs::create_dir(&out_path)?;
+    }
+    out_path.push(image_name);
+    //unwrap is okay because the user supplied the file name as a valid utf-8 string.
+
+    img.save(&out_path)?;
+    println!("\rSaved image as {}", out_path.display());
 
     // Everything finished correctly!
     Ok(())
