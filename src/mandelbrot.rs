@@ -42,8 +42,7 @@ use crate::structs::{Frame, RenderParameters};
 /// 100x100 pixel image.
 ///
 /// `iterations` is the maximum number of iterations to compute for each pixel sample before labeling
-/// a point as part of the set. If this is set to anything other than 255, the grayscale option should probably be
-/// enabled for the best looking results, as the color curves were chosen under that assumption.
+/// a point as part of the set.
 ///
 /// If `grayscale` is true the image is rendered in grayscale instead of color.
 pub fn render(
