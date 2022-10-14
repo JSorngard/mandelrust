@@ -159,7 +159,8 @@ fn color_column(
         // part we just mirror this pixel
         if mirror && c_imag > 0.0 {
             for color_channel in 0..NUM_COLOR_CHANNELS {
-                result[y + color_channel] = result[mirror_from - 3 + color_channel];
+                result[y + color_channel] =
+                    result[mirror_from - NUM_COLOR_CHANNELS + color_channel];
             }
             mirror_from -= NUM_COLOR_CHANNELS;
         } else {
@@ -188,8 +189,9 @@ fn color_column(
     // Lock the mutex for the image pixels
     let mut pixels = image.lock().expect("mutex was poisoned, aborting");
 
-    for (j, i) in
-        (xindex * yresolution * NUM_COLOR_CHANNELS..yresolution * (xindex + 1) * NUM_COLOR_CHANNELS).enumerate()
+    for (j, i) in (xindex * yresolution * NUM_COLOR_CHANNELS
+        ..yresolution * (xindex + 1) * NUM_COLOR_CHANNELS)
+        .enumerate()
     {
         // and copy the results into it
         pixels[i] = result[j];
