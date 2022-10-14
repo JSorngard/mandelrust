@@ -208,8 +208,9 @@ fn map_luma_to_color(luma: f64) -> [u8; 3] {
 
 /// Computes the escape speed for the values in a small region
 /// around the given value and returns their average.
-/// If x is the location of `c_real` + `c_imag`*i and `sqrt_samples_per_pixel` = 3,
-/// then the dots are also sampled:
+/// If x is the location of `c_real` + `c_imag`*i and
+/// `sqrt_samples_per_pixel` = 3, then the dots are also sampled:
+/// 
 /// ```text
 ///   real_delta
 ///    -------
@@ -217,6 +218,9 @@ fn map_luma_to_color(luma: f64) -> [u8; 3] {
 ///    .  x  .  | imag_delta
 ///    .  .  .  |
 /// ```
+/// 
+/// The gap between the sample points at the edge and the edge
+/// is the same as between the points.
 pub fn supersampled_iterate(
     sqrt_samples_per_pixel: NonZeroU8,
     c_real: f64,
