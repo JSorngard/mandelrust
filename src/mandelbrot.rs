@@ -1,6 +1,6 @@
 use std::error::Error;
 use std::io::{stdout, Write};
-use std::num::NonZeroU8;
+use std::num::{NonZeroU32, NonZeroU8, NonZeroUsize};
 use std::sync::{Arc, Mutex};
 
 use image::DynamicImage;
@@ -65,8 +65,8 @@ pub fn render(
     let start_real = draw_region.center_real - draw_region.real_distance / 2.0;
     let start_imag = mirror_sign * draw_region.center_imag - draw_region.imag_distance / 2.0;
 
-    let xresolution = render_parameters.x_resolution;
-    let yresolution = render_parameters.y_resolution;
+    let xresolution = render_parameters.x_resolution.get();
+    let yresolution = render_parameters.y_resolution.get();
 
     let pixel_bytes: Vec<u8> = vec![0; xresolution * yresolution * 3];
     let pixel_ptr = Arc::new(Mutex::new(pixel_bytes));
@@ -132,11 +132,10 @@ fn color_column(
     mirror: bool,
     image: Arc<Mutex<Vec<u8>>>,
 ) {
-    let xresolution = render_parameters.x_resolution;
-    let yresolution = render_parameters.y_resolution;
+    let xresolution = render_parameters.x_resolution.get();
+    let yresolution = render_parameters.y_resolution.get();
 
     let grayscale = render_parameters.grayscale;
-    let max_iterations = render_parameters.iterations;
 
     let mut mirror_from: usize = 0;
     let real_delta = draw_region.real_distance / (xresolution - 1) as f64;
@@ -164,11 +163,11 @@ fn color_column(
                 c_imag,
                 real_delta,
                 imag_delta,
-                max_iterations,
+                render_parameters.iterations,
             );
 
             let colors = if grayscale {
-                [(255.0 * escape_speed) as u8; 3]
+                [(f64::from(u8::MAX) * escape_speed) as u8; 3]
             } else {
                 map_luma_to_color(escape_speed)
             };
@@ -210,7 +209,7 @@ fn map_luma_to_color(luma: f64) -> [u8; 3] {
 /// around the given value and returns their average.
 /// If x is the location of `c_real` + `c_imag`*i and
 /// `sqrt_samples_per_pixel` = 3, then the dots are also sampled:
-/// 
+///
 /// ```text
 ///   real_delta
 ///    -------
@@ -218,7 +217,7 @@ fn map_luma_to_color(luma: f64) -> [u8; 3] {
 ///    .  x  .  | imag_delta
 ///    .  .  .  |
 /// ```
-/// 
+///
 /// The gap between the sample points at the edge and the
 /// edge of the pixel is the same as between the points.
 pub fn supersampled_iterate(
@@ -227,14 +226,14 @@ pub fn supersampled_iterate(
     c_imag: f64,
     real_delta: f64,
     imag_delta: f64,
-    maxiterations: u32,
+    maxiterations: NonZeroU32,
 ) -> f64 {
     let ssaa = sqrt_samples_per_pixel.get();
     let f64ssaa: f64 = ssaa.into();
 
     //samples can be a u16 since the maximum number of samples is u8::MAX^2 which is less than u16::MAX
     let mut samples: u16 = 0;
-    
+
     let mut escape_speed: f64 = 0.0;
     let mut coloffset: f64;
     let mut rowoffset: f64;
@@ -272,9 +271,11 @@ pub fn supersampled_iterate(
 /// on the given c starting with z_0 = c until it either escapes
 /// or the loop exceeds the maximum number of iterations.
 /// Returns the escape speed of the point as a number between 0 and 1.
-pub fn iterate(c_re: f64, c_im: f64, maxiterations: u32) -> f64 {
+pub fn iterate(c_re: f64, c_im: f64, maxiterations: NonZeroU32) -> f64 {
     let c_imag_sqr = c_im * c_im;
     let mag_sqr = c_re * c_re + c_imag_sqr;
+
+    let maxiterations = maxiterations.get();
 
     // Check whether the point is within the main cardioid or period 2 bulb.
     if (c_re + 1.0) * (c_re + 1.0) + c_imag_sqr <= 0.0625
@@ -341,18 +342,18 @@ impl Frame {
 /// that is relevant to the rendering process.
 #[derive(Clone, Copy)]
 pub struct RenderParameters {
-    pub x_resolution: usize,
-    pub y_resolution: usize,
-    pub iterations: u32,
+    pub x_resolution: NonZeroUsize,
+    pub y_resolution: NonZeroUsize,
+    pub iterations: NonZeroU32,
     pub sqrt_samples_per_pixel: NonZeroU8,
     pub grayscale: bool,
 }
 
 impl RenderParameters {
     pub fn new(
-        x_resolution: usize,
-        y_resolution: usize,
-        iterations: u32,
+        x_resolution: NonZeroUsize,
+        y_resolution: NonZeroUsize,
+        iterations: NonZeroU32,
         sqrt_samples_per_pixel: NonZeroU8,
         grayscale: bool,
     ) -> Self {
