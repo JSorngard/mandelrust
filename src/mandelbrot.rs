@@ -5,6 +5,7 @@ use std::sync::{Arc, Mutex};
 
 use image::DynamicImage;
 use indicatif::ParallelProgressIterator;
+use itertools::Itertools;
 use rayon::prelude::*;
 
 /// Takes in variables describing where to render and at what resolution
@@ -225,12 +226,7 @@ pub fn supersampled_iterate(
     maxiterations: u32,
 ) -> f64 {
     let ssaa = sqrt_samples_per_pixel.get();
-
-    let one_over_ssaa = if ssaa == 1 {
-        0.0
-    } else {
-        1.0 / f64::from(ssaa)
-    };
+    let f64ssaa: f64 = ssaa.into();
 
     let mut samples: u32 = 0;
     let mut escape_speed: f64 = 0.0;
@@ -239,9 +235,9 @@ pub fn supersampled_iterate(
     let mut esc: f64;
 
     // Supersampling loop.
-    for k in 1..i32::from(ssaa) * i32::from(ssaa) + 1 {
-        coloffset = (f64::from(k % i32::from(ssaa) - 1)) * one_over_ssaa;
-        rowoffset = (f64::from(k - 1) / f64::from(ssaa) - 1.0) * one_over_ssaa;
+    for (i, j) in (1..=ssaa).cartesian_product(1..=ssaa) {
+        coloffset = (2.0 * f64::from(i) - f64ssaa - 1.0) / f64ssaa;
+        rowoffset = (2.0 * f64::from(j) - f64ssaa - 1.0) / f64ssaa;
 
         // Compute escape speed of point.
         esc = iterate(
