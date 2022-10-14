@@ -315,7 +315,8 @@ pub fn iterate(c_re: f64, c_im: f64, maxiterations: u32) -> f64 {
     }
 }
 
-#[derive(Clone, Copy, Debug, Default)]
+/// Contains information about a rectangle-shaped region in the complex plane.
+#[derive(Clone, Copy)]
 pub struct Frame {
     pub center_real: f64,
     pub center_imag: f64,
@@ -334,7 +335,9 @@ impl Frame {
     }
 }
 
-#[derive(Clone, Copy, Debug)]
+/// Contains information about the mandelbrot image
+/// that is relevant to the rendering process.
+#[derive(Clone, Copy)]
 pub struct RenderParameters {
     pub x_resolution: usize,
     pub y_resolution: usize,
