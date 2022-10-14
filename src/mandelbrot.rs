@@ -99,6 +99,8 @@ pub fn render(
         (*pixel_ptr.lock().expect("the mutex was poisoned, aborting")).clone();
     // and place it in an image buffer
     let mut img = image::ImageBuffer::<image::Rgb<u8>, Vec<u8>>::from_vec(
+        // The image is stored in a rotated fashion so that the pixels
+        // of a column of the image lie contiguous in the vector.
         yresolution.try_into()?,
         xresolution.try_into()?,
         finished_pixel_data,
@@ -108,7 +110,7 @@ pub fn render(
     print!("\rProcessing image");
     stdout().flush()?;
 
-    // Manipulate it to be the right side up and
+    // Rotate it to be the right side up and
     img = image::imageops::rotate270(&img);
     if mirror_sign == -1.0 {
         // flip it vertically if we need to due to mirroring
@@ -181,6 +183,8 @@ fn color_column(
 
     // Lock the mutex for the image pixels
     let mut pixels = image.lock().expect("mutex was poisoned, aborting");
+    
+    // We store the data in a transposed fashion for cache reasons
     for (j, i) in (xindex * yresolution * 3..yresolution * (xindex + 1) * 3).enumerate() {
         // and copy the results into it
         pixels[i] = result[j];
