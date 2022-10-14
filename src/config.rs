@@ -1,4 +1,4 @@
-use std::num::{NonZeroU32, NonZeroU8, NonZeroUsize, ParseFloatError, ParseIntError};
+use std::num::{NonZeroU32, NonZeroU8, NonZeroUsize, ParseFloatError};
 
 use clap::Parser;
 
@@ -61,10 +61,9 @@ pub struct Cli {
         value_name = "SQRT(SSAA FACTOR)",
         // unwrap is okay because 3 is not 0.
         default_value_t = NonZeroU8::new(3).unwrap(),
-        value_parser(nonzero_square_byte),
     )]
     /// How many samples to compute for each pixel (along one direction, the actual number of samples is the square of this number).
-    /// The valid values are 1 to 15, where 1 means that supersampling is off
+    /// If this is set to 1, supersampling is turned off
     pub ssaa: NonZeroU8,
 
     #[arg(
@@ -98,17 +97,6 @@ fn positive_double(s: &str) -> Result<f64, String> {
         Ok(x)
     } else {
         Err("the value must be positive".into())
-    }
-}
-
-/// Tries to parse the input string into a `NonZeroU8` < sqrt(u8::MAX).
-fn nonzero_square_byte(s: &str) -> Result<NonZeroU8, String> {
-    let x: NonZeroU8 = s.parse().map_err(|e: ParseIntError| e.to_string())?;
-
-    if x.get() <= f32::sqrt(u8::MAX as f32).floor() as u8 {
-        Ok(x)
-    } else {
-        Err("the square of the number does not fit in a u8".into())
     }
 }
 

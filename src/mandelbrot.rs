@@ -232,7 +232,9 @@ pub fn supersampled_iterate(
     let ssaa = sqrt_samples_per_pixel.get();
     let f64ssaa: f64 = ssaa.into();
 
-    let mut samples: u32 = 0;
+    //samples can be a u16 since the maximum number of samples is u8::MAX^2 which is less than u16::MAX
+    let mut samples: u16 = 0;
+    
     let mut escape_speed: f64 = 0.0;
     let mut coloffset: f64;
     let mut rowoffset: f64;

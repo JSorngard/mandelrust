@@ -45,7 +45,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     if ssaa_fact == 1 {
         write!(&mut header, "n")?;
     } else {
-        write!(&mut header, " {} times supersampled", ssaa_fact * ssaa_fact)?;
+        write!(&mut header, " {} times supersampled", u16::from(ssaa_fact) * u16::from(ssaa_fact))?;
     }
     write!(
         &mut header,
