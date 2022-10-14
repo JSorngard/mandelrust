@@ -189,7 +189,7 @@ fn color_column(
     let mut pixels = image.lock().expect("mutex was poisoned, aborting");
 
     for (j, i) in
-        (xindex * yresolution * NUM_COLOR_CHANNELS..yresolution * (xindex + 1) * 3).enumerate()
+        (xindex * yresolution * NUM_COLOR_CHANNELS..yresolution * (xindex + 1) * NUM_COLOR_CHANNELS).enumerate()
     {
         // and copy the results into it
         pixels[i] = result[j];
