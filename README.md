@@ -17,12 +17,13 @@ I have tried to make the program faster over time. Some of the techniques used a
 The program can render a nine times supersampled 8k image of the set in just over three seconds on my laptop with a quad core i7-7500U CPU, while a non-supersampled 1080p image finishes in just over 200 ms. On my desktop with a 5800X3D the same tests finish in just over one second and just under 100 ms respectively.
 
 # How to use this program
- 0. Install [Rust](https://www.rust-lang.org/tools/install) and [git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git)
- 1. Clone this git repo with `git clone https://www.github.com/JSorngard/mandelrust.git`
- 2. Go into the repository with `cd mandelrust`
- 2. Compile the program with `cargo build --release`
- 3. Run the program with `./target/release/mandelrust.exe`
- 4. You can specify where the image is focused, how zoomed it is and how many iterations to do (among other things) with command line arguments. For an exhaustive list run the program with the `--help` argument
+ 1. Install [Rust](https://www.rust-lang.org/tools/install) and [git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git)
+ 2. Open a terminal in the folder you want to install the program in
+ 3. Clone this git repo with `git clone https://www.github.com/JSorngard/mandelrust.git`
+ 4. Go into the repository with `cd mandelrust`
+ 5. Compile the program with `cargo build --release`
+ 6. Run the program with `./target/release/mandelrust.exe`
+ 7. You can specify where the image is focused, how zoomed it is and how many iterations to do (among other things) with command line arguments. For an exhaustive list run the program with the `--help` argument
 
 # Example images
 Default settings:
