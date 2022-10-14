@@ -74,7 +74,7 @@ pub fn render(
     // Make a parallel iterator over all the real values with rayon and for each
     (0..xresolution)
         .into_par_iter()
-        .progress_count(xresolution.try_into().unwrap())
+        .progress_count(xresolution.try_into()?)
         .for_each(|real| {
             // compute the real part of c and
             let c_real =
