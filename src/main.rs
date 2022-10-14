@@ -38,7 +38,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     );
 
     // Output some basic information about what the program will be rendering.
-    let mut header = Vec::new();
+    let mut header = Vec::with_capacity(61);
     write!(&mut header, "---- Generating a")?;
     if args.ssaa.get() == 1 {
         write!(&mut header, "n")?;
