@@ -8,6 +8,8 @@ use indicatif::ParallelProgressIterator;
 use itertools::Itertools;
 use rayon::prelude::*;
 
+const NUM_COLOR_CHANNELS: usize = 3;
+
 /// Takes in variables describing where to render and at what resolution
 /// and produces an image of the Mandelbrot set.
 ///
@@ -68,7 +70,7 @@ pub fn render(
     let xresolution = render_parameters.x_resolution.get();
     let yresolution = render_parameters.y_resolution.get();
 
-    let pixel_bytes: Vec<u8> = vec![0; xresolution * yresolution * 3];
+    let pixel_bytes: Vec<u8> = vec![0; xresolution * yresolution * NUM_COLOR_CHANNELS];
     let pixel_ptr = Arc::new(Mutex::new(pixel_bytes));
 
     // Make a parallel iterator over all the real values with rayon and for each
@@ -144,20 +146,22 @@ fn color_column(
     let imag_delta = draw_region.imag_distance / (yresolution - 1) as f64;
 
     // Create a temporary vector to hold the results for this row of pixels
-    let mut result = vec![0; yresolution * 3];
+    let mut result = vec![0; yresolution * NUM_COLOR_CHANNELS];
     let mut c_imag: f64;
-    for y in (0..yresolution * 3).step_by(3) {
+    for y in (0..yresolution * NUM_COLOR_CHANNELS).step_by(NUM_COLOR_CHANNELS) {
         // Compute the imaginary part at this pixel
-        c_imag = start_imag + draw_region.imag_distance * (y as f64) / (3.0 * yresolution as f64);
+        c_imag = start_imag
+            + draw_region.imag_distance * (y as f64)
+                / (NUM_COLOR_CHANNELS as f64 * yresolution as f64);
 
         // If we have rendered all the pixels with
         // negative imaginary part for this real
         // part we just mirror this pixel
         if mirror && c_imag > 0.0 {
-            result[y] = result[mirror_from - 3];
-            result[y + 1] = result[mirror_from - 2];
-            result[y + 2] = result[mirror_from - 1];
-            mirror_from -= 3;
+            for color_channel in 0..NUM_COLOR_CHANNELS {
+                result[y + color_channel] = result[mirror_from - 3 + color_channel];
+            }
+            mirror_from -= NUM_COLOR_CHANNELS;
         } else {
             let escape_speed = supersampled_iterate(
                 render_parameters.sqrt_samples_per_pixel,
@@ -169,22 +173,24 @@ fn color_column(
             );
 
             let colors = if grayscale {
-                [(f64::from(u8::MAX) * escape_speed) as u8; 3]
+                [(f64::from(u8::MAX) * escape_speed) as u8; NUM_COLOR_CHANNELS]
             } else {
                 map_luma_to_color(escape_speed)
             };
 
-            result[y] = colors[0];
-            result[y + 1] = colors[1];
-            result[y + 2] = colors[2];
-            mirror_from += 3;
+            for color_channel in 0..NUM_COLOR_CHANNELS {
+                result[y + color_channel] = colors[color_channel];
+            }
+            mirror_from += NUM_COLOR_CHANNELS;
         }
     }
 
     // Lock the mutex for the image pixels
     let mut pixels = image.lock().expect("mutex was poisoned, aborting");
-    
-    for (j, i) in (xindex * yresolution * 3..yresolution * (xindex + 1) * 3).enumerate() {
+
+    for (j, i) in
+        (xindex * yresolution * NUM_COLOR_CHANNELS..yresolution * (xindex + 1) * 3).enumerate()
+    {
         // and copy the results into it
         pixels[i] = result[j];
     }
@@ -200,7 +206,7 @@ fn color_column(
 ///
 /// The function has not been tested for inputs outside the range \[0, 1\]
 /// and makes no guarantees about the output in that case.
-fn map_luma_to_color(luma: f64) -> [u8; 3] {
+fn map_luma_to_color(luma: f64) -> [u8; NUM_COLOR_CHANNELS] {
     [
         (luma * 255.0_f64.powf(1.0 - 2.0 * luma.powf(45.0))) as u8,
         (luma * 70.0 - (880.0 * luma.powf(18.0)) + (701.0 * luma.powf(9.0))) as u8,
