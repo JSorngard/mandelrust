@@ -152,7 +152,7 @@ fn color_column(
         // If we have rendered all the pixels with
         // negative imaginary part for this real
         // part we just mirror this pixel
-        if mirror && c_imag > 0.0 {
+        if mirror && c_imag >= 0.0 {
             result[y] = result[mirror_from - 3];
             result[y + 1] = result[mirror_from - 2];
             result[y + 2] = result[mirror_from - 1];
