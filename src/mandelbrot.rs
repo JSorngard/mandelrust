@@ -254,9 +254,9 @@ pub fn supersampled_iterate(
         samples += 1;
 
         // If we are far from the fractal we do not need to supersample.
-        if esc > 0.9 {
+        if esc > 0.95 {
             // Uncomment the next line to only show supersampling region as non-black.
-            // escape_speed = 0.0;
+            escape_speed = 0.0;
             break;
         }
     }
