@@ -18,9 +18,10 @@ The program can render a nine times supersampled 8k image of the set in just ove
 
 # How to use this program
  0. Install [Rust](https://www.rust-lang.org/tools/install) and [git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git)
- 1. Clone this git repo with `git clone https://www.github.com/JSorngard/mandelrust.git` and build with `cargo build --release`
- 2. Run the program with `./target/release/mandelrust.exe`
- 3. You can specify where the image is focused, how zoomed it is and how many iterations to do (among other things) with command line arguments. For an exhaustive list run the program with the `--help` argument
+ 1. Clone this git repo with `git clone https://www.github.com/JSorngard/mandelrust.git`
+ 2. Compile the program with `cargo build --release`
+ 3. Run the program with `./target/release/mandelrust.exe`
+ 4. You can specify where the image is focused, how zoomed it is and how many iterations to do (among other things) with command line arguments. For an exhaustive list run the program with the `--help` argument
 
 # Example images
 Default settings:
