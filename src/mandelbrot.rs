@@ -219,8 +219,8 @@ fn map_luma_to_color(luma: f64) -> [u8; 3] {
 ///    .  .  .  |
 /// ```
 /// 
-/// The gap between the sample points at the edge and the edge
-/// is the same as between the points.
+/// The gap between the sample points at the edge and the
+/// edge of the pixel is the same as between the points.
 pub fn supersampled_iterate(
     sqrt_samples_per_pixel: NonZeroU8,
     c_real: f64,
