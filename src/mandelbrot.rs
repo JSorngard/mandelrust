@@ -8,6 +8,19 @@ use indicatif::ParallelProgressIterator;
 use itertools::Itertools;
 use rayon::prelude::*;
 
+// ----------- DEBUG FLAGS --------------
+// Set to true to only super sample close to the border of the set.
+const RESTRICT_SSAA_REGION: bool = true;
+
+// Set to true to show the region where super sampling is skipped as brown.
+const SHOW_SSAA_REGION: bool = false;
+
+// Set to true to split the image into two parts along the real axis
+// (if it is present in the image) and then only iterate the points in the
+// larger part, and mirror the points in the smaller part from the larger.
+const ENABLE_MIRRORING: bool = true;
+// --------------------------------------
+
 const NUM_COLOR_CHANNELS: usize = 3;
 
 /// Takes in variables describing where to render and at what resolution
@@ -53,7 +66,7 @@ pub fn render(
     // True if the image contains the real axis, false otherwise.
     // If the image contains the real axis we want to mirror
     // the result of the largest half on to the smallest.
-    let mirror = draw_region.center_imag.abs() < draw_region.imag_distance;
+    let mirror = ENABLE_MIRRORING && draw_region.center_imag.abs() < draw_region.imag_distance;
 
     // One way of doing this is to always assume we are rendering
     // in the lower half of the complex plane. If the assumption is false
@@ -265,9 +278,11 @@ pub fn supersampled_iterate(
         samples += 1;
 
         // If we are far from the fractal we do not need to supersample.
-        if esc > 0.95 {
-            // Uncomment the next line to only show supersampling region as non-black.
-            //escape_speed = 0.0;
+        if RESTRICT_SSAA_REGION && esc > 0.95 {
+            if SHOW_SSAA_REGION {
+                escape_speed = 0.5;
+            }
+
             break;
         }
     }
