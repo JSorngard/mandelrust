@@ -87,6 +87,10 @@ pub struct Cli {
     #[arg(short, long, default_value = "renders", value_name = "OUTPUT FOLDER")]
     /// The folder in which to save the resulting image
     pub output_folder: String,
+
+    #[arg(long)]
+    /// Do not mirror the image in the real axis
+    pub disable_mirroring: bool,
 }
 
 /// Tries to parse the input string slice into an f64 > 0.

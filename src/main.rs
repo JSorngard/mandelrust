@@ -35,6 +35,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         args.max_iterations,
         args.ssaa,
         args.grayscale,
+        !args.disable_mirroring,
     );
 
     // Output some basic information about what the program will be rendering.

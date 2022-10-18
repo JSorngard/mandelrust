@@ -14,11 +14,6 @@ const RESTRICT_SSAA_REGION: bool = true;
 
 // Set to true to show the region where super sampling is skipped as brown.
 const SHOW_SSAA_REGION: bool = false;
-
-// Set to true to split the image into two parts along the real axis
-// (if it is present in the image) and then only iterate the points in the
-// larger part, and mirror the points in the smaller part from the larger.
-const ENABLE_MIRRORING: bool = true;
 // --------------------------------------
 
 const NUM_COLOR_CHANNELS: usize = 3;
@@ -66,7 +61,7 @@ pub fn render(
     // True if the image contains the real axis, false otherwise.
     // If the image contains the real axis we want to mirror
     // the result of the largest half on to the smallest.
-    let mirror = ENABLE_MIRRORING && draw_region.center_imag.abs() < draw_region.imag_distance;
+    let mirror = render_parameters.mirror && draw_region.center_imag.abs() < draw_region.imag_distance;
 
     // One way of doing this is to always assume we are rendering
     // in the lower half of the complex plane. If the assumption is false
@@ -373,6 +368,7 @@ pub struct RenderParameters {
     pub iterations: NonZeroU32,
     pub sqrt_samples_per_pixel: NonZeroU8,
     pub grayscale: bool,
+    pub mirror: bool,
 }
 
 impl RenderParameters {
@@ -382,6 +378,7 @@ impl RenderParameters {
         iterations: NonZeroU32,
         sqrt_samples_per_pixel: NonZeroU8,
         grayscale: bool,
+        mirror: bool,
     ) -> Self {
         RenderParameters {
             x_resolution,
@@ -389,6 +386,7 @@ impl RenderParameters {
             iterations,
             sqrt_samples_per_pixel,
             grayscale,
+            mirror,
         }
     }
 }
