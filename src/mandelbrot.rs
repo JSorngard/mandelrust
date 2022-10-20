@@ -86,14 +86,14 @@ pub fn render(
             * yresolution
     ]));
 
-    // Make a parallel iterator over all the real values with rayon and for each
+    // Make a parallel iterator over the pixel columns of the image and for each
     (0..xresolution)
         .into_par_iter()
         .progress_count(xresolution.try_into()?)
         .try_for_each(|real| {
-            // try to color every pixel with
+            // try to color every pixel
             color_column(
-                // that real value
+                // with the corresponding real value
                 start_real + draw_region.real_distance * (real as f64) / (xresolution as f64),
                 render_parameters,
                 draw_region,
