@@ -47,7 +47,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     print!("\rEncoding and saving image");
     stdout().flush()?;
-    
+
     let image_name = if args.record_params {
         format!(
             "{DEFAULT_FILE_NAME}_at_re_{}_im_{}_zoom_{}_maxiters_{}.{DEFAULT_FILE_EXTENSION}",
