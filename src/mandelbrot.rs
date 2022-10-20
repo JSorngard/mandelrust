@@ -68,13 +68,10 @@ pub fn render(
     // in the lower half of the complex plane. If the assumption is false
     // we only need to flip the image vertically to get the
     // correct result since it is symmetric under conjugation.
-    let mirror_sign = if draw_region.center_imag > 0.0 {
-        -1.0
-    } else {
-        1.0
-    };
+    let need_to_flip = draw_region.center_imag > 0.0;
     let start_real = draw_region.center_real - draw_region.real_distance / 2.0;
-    let start_imag = mirror_sign * draw_region.center_imag - draw_region.imag_distance / 2.0;
+    let start_imag = if need_to_flip { -1.0 } else { 1.0 } * draw_region.center_imag
+        - draw_region.imag_distance / 2.0;
 
     let xresolution = render_parameters.x_resolution.get();
     let yresolution = render_parameters.y_resolution.get();
@@ -126,7 +123,7 @@ pub fn render(
 
     // Rotate it to be the right side up and
     img = image::imageops::rotate270(&img);
-    if mirror_sign == -1.0 {
+    if need_to_flip {
         // flip it vertically if we need to due to mirroring
         image::imageops::flip_vertical_in_place(&mut img);
     }
