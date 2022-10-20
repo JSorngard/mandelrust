@@ -102,7 +102,7 @@ pub fn render(
                 real,
                 start_imag,
                 mirror,
-                pixel_ptr.clone(),
+                &pixel_ptr,
             );
         });
 
@@ -147,7 +147,7 @@ fn color_column(
     xindex: usize,
     start_imag: f64,
     mirror: bool,
-    image: Arc<Mutex<Vec<u8>>>,
+    image: &Arc<Mutex<Vec<u8>>>,
 ) {
     let xresolution = render_parameters.x_resolution.get();
     let yresolution = render_parameters.y_resolution.get();
