@@ -61,7 +61,8 @@ pub fn render(
     // True if the image contains the real axis, false otherwise.
     // If the image contains the real axis we want to mirror
     // the result of the largest half on to the smallest.
-    let mirror = render_parameters.mirror && draw_region.center_imag.abs() < draw_region.imag_distance;
+    let mirror =
+        render_parameters.mirror && draw_region.center_imag.abs() < draw_region.imag_distance;
 
     // One way of doing this is to always assume we are rendering
     // in the lower half of the complex plane. If the assumption is false
@@ -78,8 +79,12 @@ pub fn render(
     let xresolution = render_parameters.x_resolution.get();
     let yresolution = render_parameters.y_resolution.get();
 
-    let pixel_bytes: Vec<u8> = vec![0; xresolution * yresolution * NUM_COLOR_CHANNELS];
-    let pixel_ptr = Arc::new(Mutex::new(pixel_bytes));
+    let pixel_ptr = Arc::new(Mutex::new(vec![
+        0;
+        xresolution
+            * yresolution
+            * NUM_COLOR_CHANNELS
+    ]));
 
     // Make a parallel iterator over all the real values with rayon and for each
     (0..xresolution)
