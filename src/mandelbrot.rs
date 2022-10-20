@@ -79,7 +79,7 @@ pub fn render(
     let xresolution = render_parameters.x_resolution.get();
     let yresolution = render_parameters.y_resolution.get();
 
-    let pixel_ptr = Arc::new(Mutex::new(vec![
+    let pixels_arc = Arc::new(Mutex::new(vec![
         0;
         NUM_COLOR_CHANNELS
             * xresolution
@@ -91,27 +91,27 @@ pub fn render(
         .into_par_iter()
         .progress_count(xresolution.try_into()?)
         .for_each(|real| {
-            // compute the real part of c and
-            let c_real =
-                start_real + draw_region.real_distance * (real as f64) / (xresolution as f64);
-            // color every pixel with that real value
+            // color every pixel with
             color_column(
-                c_real,
+                // that real value
+                start_real + draw_region.real_distance * (real as f64) / (xresolution as f64),
                 render_parameters,
                 draw_region,
                 real,
                 start_imag,
                 mirror,
-                &pixel_ptr,
+                &pixels_arc,
             );
         });
 
     print!("\rRendering image");
     stdout().flush()?;
 
-    // Extract the data from the mutex
-    let finished_pixel_data =
-        (*pixel_ptr.lock().expect("the mutex was poisoned, aborting")).clone();
+    // Extract the data from the Arc<Mutex<>>
+    let finished_pixel_data = Arc::try_unwrap(pixels_arc)
+        .map_err(|_| "Arc still had multiple owners after the render finished")?
+        .into_inner()?;
+
     // and place it in an image buffer
     let mut img = image::ImageBuffer::<image::Rgb<u8>, Vec<u8>>::from_vec(
         // The image is stored in a rotated fashion so that the pixels
@@ -238,7 +238,7 @@ fn map_luma_to_color(luma: f64) -> [u8; NUM_COLOR_CHANNELS] {
 ///
 /// The gap between the sample points at the edge and the
 /// edge of the pixel is the same as between the points.
-/// 
+///
 /// N.B.: if `sqrt_samples_per_pixel` is even, the center of
 /// the pixel is never sampled.
 pub fn supersampled_iterate(
