@@ -113,8 +113,8 @@ pub fn render(
 
     // and place it in an image buffer
     let mut img = image::ImageBuffer::<image::Rgb<u8>, Vec<u8>>::from_vec(
-        // The image is stored in a rotated fashion so that the pixels
-        // of a column of the image lie contiguous in the vector.
+        // The image is stored in a transposed fashion so that the pixels
+        // of a column of the image lie contiguous in the backing vector.
         yresolution.try_into()?,
         xresolution.try_into()?,
         finished_pixel_data,
