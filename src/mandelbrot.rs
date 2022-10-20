@@ -105,9 +105,6 @@ pub fn render(
         })?;
     // If the rendering fails we stop all threads and return the error.
 
-    print!("\rRendering image");
-    stdout().flush()?;
-
     // Extract the data from the Arc<Mutex<>>
     let finished_pixel_data = Arc::try_unwrap(pixels_arc)
         .map_err(|_| "Arc still had multiple owners after the render finished")?
