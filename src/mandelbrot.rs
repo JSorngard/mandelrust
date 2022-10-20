@@ -90,8 +90,8 @@ pub fn render(
     (0..xresolution)
         .into_par_iter()
         .progress_count(xresolution.try_into()?)
-        .for_each(|real| {
-            // color every pixel with
+        .try_for_each(|real| {
+            // try to color every pixel with
             color_column(
                 // that real value
                 start_real + draw_region.real_distance * (real as f64) / (xresolution as f64),
@@ -101,8 +101,9 @@ pub fn render(
                 start_imag,
                 mirror,
                 &pixels_arc,
-            );
-        });
+            )
+        })?;
+    // If the rendering fails we stop all threads and return the error.
 
     print!("\rRendering image");
     stdout().flush()?;
@@ -110,7 +111,8 @@ pub fn render(
     // Extract the data from the Arc<Mutex<>>
     let finished_pixel_data = Arc::try_unwrap(pixels_arc)
         .map_err(|_| "Arc still had multiple owners after the render finished")?
-        .into_inner()?;
+        .into_inner()
+        .map_err(|_| "Mutex was poisoned")?;
 
     // and place it in an image buffer
     let mut img = image::ImageBuffer::<image::Rgb<u8>, Vec<u8>>::from_vec(
@@ -148,7 +150,7 @@ fn color_column(
     start_imag: f64,
     mirror: bool,
     image: &Arc<Mutex<Vec<u8>>>,
-) {
+) -> Result<(), String> {
     let xresolution = render_parameters.x_resolution.get();
     let yresolution = render_parameters.y_resolution.get();
 
@@ -198,12 +200,15 @@ fn color_column(
         }
     }
 
-    // Lock the mutex for the image pixels, and copy the results of the iterations into the correct part of it
-    image.lock().expect("mutex was poisoned, aborting")[(xindex * yresolution * NUM_COLOR_CHANNELS
+    // Lock the mutex around the image pixels
+    let mut pixels = image.lock().map_err(|_| "the mutex was poisoned")?;
+    // and copy the results of the iterations into the correct part of the image.
+    pixels[(xindex * yresolution * NUM_COLOR_CHANNELS
         ..yresolution * (xindex + 1) * NUM_COLOR_CHANNELS)]
         .copy_from_slice(&result);
 
     // Unlock the mutex here by dropping the `MutexGuard` as it goes out of scope.
+    Ok(())
 }
 
 /// Determines the color of a pixel. The color map that this function uses was taken from the python code in
