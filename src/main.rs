@@ -40,7 +40,6 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     give_user_feedback(&args, &render_parameters)?;
 
-    // Render the image
     let img = render(render_parameters, draw_region)?;
 
     print!("\rEncoding and saving image");
