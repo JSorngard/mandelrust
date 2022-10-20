@@ -192,23 +192,17 @@ fn color_column(
                 map_luma_to_color(escape_speed)
             };
 
-            for color_channel in 0..NUM_COLOR_CHANNELS {
-                result[y + color_channel] = colors[color_channel];
-            }
+            result[y..(NUM_COLOR_CHANNELS + y)].copy_from_slice(&colors);
+
             mirror_from += NUM_COLOR_CHANNELS;
         }
     }
 
-    // Lock the mutex for the image pixels
-    let mut pixels = image.lock().expect("mutex was poisoned, aborting");
+    // Lock the mutex for the image pixels, and copy the results of the iterations into the correct part of it
+    image.lock().expect("mutex was poisoned, aborting")[(xindex * yresolution * NUM_COLOR_CHANNELS
+        ..yresolution * (xindex + 1) * NUM_COLOR_CHANNELS)]
+        .copy_from_slice(&result);
 
-    for (j, i) in (xindex * yresolution * NUM_COLOR_CHANNELS
-        ..yresolution * (xindex + 1) * NUM_COLOR_CHANNELS)
-        .enumerate()
-    {
-        // and copy the results into it
-        pixels[i] = result[j];
-    }
     // Unlock the mutex here by dropping the `MutexGuard` as it goes out of scope.
 }
 
@@ -244,6 +238,9 @@ fn map_luma_to_color(luma: f64) -> [u8; NUM_COLOR_CHANNELS] {
 ///
 /// The gap between the sample points at the edge and the
 /// edge of the pixel is the same as between the points.
+/// 
+/// N.B.: if `sqrt_samples_per_pixel` is even, the center of
+/// the pixel is never sampled.
 pub fn supersampled_iterate(
     sqrt_samples_per_pixel: NonZeroU8,
     c_real: f64,
