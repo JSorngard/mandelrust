@@ -7,11 +7,11 @@ use std::{
 use clap::Parser;
 
 use crate::{
-    config::Cli,
+    command_line_interface::Cli,
     mandelbrot::{render, Frame, RenderParameters},
 };
 
-mod config;
+mod command_line_interface;
 mod mandelbrot;
 
 fn main() -> Result<(), Box<dyn Error>> {
@@ -38,29 +38,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         !args.disable_mirroring,
     );
 
-    // Output some basic information about what the program will be rendering.
-    let mut header = Vec::with_capacity(61);
-    write!(&mut header, "---- Generating a")?;
-    if args.ssaa.get() == 1 {
-        write!(&mut header, "n")?;
-    } else {
-        write!(
-            &mut header,
-            " {} times supersampled",
-            u16::from(args.ssaa.get()) * u16::from(args.ssaa.get())
-        )?;
-    }
-    write!(
-        &mut header,
-        " image with a resolution of {xresolution} by {} pixels",
-        args.pixels.get(),
-    )?;
-    if (args.zoom - 1.0).abs() > f64::EPSILON {
-        write!(&mut header, " zoomed by a factor of {}", args.zoom)?;
-    }
-    write!(&mut header, " ----")?;
-
-    println!("{}", std::str::from_utf8(&header)?);
+    give_user_feedback(&args, &render_parameters)?;
 
     // Render the image
     let img = render(render_parameters, draw_region)?;
@@ -89,5 +67,34 @@ fn main() -> Result<(), Box<dyn Error>> {
     println!("\rSaved image as {}", out_path.display());
 
     // Everything finished correctly!
+    Ok(())
+}
+
+/// Output some basic information about what the program will be rendering.
+fn give_user_feedback(args: &Cli, rparams: &RenderParameters) -> Result<(), Box<dyn Error>> {
+    let mut header = Vec::with_capacity(61);
+    write!(&mut header, "---- Generating a")?;
+    if args.ssaa.get() == 1 {
+        write!(&mut header, "n")?;
+    } else {
+        write!(
+            &mut header,
+            " {} times supersampled",
+            u16::from(args.ssaa.get()) * u16::from(args.ssaa.get())
+        )?;
+    }
+    write!(
+        &mut header,
+        " image with a resolution of {} by {} pixels",
+        rparams.x_resolution,
+        args.pixels.get(),
+    )?;
+    if (args.zoom - 1.0).abs() > f64::EPSILON {
+        write!(&mut header, " zoomed by a factor of {}", args.zoom)?;
+    }
+    write!(&mut header, " ----")?;
+
+    println!("{}", std::str::from_utf8(&header)?);
+
     Ok(())
 }
