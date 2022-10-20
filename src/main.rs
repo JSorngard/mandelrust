@@ -14,6 +14,9 @@ use crate::{
 mod command_line_interface;
 mod mandelbrot;
 
+const DEFAULT_FILE_NAME: &str = "mandelbrot_set";
+const DEFAULT_FILE_EXTENSION: &str = "png";
+
 fn main() -> Result<(), Box<dyn Error>> {
     let args = Cli::parse();
 
@@ -44,13 +47,14 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     print!("\rEncoding and saving image");
     stdout().flush()?;
+    
     let image_name = if args.record_params {
         format!(
-            "mandelbrot_set_at_re_{}_im_{}_zoom_{}_maxiters_{}.png",
-            args.real_center, args.imag_center, args.zoom, args.max_iterations
+            "{DEFAULT_FILE_NAME}_at_re_{}_im_{}_zoom_{}_maxiters_{}.{DEFAULT_FILE_EXTENSION}",
+            args.real_center, args.imag_center, args.zoom, args.max_iterations,
         )
     } else {
-        "mandelbrot_set.png".to_owned()
+        format!("{DEFAULT_FILE_NAME}.{DEFAULT_FILE_EXTENSION}")
     };
 
     let mut out_path = PathBuf::new();
