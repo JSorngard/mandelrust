@@ -81,9 +81,9 @@ pub fn render(
 
     let pixel_ptr = Arc::new(Mutex::new(vec![
         0;
-        xresolution
+        NUM_COLOR_CHANNELS
+            * xresolution
             * yresolution
-            * NUM_COLOR_CHANNELS
     ]));
 
     // Make a parallel iterator over all the real values with rayon and for each
