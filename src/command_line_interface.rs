@@ -109,7 +109,7 @@ fn non_negative_double(s: &str) -> Result<f64, String> {
 /// 3:2 and 1.5 both work.
 fn parse_aspect_ratio(s: &str) -> Result<f64, String> {
     match s.parse::<f64>() {
-        Ok(float) => Ok(float),
+        Ok(x_by_y) => Ok(x_by_y),
         Err(_) => {
             let substrings: Vec<&str> = s.split(':').collect();
             if substrings.len() == 2 {
