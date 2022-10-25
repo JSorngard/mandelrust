@@ -115,7 +115,8 @@ fn parse_aspect_ratio(s: &str) -> Result<f64, String> {
             if substrings.len() == 2 {
                 match (substrings[0].parse::<f64>(), substrings[1].parse::<f64>()) {
                     (Ok(x), Ok(y)) => Ok(x / y),
-                    _ => Err("invalid float literal".into()),
+                    (Ok(_), Err(e)) | (Err(e), Ok(_)) => Err(e.to_string()),
+                    _ => Err("invalid float literals".into()),
                 }
             } else {
                 Err("input could not be interpreted as an aspect ratio".into())
