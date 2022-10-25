@@ -111,14 +111,11 @@ fn parse_aspect_ratio(s: &str) -> Result<f64, String> {
     match s.parse::<f64>() {
         Ok(float) => Ok(float),
         Err(_) => {
-            let substrings: Vec<&str> = s.split(":").collect();
+            let substrings: Vec<&str> = s.split(':').collect();
             if substrings.len() == 2 {
-                match substrings[0].parse::<f64>() {
-                    Ok(x) => match substrings[1].parse::<f64>() {
-                        Ok(y) => Ok(x / y),
-                        Err(e) => Err(e.to_string()),
-                    },
-                    Err(e) => Err(e.to_string()),
+                match (substrings[0].parse::<f64>(), substrings[1].parse::<f64>()) {
+                    (Ok(x), Ok(y)) => Ok(x / y),
+                    _ => Err("invalid float literal".into()),
                 }
             } else {
                 Err("input could not be interpreted as an aspect ratio".into())
