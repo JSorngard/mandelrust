@@ -22,7 +22,9 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     let xresolution = (args.aspect_ratio * (args.pixels.get() as f64)) as usize;
 
-    let imag_distance = 8.0 / (3.0 * args.zoom);
+    let zoom = 2.0_f64.powf(args.zoom);
+
+    let imag_distance = 8.0 / (3.0 * zoom);
     let real_distance = args.aspect_ratio * imag_distance;
 
     let draw_region = Frame::new(
@@ -92,8 +94,8 @@ fn give_user_feedback(args: &Cli, rparams: &RenderParameters) -> Result<(), Box<
         rparams.x_resolution,
         args.pixels.get(),
     )?;
-    if (args.zoom - 1.0).abs() > f64::EPSILON {
-        write!(&mut header, " zoomed by a factor of {}", args.zoom)?;
+    if args.zoom > 0.0 {
+        write!(&mut header, " zoomed by a factor of {}", 2.0_f64.powf(args.zoom))?;
     }
     write!(&mut header, " ----")?;
 

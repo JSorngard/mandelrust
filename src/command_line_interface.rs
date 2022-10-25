@@ -32,13 +32,13 @@ pub struct Cli {
     #[arg(
         short,
         long,
-        value_parser(positive_double),
+        value_parser(non_negative_double),
         value_name = "ZOOM LEVEL",
-        default_value_t = 1.0
+        default_value_t = 0.0
     )]
-    /// How far in to zoom on the given center point. If this is 2 the image is zoomed by a factor of 2,
-    /// meaning the vertical and horizontal distance that the image covers in the complex plane is halved.
-    /// In general these distances scale as 1/zoom
+    /// How far in to zoom on the given center point. This number works on an exponential scale
+    /// where 0 means no zoom and every time it is increased by 1 the vertical and
+    /// horizontal distances covered by the image are halved.
     pub zoom: f64,
 
     #[arg(
@@ -91,6 +91,17 @@ pub struct Cli {
     #[arg(long)]
     /// Do not mirror the image in the real axis
     pub disable_mirroring: bool,
+}
+
+/// Tries to parse the input string slice into an f64 >= 0.
+fn non_negative_double(s: &str) -> Result<f64, String> {
+    let x: f64 = s.parse().map_err(|e: ParseFloatError| e.to_string())?;
+
+    if x >= 0.0 {
+        Ok(x)
+    } else {
+        Err("the value must not be negative".into())
+    }
 }
 
 /// Tries to parse the input string slice into an f64 > 0.
