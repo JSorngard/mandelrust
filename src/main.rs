@@ -95,7 +95,11 @@ fn give_user_feedback(args: &Cli, rparams: &RenderParameters) -> Result<(), Box<
         args.pixels.get(),
     )?;
     if args.zoom > 0.0 {
-        write!(&mut header, " zoomed by a factor of {}", 2.0_f64.powf(args.zoom))?;
+        write!(
+            &mut header,
+            " zoomed by a factor of {}",
+            2.0_f64.powf(args.zoom)
+        )?;
     }
     write!(&mut header, " ----")?;
 
