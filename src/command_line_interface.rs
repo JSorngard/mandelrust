@@ -50,7 +50,13 @@ pub struct Cli {
     /// The number of pixels along the y-axis of the image
     pub pixels: NonZeroUsize,
 
-    #[arg(short, long, value_parser(parse_aspect_ratio), default_value_t = 1.5)]
+    #[arg(
+        short,
+        long,
+        value_name = "ASPECT RATIO",
+        value_parser(parse_aspect_ratio),
+        default_value_t = 1.5
+    )]
     /// The aspect ratio of the image. The horizontal pixel resolution is calculated by multiplying the
     /// vertical pixel resolution by this number. The aspect ratio can also be entered in the format x:y,
     /// where x and y are doubles, e.g. 3:2.
