@@ -50,9 +50,10 @@ pub struct Cli {
     /// The number of pixels along the y-axis of the image
     pub pixels: NonZeroUsize,
 
-    #[arg(short, long, value_parser(positive_double), default_value_t = 1.5)]
+    #[arg(short, long, value_parser(parse_aspect_ratio), default_value_t = 1.5)]
     /// The aspect ratio of the image. The horizontal pixel resolution is calculated by multiplying the
-    /// vertical pixel resolution by this number
+    /// vertical pixel resolution by this number. The aspect ratio can also be entered in the format x:y,
+    /// where x and y are doubles, e.g. 3:2.
     pub aspect_ratio: f64,
 
     #[arg(
@@ -104,14 +105,25 @@ fn non_negative_double(s: &str) -> Result<f64, String> {
     }
 }
 
-/// Tries to parse the input string slice into an f64 > 0.
-fn positive_double(s: &str) -> Result<f64, String> {
-    let x: f64 = s.parse().map_err(|e: ParseFloatError| e.to_string())?;
-
-    if x > 0.0 {
-        Ok(x)
-    } else {
-        Err("the value must be positive".into())
+/// Tries to interpret the input string as if it is an aspect ratio.
+/// 3:2 and 1.5 both work.
+fn parse_aspect_ratio(s: &str) -> Result<f64, String> {
+    match s.parse::<f64>() {
+        Ok(float) => Ok(float),
+        Err(_) => {
+            let substrings: Vec<&str> = s.split(":").collect();
+            if substrings.len() == 2 {
+                match substrings[0].parse::<f64>() {
+                    Ok(x) => match substrings[1].parse::<f64>() {
+                        Ok(y) => Ok(x / y),
+                        Err(e) => Err(e.to_string()),
+                    },
+                    Err(e) => Err(e.to_string()),
+                }
+            } else {
+                Err("input could not be interpreted as an aspect ratio".into())
+            }
+        }
     }
 }
 
