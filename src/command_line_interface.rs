@@ -36,9 +36,10 @@ pub struct Cli {
         value_name = "ZOOM LEVEL",
         default_value_t = 0.0
     )]
-    /// How far in to zoom on the given center point. This number works on an exponential scale
-    /// where 0 means no zoom and every time it is increased by 1 the vertical and
-    /// horizontal distances covered by the image are halved.
+    /// A real number describing how far in to zoom on the given center point.
+    /// This number works on an exponential scale where 0 means no zoom
+    /// and every time it is increased by 1 the vertical and horizontal
+    /// distances covered by the image are halved
     pub zoom: f64,
 
     #[arg(
@@ -58,8 +59,8 @@ pub struct Cli {
         default_value_t = 1.5
     )]
     /// The aspect ratio of the image. The horizontal pixel resolution is calculated by multiplying the
-    /// vertical pixel resolution by this number. The aspect ratio can also be entered in the format x:y,
-    /// where x and y are doubles, e.g. 3:2.
+    /// vertical pixel resolution by this number. The aspect ratio can be entered as a real number and also in the format x:y,
+    /// where x and y are integers, e.g. 3:2
     pub aspect_ratio: f64,
 
     #[arg(
@@ -119,10 +120,10 @@ fn parse_aspect_ratio(s: &str) -> Result<f64, String> {
         Err(_) => {
             let substrings: Vec<&str> = s.split(':').collect();
             if substrings.len() == 2 {
-                match (substrings[0].parse::<f64>(), substrings[1].parse::<f64>()) {
-                    (Ok(x), Ok(y)) => Ok(x / y),
+                match (substrings[0].parse::<u32>(), substrings[1].parse::<u32>()) {
+                    (Ok(x), Ok(y)) => Ok(f64::from(x) / f64::from(y)),
                     (Ok(_), Err(e)) | (Err(e), Ok(_)) => Err(e.to_string()),
-                    _ => Err("invalid float literals".into()),
+                    _ => Err("invalid digit found in string".into()),
                 }
             } else {
                 Err("input could not be interpreted as an aspect ratio".into())
