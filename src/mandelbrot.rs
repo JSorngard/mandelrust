@@ -29,7 +29,6 @@ const NUM_COLOR_CHANNELS: usize = 3;
 /// and imaginary direction respectively.
 /// `sqrt_samples_per_pixel` is the number of supersampled points along one direction. If it
 /// is e.g. 3, then a supersampled pixel will be sampled 3^2 = 9 times.
-/// region contains:
 ///
 /// `center_real` and `center_imag` are the real and imaginary parts of the
 /// point at the center of the image.
