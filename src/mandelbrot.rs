@@ -301,6 +301,9 @@ pub fn iterate(c_re: f64, c_im: f64, maxiterations: NonZeroU32) -> f64 {
 
     // Iterates the mandelbrot function.
     // This loop uses only 3 multiplications, which is the minimum.
+    // While it is common to abort when |z| > 2 since such a point is guaranteed
+    // to not be in the set, we keep iterating until |z| >= 6 as this reduces
+    // color banding.
     while iterations < maxiterations && z_re_sqr + z_im_sqr <= 36.0 {
         z_im *= z_re;
         z_im += z_im;
