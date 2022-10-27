@@ -5,7 +5,7 @@ use std::num::{NonZeroU32, NonZeroU8, NonZeroUsize};
 use image::DynamicImage;
 use indicatif::ParallelProgressIterator;
 use itertools::Itertools;
-use rayon::{iter::ParallelBridge, prelude::*};
+use rayon::{iter::ParallelBridge, prelude::ParallelIterator};
 
 // ----------- DEBUG FLAGS --------------
 // Set to true to only super sample close to the border of the set.
@@ -77,7 +77,7 @@ pub fn render(
     let mut pixels: Vec<u8> = vec![0; NUM_COLOR_CHANNELS * xresolution * yresolution];
 
     pixels
-    // Split the image up into bands.
+        // Split the image up into bands.
         .chunks_mut(NUM_COLOR_CHANNELS * yresolution)
         .enumerate()
         // Iterate over the bands in parallel
