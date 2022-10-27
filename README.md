@@ -3,8 +3,15 @@ Renders a supersampled image of the Mandelbrot set to a png file. It is possible
 
 This was one of my first projects to learn rust.
 
+# Prettier mandelbrot rendering
+This is of course subjective, but here is a list of what I've done to make the resulting images look better in my eyes:  
+
+ 1. Use a color palette that is smooth i.e. small differences in escape speed should map to small differences in color. In this program this is achieved by the color palette being a continuous function that maps escape speeds to colors.  
+ 2. Do not abort the iteration when |z| > 2, but at a larger absolute value (in this program I have chosen 6). Together with using a function that smoothly maps iteration count and absolute value to a number between 0 and 1 this completely removes color banding.  
+ 4. Supersample every pixel to remove graininess.
+
 # Faster mandelbrot rendering
-I have tried to make the program faster over time. Some of the techniques used are
+I have tried to make the program faster over time. Some of the techniques used are:
 
  1. If the image contains the real axis, split the image there and only render the larger half. Then mirror the smaller half from it.  
  2. There are [closed form expressions](https://en.wikipedia.org/wiki/Plotting_algorithms_for_the_Mandelbrot_set#Cardioid_/_bulb_checking) for checking if a point is inside the main cardioid or the period 2 bulb, these are used to skip a large amount of iteration.  
