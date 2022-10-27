@@ -258,7 +258,7 @@ pub fn supersampled_iterate(
         samples += 1;
 
         // If we are far from the fractal we do not need to supersample.
-        if RESTRICT_SSAA_REGION && esc > 0.95 {
+        if RESTRICT_SSAA_REGION && esc > 0.9 {
             if SHOW_SSAA_REGION {
                 escape_speed = 0.5;
             }
