@@ -1,12 +1,11 @@
 use std::error::Error;
 use std::io::{stdout, Write};
 use std::num::{NonZeroU32, NonZeroU8, NonZeroUsize};
-use std::sync::{Arc, Mutex};
 
 use image::DynamicImage;
 use indicatif::ParallelProgressIterator;
 use itertools::Itertools;
-use rayon::prelude::*;
+use rayon::{iter::ParallelBridge, prelude::*};
 
 // ----------- DEBUG FLAGS --------------
 // Set to true to only super sample close to the border of the set.
@@ -75,45 +74,34 @@ pub fn render(
     let xresolution = render_parameters.x_resolution.get();
     let yresolution = render_parameters.y_resolution.get();
 
-    let pixels_arc = Arc::new(Mutex::new(vec![
-        0;
-        NUM_COLOR_CHANNELS
-            * xresolution
-            * yresolution
-    ]));
+    let mut pixels: Vec<u8> = vec![0; NUM_COLOR_CHANNELS * xresolution * yresolution];
 
-    // Make a parallel iterator over the pixel columns of the image and for each
-    (0..xresolution)
-        .into_par_iter()
+    pixels
+    // Split the image up into bands.
+        .chunks_mut(NUM_COLOR_CHANNELS * yresolution)
+        .enumerate()
+        // Iterate over the bands in parallel
+        .par_bridge()
         .progress_count(xresolution.try_into()?)
-        .try_for_each(|xindex: usize| {
-            // try to color every pixel
-            color_column(
-                // with the corresponding real value
+        .for_each(|(xindex, band)| {
+            // and color every pixel in each band
+            color_band(
                 start_real + draw_region.real_distance * (xindex as f64) / (xresolution as f64),
                 render_parameters,
                 draw_region,
-                xindex,
                 start_imag,
                 mirror,
-                &pixels_arc,
+                band,
             )
-        })?;
-    // If the rendering fails we stop all threads and return the error.
+        });
 
-    // Extract the data from the Arc<Mutex<>>
-    let finished_pixel_data = Arc::try_unwrap(pixels_arc)
-        .map_err(|_| "Arc still had multiple owners after the render finished")?
-        .into_inner()
-        .map_err(|_| "Mutex was poisoned")?;
-
-    // and place it in an image buffer
+    // Place the data in an image buffer
     let mut img = image::ImageBuffer::<image::Rgb<u8>, Vec<u8>>::from_vec(
         // The image is stored in a transposed fashion so that the pixels
         // of a column of the image lie contiguous in the backing vector.
         yresolution.try_into()?,
         xresolution.try_into()?,
-        finished_pixel_data,
+        pixels,
     )
     .ok_or("unable to construct image buffer from generated data")?;
 
@@ -134,16 +122,15 @@ pub fn render(
     })
 }
 
-/// Computes the colors of the pixels in a column of the image of the mandelbrot set.
-fn color_column(
+/// Computes the colors of the pixels in a y-axis band of the image of the mandelbrot set.
+fn color_band(
     c_real: f64,
     render_parameters: RenderParameters,
     draw_region: Frame,
-    xindex: usize,
     start_imag: f64,
     mirror: bool,
-    image: &Arc<Mutex<Vec<u8>>>,
-) -> Result<(), String> {
+    band: &mut [u8],
+) {
     let xresolution = render_parameters.x_resolution.get();
     let yresolution = render_parameters.y_resolution.get();
 
@@ -154,7 +141,6 @@ fn color_column(
     let imag_delta = draw_region.imag_distance / (yresolution - 1) as f64;
 
     // Create a temporary vector to hold the results for this row of pixels
-    let mut result = vec![0; yresolution * NUM_COLOR_CHANNELS];
     let mut c_imag: f64;
     for y in (0..yresolution * NUM_COLOR_CHANNELS).step_by(NUM_COLOR_CHANNELS) {
         // Compute the imaginary part at this pixel
@@ -167,8 +153,7 @@ fn color_column(
         // part we just mirror this pixel
         if mirror && c_imag > 0.0 {
             for color_channel in 0..NUM_COLOR_CHANNELS {
-                result[y + color_channel] =
-                    result[mirror_from - NUM_COLOR_CHANNELS + color_channel];
+                band[y + color_channel] = band[mirror_from - NUM_COLOR_CHANNELS + color_channel];
             }
             mirror_from -= NUM_COLOR_CHANNELS;
         } else {
@@ -187,21 +172,21 @@ fn color_column(
                 map_luma_to_color(escape_speed)
             };
 
-            result[y..(NUM_COLOR_CHANNELS + y)].copy_from_slice(&colors);
+            band[y..(NUM_COLOR_CHANNELS + y)].copy_from_slice(&colors);
 
             mirror_from += NUM_COLOR_CHANNELS;
         }
     }
 
-    // Lock the mutex around the image pixels
-    let mut pixels = image.lock().map_err(|_| "the mutex was poisoned")?;
-    // and copy the results of the iterations into the correct part of the image.
-    pixels[(xindex * yresolution * NUM_COLOR_CHANNELS
-        ..yresolution * (xindex + 1) * NUM_COLOR_CHANNELS)]
-        .copy_from_slice(&result);
+    // // Lock the mutex around the image pixels
+    // let mut pixels = image.lock().map_err(|_| "the mutex was poisoned")?;
+    // // and copy the results of the iterations into the correct part of the image.
+    // pixels[(xindex * yresolution * NUM_COLOR_CHANNELS
+    //     ..yresolution * (xindex + 1) * NUM_COLOR_CHANNELS)]
+    //     .copy_from_slice(&result);
 
-    // Unlock the mutex here by dropping the `MutexGuard` as it goes out of scope.
-    Ok(())
+    // // Unlock the mutex here by dropping the `MutexGuard` as it goes out of scope.
+    // Ok(())
 }
 
 /// Determines the color of a pixel. The color map that this function uses was taken from the python code in
