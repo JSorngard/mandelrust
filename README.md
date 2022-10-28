@@ -29,7 +29,7 @@ The program can render a sixteen times supersampled 8k image of the set in just 
  3. Clone this git repo with `git clone https://www.github.com/JSorngard/mandelrust.git`
  4. Go into the repository with `cd mandelrust`
  5. Compile the program with `cargo build --release`
- 6. Run the program with `./target/release/mandelrust.exe`
+ 6. Run the program with `./target/release/mandelrust.exe`. The resulting image can be found in the `renders` folder.
  7. You can specify where the image is focused, how zoomed it is and how many iterations to do (among other things) with command line arguments. For an exhaustive list run the program with the `--help` argument
 
 # Example images
