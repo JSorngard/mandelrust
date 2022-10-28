@@ -24,9 +24,9 @@ I have tried to make the program faster over time. Some of the techniques used a
 The program can render a sixteen times supersampled 8k image of the set in just over three seconds on my laptop with a quad core i7-7500U CPU, while a non-supersampled 1080p image finishes in just under 200 ms. On my desktop with a 5800X3D the same tests finish in just over one second and just under 100 ms respectively.
 
 # How to use this program
- 1. Install [Rust](https://www.rust-lang.org/tools/install) and [git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git)
+ 1. Install [Rust](https://www.rust-lang.org/tools/install)
  2. Open a terminal in the folder you want to install the program in
- 3. Clone this git repo with `git clone https://www.github.com/JSorngard/mandelrust.git`
+ 3. Download this code either by cloning this git repo with `git clone https://www.github.com/JSorngard/mandelrust.git` or by clicking the green button labeled "Code" and choosing "Download zip"
  4. Go into the repository with `cd mandelrust`
  5. Compile the program with `cargo build --release`
  6. Run the program with `./target/release/mandelrust.exe`. The resulting image can be found in the `renders` folder.
