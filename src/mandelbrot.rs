@@ -196,9 +196,9 @@ fn map_escape_speed_to_color(esc: f64) -> [u8; NUM_COLOR_CHANNELS] {
 
     [
         (esc * 255.0_f64.powf(1.0 - 2.0 * ninth_power * thirty_sixth_power)) as u8,
-        (esc * 70.0 - (880.0 * ninth_power * ninth_power) + (701.0 * ninth_power)) as u8,
+        (esc * 70.0 - 880.0 * eighteenth_power + 701.0 * ninth_power) as u8,
         (esc * 80.0 + ninth_power * 255.0
-            - (950.0 * thirty_sixth_power * thirty_sixth_power * eighteenth_power * ninth_power))
+            - 950.0 * thirty_sixth_power * thirty_sixth_power * eighteenth_power * ninth_power)
             as u8,
     ]
 }
