@@ -177,16 +177,6 @@ fn color_band(
             mirror_from += NUM_COLOR_CHANNELS;
         }
     }
-
-    // // Lock the mutex around the image pixels
-    // let mut pixels = image.lock().map_err(|_| "the mutex was poisoned")?;
-    // // and copy the results of the iterations into the correct part of the image.
-    // pixels[(xindex * yresolution * NUM_COLOR_CHANNELS
-    //     ..yresolution * (xindex + 1) * NUM_COLOR_CHANNELS)]
-    //     .copy_from_slice(&result);
-
-    // // Unlock the mutex here by dropping the `MutexGuard` as it goes out of scope.
-    // Ok(())
 }
 
 /// Determines the color of a pixel. The color map that this function uses was taken from the python code in
