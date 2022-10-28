@@ -169,7 +169,7 @@ fn color_band(
             let colors = if grayscale {
                 [(f64::from(u8::MAX) * escape_speed) as u8; NUM_COLOR_CHANNELS]
             } else {
-                map_luma_to_color(escape_speed)
+                map_escape_speed_to_color(escape_speed)
             };
 
             band[y..(NUM_COLOR_CHANNELS + y)].copy_from_slice(&colors);
@@ -198,11 +198,11 @@ fn color_band(
 ///
 /// The function has not been tested for inputs outside the range \[0, 1\]
 /// and makes no guarantees about the output in that case.
-fn map_luma_to_color(luma: f64) -> [u8; NUM_COLOR_CHANNELS] {
+fn map_escape_speed_to_color(esc: f64) -> [u8; NUM_COLOR_CHANNELS] {
     [
-        (luma * 255.0_f64.powf(1.0 - 2.0 * luma.powf(45.0))) as u8,
-        (luma * 70.0 - (880.0 * luma.powf(18.0)) + (701.0 * luma.powf(9.0))) as u8,
-        (luma * 80.0 + (luma.powf(9.0) * 255.0) - (950.0 * luma.powf(99.0))) as u8,
+        (esc * 255.0_f64.powf(1.0 - 2.0 * esc.powf(45.0))) as u8,
+        (esc * 70.0 - (880.0 * esc.powf(18.0)) + (701.0 * esc.powf(9.0))) as u8,
+        (esc * 80.0 + (esc.powf(9.0) * 255.0) - (950.0 * esc.powf(99.0))) as u8,
     ]
 }
 
