@@ -189,7 +189,8 @@ fn color_band(
 /// The function has not been tested for inputs outside the range \[0, 1\]
 /// and makes no guarantees about the output in that case.
 fn map_escape_speed_to_color(esc: f64) -> [u8; NUM_COLOR_CHANNELS] {
-    let ninth_power = esc.powf(9.0);
+    let third_power = esc * esc * esc;
+    let ninth_power = third_power * third_power * third_power;
     let eighteenth_power = ninth_power * ninth_power;
     let thirty_sixth_power = eighteenth_power * eighteenth_power;
 
