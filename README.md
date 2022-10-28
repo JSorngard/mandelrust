@@ -7,8 +7,8 @@ This was one of my first projects to learn rust.
 This is of course subjective, but here is a list of what I've done to make the resulting images look better in my eyes:  
 
  1. Use a color palette that is smooth i.e. small differences in escape speed should map to small differences in color. In this program this is achieved by the color palette being a continuous function that maps escape speeds to colors.  
- 2. Do not abort the iteration when |z| > 2, but at a larger absolute value (in this program I have chosen 6). Together with using a function that smoothly maps iteration count and absolute value to a number between 0 and 1 this completely removes color banding.  
- 4. Supersample every pixel to remove graininess.
+ 2. Do not abort the iteration [when |z| > 2](/examples/smoothing/no_smoothing_abs_geq_2.png), but at a larger absolute value (in this program I have [chosen 6](/examples/smoothing/no_smoothing_abs_geq_6.png)). Together with using a function that smoothly maps iteration count and absolute value to a number between 0 and 1 this [completely removes color banding](/examples/smoothing/smoothing_abs_geq_6.png).  
+ 4. [Supersample the image](/examples/smoothing/smoothing_abs_geq_6_ssaa.png) to remove graininess.
 
 # Faster mandelbrot rendering
 I have tried to make the program faster over time. Some of the techniques used are:
