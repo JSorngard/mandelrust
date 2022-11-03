@@ -140,11 +140,9 @@ fn color_band(
     let real_delta = draw_region.real_distance / (xresolution - 1) as f64;
     let imag_delta = draw_region.imag_distance / (yresolution - 1) as f64;
 
-    // Create a temporary vector to hold the results for this row of pixels
-    let mut c_imag: f64;
     for y in (0..yresolution * NUM_COLOR_CHANNELS).step_by(NUM_COLOR_CHANNELS) {
         // Compute the imaginary part at this pixel
-        c_imag = start_imag
+        let c_imag = start_imag
             + draw_region.imag_distance * (y as f64)
                 / (NUM_COLOR_CHANNELS as f64 * yresolution as f64);
 
