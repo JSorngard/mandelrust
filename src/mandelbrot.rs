@@ -163,7 +163,7 @@ fn color_band(
                 c_imag,
                 real_delta,
                 imag_delta,
-                render_parameters.iterations,
+                render_parameters.maxiterations,
             );
 
             let colors = if grayscale {
@@ -347,7 +347,7 @@ impl Frame {
 pub struct RenderParameters {
     pub x_resolution: NonZeroUsize,
     pub y_resolution: NonZeroUsize,
-    pub iterations: NonZeroU32,
+    pub maxiterations: NonZeroU32,
     pub sqrt_samples_per_pixel: NonZeroU8,
     pub grayscale: bool,
     pub mirror: bool,
@@ -357,7 +357,7 @@ impl RenderParameters {
     pub fn new(
         x_resolution: NonZeroUsize,
         y_resolution: NonZeroUsize,
-        iterations: NonZeroU32,
+        maxiterations: NonZeroU32,
         sqrt_samples_per_pixel: NonZeroU8,
         grayscale: bool,
         mirror: bool,
@@ -365,7 +365,7 @@ impl RenderParameters {
         RenderParameters {
             x_resolution,
             y_resolution,
-            iterations,
+            maxiterations,
             sqrt_samples_per_pixel,
             grayscale,
             mirror,
