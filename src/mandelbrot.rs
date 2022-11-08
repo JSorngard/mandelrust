@@ -109,7 +109,7 @@ pub fn render(
     print!("\rProcessing image");
     stdout().flush()?;
 
-    // Rotate it to be the right side up and
+    // Undo the transposed state used during rendering and
     img = image::imageops::rotate270(&img);
     if need_to_flip {
         // flip it vertically if we need to due to mirroring
