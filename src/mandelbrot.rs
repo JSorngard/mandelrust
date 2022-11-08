@@ -116,11 +116,11 @@ pub fn render(
         image::imageops::flip_vertical_in_place(&mut img);
     }
 
-    Ok(if render_parameters.grayscale {
-        DynamicImage::ImageLuma8(image::imageops::grayscale(&img))
+    if render_parameters.grayscale {
+        Ok(DynamicImage::ImageLuma8(image::imageops::grayscale(&img)))
     } else {
-        DynamicImage::ImageRgb8(img)
-    })
+        Ok(DynamicImage::ImageRgb8(img))
+    }
 }
 
 /// Computes the colors of the pixels in a y-axis band of the image of the mandelbrot set.
