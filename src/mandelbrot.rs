@@ -72,22 +72,22 @@ pub fn render(
     let start_imag = if need_to_flip { -1.0 } else { 1.0 } * draw_region.center_imag
         - draw_region.imag_distance / 2.0;
 
-    let xresolution = render_parameters.x_resolution.get();
-    let yresolution = render_parameters.y_resolution.get();
+    let x_resolution = render_parameters.x_resolution.get();
+    let y_resolution = render_parameters.y_resolution.get();
 
-    let mut pixels: Vec<u8> = vec![0; NUM_COLOR_CHANNELS * xresolution * yresolution];
+    let mut pixels: Vec<u8> = vec![0; NUM_COLOR_CHANNELS * x_resolution * y_resolution];
 
     pixels
         // Split the image up into bands.
-        .chunks_mut(NUM_COLOR_CHANNELS * yresolution)
+        .chunks_mut(NUM_COLOR_CHANNELS * y_resolution)
         .enumerate()
         // Iterate over the bands in parallel
         .par_bridge()
-        .progress_count(xresolution.try_into()?)
-        .for_each(|(xindex, band)| {
+        .progress_count(x_resolution.try_into()?)
+        .for_each(|(x_index, band)| {
             // and color every pixel in each band
             color_band(
-                start_real + draw_region.real_distance * (xindex as f64) / (xresolution as f64),
+                start_real + draw_region.real_distance * (x_index as f64) / (x_resolution as f64),
                 render_parameters,
                 draw_region,
                 start_imag,
@@ -100,8 +100,8 @@ pub fn render(
     let mut img = image::ImageBuffer::<image::Rgb<u8>, Vec<u8>>::from_vec(
         // The image is stored in a transposed fashion so that the pixels
         // of a column of the image lie contiguous in the backing vector.
-        yresolution.try_into()?,
-        xresolution.try_into()?,
+        y_resolution.try_into()?,
+        x_resolution.try_into()?,
         pixels,
     )
     .ok_or("unable to construct image buffer from generated data")?;
@@ -132,26 +132,23 @@ fn color_band(
     mirror: bool,
     band: &mut [u8],
 ) {
-    let xresolution = render_parameters.x_resolution.get();
-    let yresolution = render_parameters.y_resolution.get();
-
-    let grayscale = render_parameters.grayscale;
+    let y_resolution = render_parameters.y_resolution.get();
 
     let mut mirror_from: usize = 0;
-    let real_delta = draw_region.real_distance / (xresolution - 1) as f64;
-    let imag_delta = draw_region.imag_distance / (yresolution - 1) as f64;
+    let real_delta = draw_region.real_distance / (render_parameters.x_resolution.get() - 1) as f64;
+    let imag_delta = draw_region.imag_distance / (y_resolution - 1) as f64;
 
-    for y in (0..yresolution * NUM_COLOR_CHANNELS).step_by(NUM_COLOR_CHANNELS) {
+    for y_index in (0..y_resolution * NUM_COLOR_CHANNELS).step_by(NUM_COLOR_CHANNELS) {
         // Compute the imaginary part at this pixel
         let c_imag = start_imag
-            + draw_region.imag_distance * (y as f64)
-                / (NUM_COLOR_CHANNELS as f64 * yresolution as f64);
+            + draw_region.imag_distance * (y_index as f64)
+                / (NUM_COLOR_CHANNELS as f64 * y_resolution as f64);
 
         // If we have rendered all the pixels with
         // negative imaginary part for this real part
         if mirror && c_imag > 0.0 {
             // we split the current pixel band up into two and
-            let (mirror_src, mirror_dst) = band.split_at_mut(y);
+            let (mirror_src, mirror_dst) = band.split_at_mut(y_index);
 
             // `memcpy` the values of this pixel from one of the
             // already computed pixels.
@@ -171,13 +168,13 @@ fn color_band(
                 render_parameters.maxiterations,
             );
 
-            let colors = if grayscale {
+            let colors = if render_parameters.grayscale {
                 [(f64::from(u8::MAX) * escape_speed) as u8; NUM_COLOR_CHANNELS]
             } else {
                 map_escape_speed_to_color(escape_speed)
             };
 
-            band[y..(NUM_COLOR_CHANNELS + y)].copy_from_slice(&colors);
+            band[y_index..(NUM_COLOR_CHANNELS + y_index)].copy_from_slice(&colors);
 
             // We keep track of how many pixels have been colored
             // in order to potentially mirror them.
