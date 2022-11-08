@@ -16,7 +16,7 @@ I have tried to make the program faster over time. Some of the techniques used a
  1. If the image contains the real axis, split the image there and only render the larger half. Then mirror the smaller half from it.  
  2. There are [closed form expressions](https://en.wikipedia.org/wiki/Plotting_algorithms_for_the_Mandelbrot_set#Cardioid_/_bulb_checking) for checking if a point is inside the main cardioid or the period 2 bulb, these are used to skip a large amount of iteration.  
  3. [Rayon](https://docs.rs/rayon/latest/rayon/) is used to parallelize the rendering.  
- 4. Supersampling is done only close to the border of the set.  
+ 4. Supersampling is done only [close to the border of the set](/examples/smoothing/mandelbrot_set_ssaa_region.png).  
  5. The iteration loop has been restructured to use the minimum number of multiplications.  
  6. [Link time optimization](https://doc.rust-lang.org/rustc/codegen-options/index.html#lto) has been enabled, the number of [codegen units](https://doc.rust-lang.org/rustc/codegen-options/index.html#codegen-units) set to 1, and the [opt-level](https://doc.rust-lang.org/rustc/codegen-options/index.html#opt-level) to 3.  
  7. Cargo is set to enable optimization with every instruction set available [on the compiling CPU](https://rust-lang.github.io/packed_simd/perf-guide/target-feature/rustflags.html#target-cpu).
