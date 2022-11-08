@@ -112,7 +112,7 @@ pub fn render(
     // Undo the transposed state used during rendering and
     img = image::imageops::rotate270(&img);
     if need_to_flip {
-        // flip it vertically if we need to due to mirroring
+        // flip the image vertically if we need to due to mirroring
         image::imageops::flip_vertical_in_place(&mut img);
     }
 
