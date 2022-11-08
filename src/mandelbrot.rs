@@ -83,6 +83,7 @@ pub fn render(
         .enumerate()
         // Iterate over the bands in parallel
         .par_bridge()
+        // while showing a progress bar
         .progress_count(x_resolution.try_into()?)
         .for_each(|(x_index, band)| {
             // and color every pixel in each band
