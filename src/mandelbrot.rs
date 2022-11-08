@@ -63,8 +63,8 @@ pub fn render(
     let mirror =
         render_parameters.mirror && draw_region.center_imag.abs() < draw_region.imag_distance;
 
-    // One way of doing this is to always assume we are rendering
-    // in the lower half of the complex plane. If the assumption is false
+    // One way of doing this is to always assume that the half with negative
+    // imaginary part is the larger one. If the assumption is false
     // we only need to flip the image vertically to get the
     // correct result since it is symmetric under conjugation.
     let need_to_flip = draw_region.center_imag > 0.0;
