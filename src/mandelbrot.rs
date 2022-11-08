@@ -289,11 +289,7 @@ pub fn iterate(c_re: f64, c_im: f64, maxiterations: NonZeroU32) -> f64 {
     if (c_re + 1.0) * (c_re + 1.0) + c_imag_sqr <= 0.0625
         || mag_sqr * (8.0 * mag_sqr - 3.0) <= 0.09375 - c_re
     {
-        if SHOW_SSAA_REGION {
-            return 0.5;
-        } else {
-            return 0.0;
-        }
+        return 0.0;
     }
 
     let mut z_re = c_re;
