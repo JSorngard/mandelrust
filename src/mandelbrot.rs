@@ -12,6 +12,7 @@ use rayon::{iter::ParallelBridge, prelude::ParallelIterator};
 const RESTRICT_SSAA_REGION: bool = true;
 
 // Set to true to show the region where super sampling is skipped as brown.
+// The region will have a black border where partial super sampling is done.
 const SHOW_SSAA_REGION: bool = false;
 // --------------------------------------
 
