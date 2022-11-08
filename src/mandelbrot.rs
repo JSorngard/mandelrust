@@ -148,14 +148,20 @@ fn color_band(
                 / (NUM_COLOR_CHANNELS as f64 * yresolution as f64);
 
         // If we have rendered all the pixels with
-        // negative imaginary part for this real
-        // part we just mirror this pixel
+        // negative imaginary part for this real part
         if mirror && c_imag > 0.0 {
-            for color_channel in 0..NUM_COLOR_CHANNELS {
-                band[y + color_channel] = band[mirror_from - NUM_COLOR_CHANNELS + color_channel];
-            }
+            // we split the current pixel band up into two and
+            let (mirror_src, mirror_dst) = band.split_at_mut(y);
+
+            // `memcpy` the values of this pixel from one of the
+            // already computed pixels.
+            mirror_dst[0..NUM_COLOR_CHANNELS]
+                .copy_from_slice(&mirror_src[(mirror_from - NUM_COLOR_CHANNELS)..mirror_from]);
+
+            // Next loop iteration we want to mirror from the next pixel over.
             mirror_from -= NUM_COLOR_CHANNELS;
         } else {
+            // Otherwise we compute the pixel color as normal by iteration.
             let escape_speed = supersampled_iterate(
                 render_parameters.sqrt_samples_per_pixel,
                 c_real,
@@ -173,6 +179,8 @@ fn color_band(
 
             band[y..(NUM_COLOR_CHANNELS + y)].copy_from_slice(&colors);
 
+            // We keep track of how many pixels have been colored
+            // in order to potentially mirror them.
             mirror_from += NUM_COLOR_CHANNELS;
         }
     }
