@@ -21,11 +21,11 @@ const NUM_COLOR_CHANNELS: usize = 3;
 /// Takes in variables describing where to render and at what resolution
 /// and produces an image of the Mandelbrot set.
 ///
-/// `render_parameters` contains `xresolution`, `yresolution`, `iterations`, `sqrt_samples_per_pixel` and `grayscale`.
+/// `render_parameters` contains `x_resolution`, `y_resolution`, `maxiterations`, `sqrt_samples_per_pixel` and `grayscale`.
 ///
 /// `draw_region` contains `center_real`, `centar_imag`, `real_distance` and `imag_distance`.
 ///
-/// `xresolution` and `yresolution` is the resolution in pixels in the real
+/// `x_resolution` and `y_resolution` is the resolution in pixels in the real
 /// and imaginary direction respectively.
 /// `sqrt_samples_per_pixel` is the number of supersampled points along one direction. If it
 /// is e.g. 3, then a supersampled pixel will be sampled 3^2 = 9 times.
@@ -45,11 +45,11 @@ const NUM_COLOR_CHANNELS: usize = 3;
 /// |-------------------------------|
 /// ```
 /// If `real_distance` = `imag_distance` = 1,
-/// `xresolution` = `yresolution` = 100 and `center_real` = `center_imag` = 0 a square
+/// `x_resolution` = `y_resolution` = 100 and `center_real` = `center_imag` = 0 a square
 /// of size 1x1 centered on the origin will be computed and rendered as a
 /// 100x100 pixel image.
 ///
-/// `iterations` is the maximum number of iterations to compute for each pixel sample before labeling
+/// `maxiterations` is the maximum number of iterations to compute for each pixel sample before labeling
 /// a point as part of the set.
 ///
 /// If `grayscale` is true the image is rendered in grayscale instead of color.
