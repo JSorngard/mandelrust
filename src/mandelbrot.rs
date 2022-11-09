@@ -14,6 +14,10 @@ const RESTRICT_SSAA_REGION: bool = true;
 // Set to true to show the region where super sampling is skipped as brown.
 // The region will have a black border where partial super sampling is done.
 const SHOW_SSAA_REGION: bool = false;
+
+// If the escape speed of a point is larger than this,
+// supersampling will be aborted
+const SSAA_REGION_CUTOFF: f64 = 0.95;
 // --------------------------------------
 
 const NUM_COLOR_CHANNELS: usize = 3;
@@ -260,7 +264,7 @@ pub fn supersampled_iterate(
         samples += 1;
 
         // If we are far from the fractal we do not need to supersample.
-        if RESTRICT_SSAA_REGION && esc > 0.9 {
+        if RESTRICT_SSAA_REGION && esc > SSAA_REGION_CUTOFF {
             if SHOW_SSAA_REGION {
                 escape_speed = 0.5;
             }
