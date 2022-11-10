@@ -212,8 +212,8 @@ fn map_escape_speed_to_color(esc: f64) -> [u8; NUM_COLOR_CHANNELS] {
     ]
 }
 
-/// Computes the escape speed for the values in a small region
-/// around the given value and returns their average.
+/// Computes the escape speed for the values in a grid
+/// in a small region around the given value and returns their average.
 /// If x is the location of `c_real` + `c_imag`*i and
 /// `sqrt_samples_per_pixel` = 3, then the dots are also sampled:
 ///
