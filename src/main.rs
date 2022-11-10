@@ -20,7 +20,7 @@ const DEFAULT_FILE_EXTENSION: &str = "png";
 fn main() -> Result<(), Box<dyn Error>> {
     let args = Cli::parse();
 
-    let xresolution = (args.aspect_ratio * (args.pixels.get() as f64)) as usize;
+    let x_resolution = (args.aspect_ratio * (args.pixels.get() as f64)) as usize;
 
     let zoom = 2.0_f64.powf(args.zoom);
 
@@ -35,12 +35,15 @@ fn main() -> Result<(), Box<dyn Error>> {
     );
 
     let render_parameters = RenderParameters::new(
-        xresolution.try_into()?,
+        x_resolution.try_into()?,
         args.pixels,
         args.max_iterations,
         args.ssaa,
         args.grayscale,
-        !args.disable_mirroring,
+        // Only mirror at large resolutions.
+        // The "thickening" of the real axis becomes
+        // very noticable at smaller resolutions.
+        args.pixels.get() >= 1500,
     );
 
     give_user_feedback(&args, &render_parameters)?;

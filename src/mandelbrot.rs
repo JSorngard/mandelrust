@@ -16,8 +16,12 @@ const RESTRICT_SSAA_REGION: bool = true;
 const SHOW_SSAA_REGION: bool = false;
 
 // If the escape speed of a point is larger than this,
-// supersampling will be aborted
+// supersampling will be aborted.
 const SSAA_REGION_CUTOFF: f64 = 0.95;
+
+// Set to false to never mirror the image
+// regardless of resolution.
+const ENABLE_MIRRORING: bool = true;
 // --------------------------------------
 
 const NUM_COLOR_CHANNELS: usize = 3;
@@ -64,8 +68,9 @@ pub fn render(
     // True if the image contains the real axis, false otherwise.
     // If the image contains the real axis we want to mirror
     // the result of the largest half on to the smallest.
-    let mirror =
-        render_parameters.mirror && draw_region.center_imag.abs() < draw_region.imag_distance;
+    let mirror = ENABLE_MIRRORING
+        && render_parameters.mirror
+        && draw_region.center_imag.abs() < draw_region.imag_distance;
 
     // One way of doing this is to always assume that the half with negative
     // imaginary part is the larger one. If the assumption is false
