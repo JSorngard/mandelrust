@@ -243,6 +243,7 @@ pub fn supersampled_iterate(
 
     //samples can be a u16 since the maximum number of samples is u8::MAX^2 which is less than u16::MAX
     let mut samples: u16 = 0;
+    let max_samples: usize = (ssaa * ssaa).into();
 
     let mut escape_speed: f64 = 0.0;
     let mut coloffset: f64;
@@ -250,7 +251,15 @@ pub fn supersampled_iterate(
     let mut esc: f64;
 
     // Supersampling loop.
-    for (i, j) in (1..=ssaa).cartesian_product(1..=ssaa) {
+    for (i, j) in (1..=ssaa)
+        .cartesian_product(1..=ssaa)
+        // We start the super sampling loop in the middle in order to ensure
+        // that if we abort supersampling, we have sampled some of the points
+        // that are the closest to the center of the pixel first.
+        .skip(max_samples / 2)
+        .cycle()
+        .take(max_samples)
+    {
         coloffset = (2.0 * f64::from(i) - f64ssaa - 1.0) / f64ssaa;
         rowoffset = (2.0 * f64::from(j) - f64ssaa - 1.0) / f64ssaa;
 
