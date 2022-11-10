@@ -13,7 +13,7 @@ This is of course subjective, but here is a list of what I've done to make the r
 # Faster mandelbrot rendering
 I have tried to make the program faster over time. Some of the techniques used are:
 
- 1. If the image contains the real axis, split the image there and only render the larger half. Then mirror the smaller half from it.  
+ 1. If the image contains the real axis, split the image there and only render the larger half, then mirror the smaller half from it. We only do this for large enough resolutions where the "thickening"-effect that it has on the real axis becomes invisible.  
  2. There are [closed form expressions](https://en.wikipedia.org/wiki/Plotting_algorithms_for_the_Mandelbrot_set#Cardioid_/_bulb_checking) for checking if a point is inside the main cardioid or the period 2 bulb, these are used to skip a large amount of iteration.  
  3. [Rayon](https://docs.rs/rayon/latest/rayon/) is used to parallelize the rendering.  
  4. Supersampling is done only [close to the border of the set](/examples/smoothing/mandelbrot_set_ssaa_region.png).  
