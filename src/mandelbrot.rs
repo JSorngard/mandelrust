@@ -19,8 +19,7 @@ const SHOW_SSAA_REGION: bool = false;
 // supersampling will be aborted.
 const SSAA_REGION_CUTOFF: f64 = 0.95;
 
-// Set to false to never mirror the image
-// regardless of resolution.
+// Set to false to not mirror the image.
 const ENABLE_MIRRORING: bool = true;
 // --------------------------------------
 
