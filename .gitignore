@@ -1,4 +1,5 @@
 /target
+/renders
 *.png
 *sublime*
 *.json
