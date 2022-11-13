@@ -154,17 +154,16 @@ fn color_band(
             + draw_region.imag_distance * (y_index as f64)
                 / (NUM_COLOR_CHANNELS as f64 * y_resolution as f64);
 
-        // If we have rendered all the pixels with
-        // negative imaginary part for this real part
-        if mirror && c_imag > 0.0 {            
+        if mirror && c_imag > 0.0 {
+            // We have rendered every pixel with negative imaginary part.
+
             // We want to mirror from the next pixel over every iteration.
-            // This line of code is before the copying since the first time
+            // This line of code is before the mirroring since the first time
             // we enter this branch the pixel indicated by `mirror_from` is
             // the one that contains the real line, and we do not want to
             // mirror that one since the real line is infinitely thin.
             mirror_from -= NUM_COLOR_CHANNELS;
             
-            // we split the current pixel band up into two and
             let (mirror_src, mirror_dst) = band.split_at_mut(y_index);
 
             // `memcpy` the values of this pixel from one of the
