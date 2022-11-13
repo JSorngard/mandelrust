@@ -1,4 +1,4 @@
-use std::num::{NonZeroU32, NonZeroU8, NonZeroUsize, ParseFloatError};
+use core::num::{NonZeroU32, NonZeroU8, NonZeroUsize, ParseFloatError};
 
 use clap::Parser;
 
