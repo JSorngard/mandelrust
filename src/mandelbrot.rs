@@ -57,7 +57,7 @@ const NUM_COLOR_CHANNELS: usize = 3;
 /// of size 1x1 centered on the origin will be computed and rendered as a
 /// 100x100 pixel image.
 ///
-/// `maxiterations` is the maximum number of iterations to compute for each pixel sample before labeling
+/// `max_iterations` is the maximum number of iterations to compute for each pixel sample before labeling
 /// a point as part of the set.
 ///
 /// If `grayscale` is true the image is rendered in grayscale instead of color.
