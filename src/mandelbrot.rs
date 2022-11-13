@@ -156,7 +156,14 @@ fn color_band(
 
         // If we have rendered all the pixels with
         // negative imaginary part for this real part
-        if mirror && c_imag > 0.0 {
+        if mirror && c_imag > 0.0 {            
+            // We want to mirror from the next pixel over every iteration.
+            // This line of code is before the copying since the first time
+            // we enter this branch the pixel indicated by `mirror_from` is
+            // the one that contains the real line, and we do not want to
+            // mirror that one since the real line is infinitely thin.
+            mirror_from -= NUM_COLOR_CHANNELS;
+            
             // we split the current pixel band up into two and
             let (mirror_src, mirror_dst) = band.split_at_mut(y_index);
 
@@ -164,9 +171,6 @@ fn color_band(
             // already computed pixels.
             mirror_dst[0..NUM_COLOR_CHANNELS]
                 .copy_from_slice(&mirror_src[(mirror_from - NUM_COLOR_CHANNELS)..mirror_from]);
-
-            // Next loop iteration we want to mirror from the next pixel over.
-            mirror_from -= NUM_COLOR_CHANNELS;
         } else {
             // Otherwise we compute the pixel color as normal by iteration.
             let escape_speed = supersampled_iterate(
