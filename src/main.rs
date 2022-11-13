@@ -41,8 +41,8 @@ fn main() -> Result<(), Box<dyn Error>> {
         args.ssaa,
         args.grayscale,
         // Only mirror at large resolutions.
-        // The "thickening" of the real axis becomes
-        // very noticable at smaller resolutions.
+        // The real axis becomes one pixel thicker if we mirror
+        // and this is noticable at smaller resolutions.
         args.pixels.get() >= 1500,
     );
 
