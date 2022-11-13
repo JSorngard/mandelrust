@@ -163,7 +163,7 @@ fn color_band(
             // the one that contains the real line, and we do not want to
             // mirror that one since the real line is infinitely thin.
             mirror_from -= NUM_COLOR_CHANNELS;
-            
+
             let (mirror_src, mirror_dst) = band.split_at_mut(y_index);
 
             // `memcpy` the values of this pixel from one of the
