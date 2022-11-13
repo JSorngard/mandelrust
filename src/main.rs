@@ -40,10 +40,6 @@ fn main() -> Result<(), Box<dyn Error>> {
         args.max_iterations,
         args.ssaa,
         args.grayscale,
-        // Only mirror at large resolutions.
-        // The real axis becomes one pixel thicker if we mirror
-        // and this is noticable at smaller resolutions.
-        args.pixels.get() >= 1500,
     );
 
     give_user_feedback(&args, &render_parameters)?;

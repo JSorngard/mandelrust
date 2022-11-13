@@ -68,9 +68,7 @@ pub fn render(
     // True if the image contains the real axis, false otherwise.
     // If the image contains the real axis we want to mirror
     // the result of the largest half on to the smallest.
-    let mirror = ENABLE_MIRRORING
-        && render_parameters.mirror
-        && draw_region.center_imag.abs() < draw_region.imag_distance;
+    let mirror = ENABLE_MIRRORING && draw_region.center_imag.abs() < draw_region.imag_distance;
 
     // One way of doing this is to always assume that the half with negative
     // imaginary part is the larger one. If the assumption is false
@@ -376,7 +374,6 @@ pub struct RenderParameters {
     pub max_iterations: NonZeroU32,
     pub sqrt_samples_per_pixel: NonZeroU8,
     pub grayscale: bool,
-    pub mirror: bool,
 }
 
 impl RenderParameters {
@@ -386,7 +383,6 @@ impl RenderParameters {
         max_iterations: NonZeroU32,
         sqrt_samples_per_pixel: NonZeroU8,
         grayscale: bool,
-        mirror: bool,
     ) -> Self {
         RenderParameters {
             x_resolution,
@@ -394,7 +390,6 @@ impl RenderParameters {
             max_iterations,
             sqrt_samples_per_pixel,
             grayscale,
-            mirror,
         }
     }
 }
