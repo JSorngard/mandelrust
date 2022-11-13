@@ -1,6 +1,6 @@
+use core::num::{NonZeroU32, NonZeroU8, NonZeroUsize};
 use std::error::Error;
 use std::io::{stdout, Write};
-use core::num::{NonZeroU32, NonZeroU8, NonZeroUsize};
 
 use image::DynamicImage;
 use indicatif::ParallelProgressIterator;
