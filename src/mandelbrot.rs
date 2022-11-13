@@ -175,7 +175,7 @@ fn color_band(
                 c_imag,
                 real_delta,
                 imag_delta,
-                render_parameters.maxiterations,
+                render_parameters.max_iterations,
             );
 
             let colors = if render_parameters.grayscale {
@@ -241,7 +241,7 @@ pub fn supersampled_iterate(
     c_imag: f64,
     real_delta: f64,
     imag_delta: f64,
-    maxiterations: NonZeroU32,
+    max_iterations: NonZeroU32,
 ) -> f64 {
     let ssaa = sqrt_samples_per_pixel.get();
     let f64ssaa: f64 = ssaa.into();
@@ -272,7 +272,7 @@ pub fn supersampled_iterate(
         esc = iterate(
             c_real + rowoffset * real_delta,
             c_imag + coloffset * imag_delta,
-            maxiterations,
+            max_iterations,
         );
         escape_speed += esc;
         samples += 1;
@@ -297,11 +297,11 @@ pub fn supersampled_iterate(
 /// on the given c starting with z_0 = c until it either escapes
 /// or the loop exceeds the maximum number of iterations.
 /// Returns the escape speed of the point as a number between 0 and 1.
-pub fn iterate(c_re: f64, c_im: f64, maxiterations: NonZeroU32) -> f64 {
+pub fn iterate(c_re: f64, c_im: f64, max_iterations: NonZeroU32) -> f64 {
     let c_imag_sqr = c_im * c_im;
     let mag_sqr = c_re * c_re + c_imag_sqr;
 
-    let maxiterations = maxiterations.get();
+    let max_iterations = max_iterations.get();
 
     // Check whether the point is within the main cardioid or period 2 bulb.
     if (c_re + 1.0) * (c_re + 1.0) + c_imag_sqr <= 0.0625
@@ -324,7 +324,7 @@ pub fn iterate(c_re: f64, c_im: f64, maxiterations: NonZeroU32) -> f64 {
     // While it is common to abort when |z| > 2 since such a point is guaranteed
     // to not be in the set, we keep iterating until |z| >= 6 as this reduces
     // color banding.
-    while iterations < maxiterations && z_re_sqr + z_im_sqr <= 36.0 {
+    while iterations < max_iterations && z_re_sqr + z_im_sqr <= 36.0 {
         z_im *= z_re;
         z_im += z_im;
         z_im += c_im;
@@ -334,13 +334,13 @@ pub fn iterate(c_re: f64, c_im: f64, maxiterations: NonZeroU32) -> f64 {
         iterations += 1;
     }
 
-    if iterations == maxiterations {
+    if iterations == max_iterations {
         0.0
     } else {
         // This takes the escape distance, |z|, and the number of iterations to escape
         // and maps it smoothly to the range [0, 1]. This reduces color banding.
-        (f64::from(maxiterations - iterations) + (z_re_sqr + z_im_sqr).sqrt().ln().log2() - 2.8)
-            / f64::from(maxiterations)
+        (f64::from(max_iterations - iterations) + (z_re_sqr + z_im_sqr).sqrt().ln().log2() - 2.8)
+            / f64::from(max_iterations)
     }
 }
 
@@ -370,7 +370,7 @@ impl Frame {
 pub struct RenderParameters {
     pub x_resolution: NonZeroUsize,
     pub y_resolution: NonZeroUsize,
-    pub maxiterations: NonZeroU32,
+    pub max_iterations: NonZeroU32,
     pub sqrt_samples_per_pixel: NonZeroU8,
     pub grayscale: bool,
     pub mirror: bool,
@@ -380,7 +380,7 @@ impl RenderParameters {
     pub fn new(
         x_resolution: NonZeroUsize,
         y_resolution: NonZeroUsize,
-        maxiterations: NonZeroU32,
+        max_iterations: NonZeroU32,
         sqrt_samples_per_pixel: NonZeroU8,
         grayscale: bool,
         mirror: bool,
@@ -388,7 +388,7 @@ impl RenderParameters {
         RenderParameters {
             x_resolution,
             y_resolution,
-            maxiterations,
+            max_iterations,
             sqrt_samples_per_pixel,
             grayscale,
             mirror,
