@@ -29,7 +29,7 @@ const NUM_COLOR_CHANNELS: usize = 3;
 /// Takes in variables describing where to render and at what resolution
 /// and produces an image of the Mandelbrot set.
 ///
-/// `render_parameters` contains `x_resolution`, `y_resolution`, `maxiterations`, `sqrt_samples_per_pixel` and `grayscale`.
+/// `render_parameters` contains `x_resolution`, `y_resolution`, `max_iterations`, `sqrt_samples_per_pixel` and `grayscale`.
 ///
 /// `draw_region` contains `center_real`, `centar_imag`, `real_distance` and `imag_distance`.
 ///
