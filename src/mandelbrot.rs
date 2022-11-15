@@ -5,7 +5,10 @@ use std::io::{stdout, Write};
 use image::DynamicImage;
 use indicatif::ParallelProgressIterator;
 use itertools::Itertools;
-use rayon::{iter::ParallelBridge, prelude::ParallelIterator};
+use rayon::{
+    iter::{IndexedParallelIterator, ParallelIterator},
+    prelude::ParallelSliceMut,
+};
 
 // ----------- DEBUG FLAGS --------------
 // Set to true to only super sample close to the border of the set.
@@ -84,15 +87,12 @@ pub fn render(
     let mut pixels: Vec<u8> = vec![0; NUM_COLOR_CHANNELS * x_resolution * y_resolution];
 
     pixels
-        // Split the image up into bands.
-        .chunks_mut(NUM_COLOR_CHANNELS * y_resolution)
+        // Split the image up into vertical bands and iterat over them in parallel.
+        .par_chunks_mut(NUM_COLOR_CHANNELS * y_resolution)
+        // We enumerate each band to be able to compute the real value of c for that band.
         .enumerate()
-        // Iterate over the bands in parallel
-        .par_bridge()
-        // while showing a progress bar
         .progress_count(x_resolution.try_into()?)
         .for_each(|(x_index, band)| {
-            // and color every pixel in each band
             color_band(
                 start_real + draw_region.real_distance * (x_index as f64) / (x_resolution as f64),
                 render_parameters,
