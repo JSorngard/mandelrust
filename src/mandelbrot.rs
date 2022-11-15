@@ -87,7 +87,7 @@ pub fn render(
     let mut pixels: Vec<u8> = vec![0; NUM_COLOR_CHANNELS * x_resolution * y_resolution];
 
     pixels
-        // Split the image up into vertical bands and iterat over them in parallel.
+        // Split the image up into vertical bands and iterate over them in parallel.
         .par_chunks_mut(NUM_COLOR_CHANNELS * y_resolution)
         // We enumerate each band to be able to compute the real value of c for that band.
         .enumerate()
