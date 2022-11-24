@@ -170,7 +170,7 @@ fn color_band(
                 .copy_from_slice(&mirror_src[(mirror_from - NUM_COLOR_CHANNELS)..mirror_from]);
         } else {
             // Otherwise we compute the pixel color as normal by iteration.
-            let colors = supersampled_pixel_coloring(
+            let color = supersampled_pixel_coloring(
                 render_parameters.sqrt_samples_per_pixel,
                 c_real,
                 c_imag,
@@ -179,7 +179,7 @@ fn color_band(
                 render_parameters,
             );
 
-            band[y_index..(NUM_COLOR_CHANNELS + y_index)].copy_from_slice(&colors);
+            band[y_index..(NUM_COLOR_CHANNELS + y_index)].copy_from_slice(&color);
 
             // We keep track of how many pixels have been colored
             // in order to potentially mirror them.
