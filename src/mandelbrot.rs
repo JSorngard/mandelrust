@@ -229,13 +229,13 @@ fn palette(esc: f64) -> [f64; NUM_COLOR_CHANNELS] {
     let thirty_sixth_power = eighteenth_power * eighteenth_power;
     const NORM: f64 = 255.0;
 
-    [
+    srgb_to_linear_rgb([
         (esc * 255.0_f64.powf(1.0 - 2.0 * ninth_power * thirty_sixth_power)) / NORM,
         (esc * 70.0 - 880.0 * eighteenth_power + 701.0 * ninth_power) / NORM,
         (esc * 80.0 + ninth_power * 255.0
             - 950.0 * thirty_sixth_power * thirty_sixth_power * eighteenth_power * ninth_power)
             / NORM,
-    ]
+    ])
 }
 
 /// Computes the escape speed for the values in a grid
@@ -300,7 +300,7 @@ pub fn supersampled_pixel_color(
         let linear_rgb_sample = if render_parameters.grayscale {
             [escape_speed; NUM_COLOR_CHANNELS]
         } else {
-            srgb_to_linear_rgb(palette(escape_speed))
+            palette(escape_speed)
         };
 
         for (c, c_sample) in linear_rgb.iter_mut().zip(linear_rgb_sample) {
