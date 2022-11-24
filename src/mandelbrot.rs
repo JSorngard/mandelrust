@@ -191,26 +191,26 @@ fn color_band(
 fn srgb_to_linear_rgb(srgb: [f64; 3]) -> [f64; 3] {
     // srgb.map(|c| c * c) // <-- approximation of the below
 
-    srgb.map(|c| 
+    srgb.map(|c| {
         if c <= 0.04045 {
-            c/12.92
+            c / 12.92
         } else {
-            ((c + 0.055)/1.055).powf(2.4)
+            ((c + 0.055) / 1.055).powf(2.4)
         }
-    )
+    })
 }
 
 fn linear_rgb_to_srgb(linear_rgb: [f64; 3]) -> [f64; 3] {
     // linear_rgb.map(|c| c.sqrt()) // <-- approximation of the below
-    
+
     // Correct formula
-    linear_rgb.map(|c| 
+    linear_rgb.map(|c| {
         if c <= 0.0031308 {
             12.92 * c
         } else {
             1.055 * c.powf(1.0 / 2.4) - 0.055
         }
-    )
+    })
 }
 
 /// Determines the color of a pixel. The color map that this function uses was taken from the python code in
@@ -273,7 +273,7 @@ pub fn supersampled_pixel_color(
     let mut coloffset: f64;
     let mut rowoffset: f64;
 
-    let mut linear_rgb = [0.0; 3];
+    let mut srgb = [0.0; 3];
 
     // Supersampling loop.
     for (i, j) in (1..=ssaa)
@@ -295,13 +295,13 @@ pub fn supersampled_pixel_color(
             render_parameters.max_iterations,
         );
 
-        let linear_rgb_sample = if render_parameters.grayscale {
-            [escape_speed * 255.0; NUM_COLOR_CHANNELS]
+        let srgb_sample = if render_parameters.grayscale {
+            linear_rgb_to_srgb([escape_speed; NUM_COLOR_CHANNELS]).map(|c| c * 255.0)
         } else {
             palette(escape_speed)
         };
 
-        for (c, c_sample) in linear_rgb.iter_mut().zip(linear_rgb_sample) {
+        for (c, c_sample) in srgb.iter_mut().zip(srgb_sample) {
             *c += c_sample;
         }
 
@@ -310,7 +310,7 @@ pub fn supersampled_pixel_color(
         // If we are far from the fractal we do not need to supersample.
         if RESTRICT_SSAA_REGION && escape_speed > SSAA_REGION_CUTOFF {
             if SHOW_SSAA_REGION {
-                linear_rgb = [150.0, 75.0, 0.0];
+                srgb = [150.0, 75.0, 0.0];
             }
 
             break;
@@ -319,7 +319,7 @@ pub fn supersampled_pixel_color(
 
     // Insert convertion to sRGB here?
 
-    linear_rgb.map(|c| (c / f64::from(samples)) as u8)
+    srgb.map(|c| (c / f64::from(samples)) as u8)
 }
 
 /// Iterates the Mandelbrot function
