@@ -227,14 +227,16 @@ fn palette(esc: f64) -> [f64; NUM_COLOR_CHANNELS] {
     let ninth_power = third_power * third_power * third_power;
     let eighteenth_power = ninth_power * ninth_power;
     let thirty_sixth_power = eighteenth_power * eighteenth_power;
-    const NORM: f64 = 255.0;
 
     srgb_to_linear_rgb([
-        (esc * 255.0_f64.powf(1.0 - 2.0 * ninth_power * thirty_sixth_power)) / NORM,
-        (esc * 70.0 - 880.0 * eighteenth_power + 701.0 * ninth_power) / NORM,
-        (esc * 80.0 + ninth_power * 255.0
-            - 950.0 * thirty_sixth_power * thirty_sixth_power * eighteenth_power * ninth_power)
-            / NORM,
+        (esc * 255.0_f64.powf(-2.0 * ninth_power * thirty_sixth_power)),
+        (esc * 14.0 / 51.0 - 176.0 / 51.0 * eighteenth_power + 701.0 / 255.0 * ninth_power),
+        (esc * 16.0 / 51.0 + ninth_power
+            - 190.0 / 51.0
+                * thirty_sixth_power
+                * thirty_sixth_power
+                * eighteenth_power
+                * ninth_power),
     ])
 }
 
