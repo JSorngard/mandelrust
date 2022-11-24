@@ -11,6 +11,7 @@ use crate::{
     mandelbrot::{render, Frame, RenderParameters},
 };
 
+mod color_space;
 mod command_line_interface;
 mod mandelbrot;
 

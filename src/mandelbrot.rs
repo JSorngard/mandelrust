@@ -10,6 +10,8 @@ use rayon::{
     prelude::ParallelSliceMut,
 };
 
+use crate::color_space::{linear_rgb_to_srgb, srgb_to_linear_rgb};
+
 // ----------- DEBUG FLAGS --------------
 // Set to true to only super sample close to the border of the set.
 const RESTRICT_SSAA_REGION: bool = true;
@@ -186,33 +188,6 @@ fn color_band(
             mirror_from += NUM_COLOR_CHANNELS;
         }
     }
-}
-
-/// Converts a point in the sRGB color space to a linear RGB triplet.
-fn srgb_to_linear_rgb(srgb: [f64; 3]) -> [f64; 3] {
-    // srgb.map(|c| c * c) // <-- approximation of the below
-
-    srgb.map(|c| {
-        if c <= 0.04045 {
-            c / 12.92
-        } else {
-            ((c + 0.055) / 1.055).powf(2.4)
-        }
-    })
-}
-
-/// Converts an RGB triplet into a point in the sRGB color space.
-fn linear_rgb_to_srgb(linear_rgb: [f64; 3]) -> [f64; 3] {
-    // linear_rgb.map(|c| c.sqrt()) // <-- approximation of the below
-
-    // Correct formula
-    linear_rgb.map(|c| {
-        if c <= 0.0031308 {
-            12.92 * c
-        } else {
-            1.055 * c.powf(1.0 / 2.4) - 0.055
-        }
-    })
 }
 
 /// Determines the color of a pixel in linear RGB color space, represented as a triplet of numbers between 0 and 1.
