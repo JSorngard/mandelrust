@@ -16,7 +16,12 @@ const RESTRICT_SSAA_REGION: bool = true;
 
 // If the escape speed of a point is larger than this,
 // supersampling will be aborted.
-const SSAA_REGION_CUTOFF: f64 = 0.95;
+const SSAA_REGION_CUTOFF: f64 = 0.963;
+
+// Set to true to dsiplay the region where supersampling is done
+// as brown. The border region where supersampling is only partially done
+// will appear as black.
+const SHOW_SSAA_REGION: bool = false;
 
 // Set to false to not mirror the image.
 const ENABLE_MIRRORING: bool = true;
@@ -165,7 +170,7 @@ fn color_band(
                 .copy_from_slice(&mirror_src[(mirror_from - NUM_COLOR_CHANNELS)..mirror_from]);
         } else {
             // Otherwise we compute the pixel color as normal by iteration.
-            let linear_rgb = supersampled_iterate(
+            let colors = supersampled_iterate(
                 render_parameters.sqrt_samples_per_pixel,
                 c_real,
                 c_imag,
@@ -173,14 +178,6 @@ fn color_band(
                 imag_delta,
                 render_parameters,
             );
-
-            let colors = linear_rgb_to_srgb(linear_rgb);
-
-            // let colors = if render_parameters.grayscale {
-            //     [(f64::from(u8::MAX) * escape_speed) as u8; NUM_COLOR_CHANNELS]
-            // } else {
-            //     map_escape_speed_to_color(escape_speed)
-            // };
 
             band[y_index..(NUM_COLOR_CHANNELS + y_index)].copy_from_slice(&colors);
 
@@ -191,9 +188,12 @@ fn color_band(
     }
 }
 
-fn linear_rgb_to_srgb(linear_rgb: [f64; 3]) -> [u8; 3] {
-    //linear_rgb.map(|c| (c*255.0) as u8)
-    linear_rgb.map(|c| (c.sqrt() * 255.0) as u8) // <-- approximation of the below
+// fn linear_rgb_to_srgb(linear_rgb: [f64; 3]) -> [u8; 3] {
+    // linear_rgb.map(|c| (c*255.0) as u8)
+    
+    //linear_rgb.map(|c| (c.sqrt() * 255.0) as u8) // <-- approximation of the below
+    
+    // Correct formula
     // linear_rgb.map(|c| {
     //     (255.0
     //         * if c <= 0.0031308 {
@@ -202,7 +202,7 @@ fn linear_rgb_to_srgb(linear_rgb: [f64; 3]) -> [u8; 3] {
     //             1.055 * c.powf(1.0 / 2.4) - 0.055
     //         }) as u8
     // })
-}
+// }
 
 /// Determines the color of a pixel. The color map that this function uses was taken from the python code in
 /// [this](https://preshing.com/20110926/high-resolution-mandelbrot-in-obfuscated-python/) blog post.
@@ -218,18 +218,18 @@ fn palette(esc: f64) -> [f64; NUM_COLOR_CHANNELS] {
     let ninth_power = third_power * third_power * third_power;
     let eighteenth_power = ninth_power * ninth_power;
     let thirty_sixth_power = eighteenth_power * eighteenth_power;
-    const NORM: f64 = 255.0;
 
     [
-        (esc * 255.0_f64.powf(1.0 - 2.0 * ninth_power * thirty_sixth_power))/NORM,
-        (esc * 70.0 - 880.0 * eighteenth_power + 701.0 * ninth_power)/NORM,
+        (esc * 255.0_f64.powf(1.0 - 2.0 * ninth_power * thirty_sixth_power)),
+        (esc * 70.0 - 880.0 * eighteenth_power + 701.0 * ninth_power),
         (esc * 80.0 + ninth_power * 255.0
-            - 950.0 * thirty_sixth_power * thirty_sixth_power * eighteenth_power * ninth_power)/NORM,
+            - 950.0 * thirty_sixth_power * thirty_sixth_power * eighteenth_power * ninth_power),
     ]
 }
 
 /// Computes the escape speed for the values in a grid
-/// in a small region around the given value and returns their average.
+/// in a small region around the given value, computes their resulting
+/// colors and returns the average color as an RGB triplet.
 /// If x is the location of `c_real` + `c_imag`*i and
 /// `sqrt_samples_per_pixel` = 3, then the dots are also sampled:
 ///
@@ -253,7 +253,7 @@ pub fn supersampled_iterate(
     real_delta: f64,
     imag_delta: f64,
     render_parameters: RenderParameters,
-) -> [f64; 3] {
+) -> [u8; 3] {
     let ssaa = sqrt_samples_per_pixel.get();
     let f64ssaa: f64 = ssaa.into();
 
@@ -300,11 +300,17 @@ pub fn supersampled_iterate(
 
         // If we are far from the fractal we do not need to supersample.
         if RESTRICT_SSAA_REGION && escape_speed > SSAA_REGION_CUTOFF {
+            if SHOW_SSAA_REGION {
+                linear_rgb = palette(0.5);
+            }
+
             break;
         }
     }
 
-    linear_rgb.map(|c| c / f64::from(samples))
+    // Insert convertion to sRGB here?
+
+    linear_rgb.map(|c| (c / f64::from(samples)) as u8)
 }
 
 /// Iterates the Mandelbrot function
