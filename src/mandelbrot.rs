@@ -188,21 +188,28 @@ fn color_band(
     }
 }
 
-// fn linear_rgb_to_srgb(linear_rgb: [f64; 3]) -> [u8; 3] {
-    // linear_rgb.map(|c| (c*255.0) as u8)
-    
-    //linear_rgb.map(|c| (c.sqrt() * 255.0) as u8) // <-- approximation of the below
+fn srgb_to_linear_rgb(srgb: [f64; 3]) -> [f64; 3] {
+    srgb.map(|c| 
+        if c <= 0.04045 {
+            c/12.92
+        } else {
+            ((c + 0.055)/1.055).powf(2.4)
+        }
+    )
+}
+
+fn linear_rgb_to_srgb(linear_rgb: [f64; 3]) -> [f64; 3] {
+    // linear_rgb.map(|c| c.sqrt()) // <-- approximation of the below
     
     // Correct formula
-    // linear_rgb.map(|c| {
-    //     (255.0
-    //         * if c <= 0.0031308 {
-    //             12.92 * c
-    //         } else {
-    //             1.055 * c.powf(1.0 / 2.4) - 0.055
-    //         }) as u8
-    // })
-// }
+    linear_rgb.map(|c| 
+        if c <= 0.0031308 {
+            12.92 * c
+        } else {
+            1.055 * c.powf(1.0 / 2.4) - 0.055
+        }
+    )
+}
 
 /// Determines the color of a pixel. The color map that this function uses was taken from the python code in
 /// [this](https://preshing.com/20110926/high-resolution-mandelbrot-in-obfuscated-python/) blog post.
@@ -287,7 +294,7 @@ pub fn supersampled_pixel_coloring(
         );
 
         let linear_rgb_sample = if render_parameters.grayscale {
-            [escape_speed; NUM_COLOR_CHANNELS]
+            [escape_speed * 255.0; NUM_COLOR_CHANNELS]
         } else {
             palette(escape_speed)
         };
