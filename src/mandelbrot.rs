@@ -200,16 +200,17 @@ fn color_band(
 ///
 /// N.B.: The function has not been tested for inputs outside the range \[0, 1\]
 /// and makes no guarantees about the output in that case.
-fn palette(esc: f64) -> [f64; NUM_COLOR_CHANNELS] {
-    let third_power = esc * esc * esc;
+fn palette(escape_speed: f64) -> [f64; NUM_COLOR_CHANNELS] {
+    let third_power = escape_speed * escape_speed * escape_speed;
     let ninth_power = third_power * third_power * third_power;
     let eighteenth_power = ninth_power * ninth_power;
     let thirty_sixth_power = eighteenth_power * eighteenth_power;
 
     srgb_to_linear_rgb([
-        (255.0_f64.powf(-2.0 * ninth_power * thirty_sixth_power) * esc),
-        (14.0 / 51.0 * esc - 176.0 / 51.0 * eighteenth_power + 701.0 / 255.0 * ninth_power),
-        (16.0 / 51.0 * esc + ninth_power
+        (255.0_f64.powf(-2.0 * ninth_power * thirty_sixth_power) * escape_speed),
+        (14.0 / 51.0 * escape_speed - 176.0 / 51.0 * eighteenth_power
+            + 701.0 / 255.0 * ninth_power),
+        (16.0 / 51.0 * escape_speed + ninth_power
             - 190.0 / 51.0
                 * thirty_sixth_power
                 * thirty_sixth_power
