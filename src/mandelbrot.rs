@@ -170,7 +170,7 @@ fn color_band(
                 .copy_from_slice(&mirror_src[(mirror_from - NUM_COLOR_CHANNELS)..mirror_from]);
         } else {
             // Otherwise we compute the pixel color as normal by iteration.
-            let colors = supersampled_iterate(
+            let colors = supersampled_pixel_coloring(
                 render_parameters.sqrt_samples_per_pixel,
                 c_real,
                 c_imag,
@@ -246,7 +246,7 @@ fn palette(esc: f64) -> [f64; NUM_COLOR_CHANNELS] {
 ///
 /// N.B.: if `sqrt_samples_per_pixel` is even, the center of
 /// the pixel is never sampled.
-pub fn supersampled_iterate(
+pub fn supersampled_pixel_coloring(
     sqrt_samples_per_pixel: NonZeroU8,
     c_real: f64,
     c_imag: f64,
