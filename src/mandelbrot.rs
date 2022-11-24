@@ -245,7 +245,7 @@ fn palette(esc: f64) -> [f64; NUM_COLOR_CHANNELS] {
 
 /// Computes the escape speed for the values in a grid
 /// in a small region around the given value, computes their resulting
-/// colors and returns the average color as an RGB triplet.
+/// colors and returns the average color as an sRGB color.
 /// If x is the location of `c_real` + `c_imag`*i and
 /// `sqrt_samples_per_pixel` = 3, then the dots are also sampled:
 ///
