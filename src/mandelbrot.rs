@@ -323,8 +323,8 @@ pub fn supersampled_pixel_color(
             break;
         }
     }
-
-    linear_rgb_to_srgb(linear_rgb.map(|c| (c / f64::from(samples)))).map(|c| (c * 255.0) as u8)
+    // Convert to sRGB                            Divide by number of samples                     Represent as a u8 from 0 to 255
+    linear_rgb_to_srgb(linear_rgb.map(|c| (c / f64::from(samples)))).map(|c| (c * 256.0) as u8)
 }
 
 /// Iterates the Mandelbrot function
