@@ -352,7 +352,7 @@ pub fn iterate(c_re: f64, c_im: f64, max_iterations: NonZeroU32) -> f64 {
     } else {
         // This takes the escape distance, |z|, and the number of iterations to escape
         // and maps it smoothly to the range [0, 1]. This reduces color banding.
-        (f64::from(max_iterations - iterations) + (z_re_sqr + z_im_sqr).sqrt().ln().log2() - 2.8)
+        (f64::from(max_iterations - iterations) + (z_re_sqr + z_im_sqr).ln().log2() - 3.8)
             / f64::from(max_iterations)
     }
 }
