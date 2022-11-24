@@ -189,6 +189,8 @@ fn color_band(
 }
 
 fn srgb_to_linear_rgb(srgb: [f64; 3]) -> [f64; 3] {
+    // srgb.map(|c| c * c) // <-- approximation of the below
+
     srgb.map(|c| 
         if c <= 0.04045 {
             c/12.92
@@ -308,7 +310,7 @@ pub fn supersampled_pixel_coloring(
         // If we are far from the fractal we do not need to supersample.
         if RESTRICT_SSAA_REGION && escape_speed > SSAA_REGION_CUTOFF {
             if SHOW_SSAA_REGION {
-                linear_rgb = palette(0.5);
+                linear_rgb = [150.0, 75.0, 0.0];
             }
 
             break;
