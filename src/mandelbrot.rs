@@ -188,6 +188,7 @@ fn color_band(
     }
 }
 
+/// Converts a point in the sRGB color space to a linear RGB triplet.
 fn srgb_to_linear_rgb(srgb: [f64; 3]) -> [f64; 3] {
     // srgb.map(|c| c * c) // <-- approximation of the below
 
@@ -200,6 +201,7 @@ fn srgb_to_linear_rgb(srgb: [f64; 3]) -> [f64; 3] {
     })
 }
 
+/// Converts an RGB triplet into a point in the sRGB color space.
 fn linear_rgb_to_srgb(linear_rgb: [f64; 3]) -> [f64; 3] {
     // linear_rgb.map(|c| c.sqrt()) // <-- approximation of the below
 
@@ -213,14 +215,15 @@ fn linear_rgb_to_srgb(linear_rgb: [f64; 3]) -> [f64; 3] {
     })
 }
 
-/// Determines the color of a pixel. The color map that this function uses was taken from the python code in
+/// Determines the color of a pixel in linear RGB color space, represented as a triplet of numbers between 0 and 1.
+/// The color map that this function uses was taken from the python code in
 /// [this](https://preshing.com/20110926/high-resolution-mandelbrot-in-obfuscated-python/) blog post.
 ///
 /// As the input increases from 0 to 1 the color transitions as
 ///
 /// black -> brown -> orange -> yellow -> cyan -> blue -> dark blue -> black.
 ///
-/// The function has not been tested for inputs outside the range \[0, 1\]
+/// N.B.: The function has not been tested for inputs outside the range \[0, 1\]
 /// and makes no guarantees about the output in that case.
 fn palette(esc: f64) -> [f64; NUM_COLOR_CHANNELS] {
     let third_power = esc * esc * esc;
@@ -229,9 +232,9 @@ fn palette(esc: f64) -> [f64; NUM_COLOR_CHANNELS] {
     let thirty_sixth_power = eighteenth_power * eighteenth_power;
 
     srgb_to_linear_rgb([
-        (esc * 255.0_f64.powf(-2.0 * ninth_power * thirty_sixth_power)),
-        (esc * 14.0 / 51.0 - 176.0 / 51.0 * eighteenth_power + 701.0 / 255.0 * ninth_power),
-        (esc * 16.0 / 51.0 + ninth_power
+        (255.0_f64.powf(-2.0 * ninth_power * thirty_sixth_power) * esc),
+        (14.0 / 51.0 * esc - 176.0 / 51.0 * eighteenth_power + 701.0 / 255.0 * ninth_power),
+        (16.0 / 51.0 * esc + ninth_power
             - 190.0 / 51.0
                 * thirty_sixth_power
                 * thirty_sixth_power
