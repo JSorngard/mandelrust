@@ -227,12 +227,14 @@ fn palette(esc: f64) -> [f64; NUM_COLOR_CHANNELS] {
     let ninth_power = third_power * third_power * third_power;
     let eighteenth_power = ninth_power * ninth_power;
     let thirty_sixth_power = eighteenth_power * eighteenth_power;
+    const NORM: f64 = 255.0;
 
     [
-        (esc * 255.0_f64.powf(1.0 - 2.0 * ninth_power * thirty_sixth_power)),
-        (esc * 70.0 - 880.0 * eighteenth_power + 701.0 * ninth_power),
+        (esc * 255.0_f64.powf(1.0 - 2.0 * ninth_power * thirty_sixth_power)) / NORM,
+        (esc * 70.0 - 880.0 * eighteenth_power + 701.0 * ninth_power) / NORM,
         (esc * 80.0 + ninth_power * 255.0
-            - 950.0 * thirty_sixth_power * thirty_sixth_power * eighteenth_power * ninth_power),
+            - 950.0 * thirty_sixth_power * thirty_sixth_power * eighteenth_power * ninth_power)
+            / NORM,
     ]
 }
 
@@ -273,7 +275,7 @@ pub fn supersampled_pixel_color(
     let mut coloffset: f64;
     let mut rowoffset: f64;
 
-    let mut srgb = [0.0; 3];
+    let mut linear_rgb = [0.0; 3];
 
     // Supersampling loop.
     for (i, j) in (1..=ssaa)
@@ -295,13 +297,13 @@ pub fn supersampled_pixel_color(
             render_parameters.max_iterations,
         );
 
-        let srgb_sample = if render_parameters.grayscale {
-            linear_rgb_to_srgb([escape_speed; NUM_COLOR_CHANNELS]).map(|c| c * 255.0)
+        let linear_rgb_sample = if render_parameters.grayscale {
+            [escape_speed; NUM_COLOR_CHANNELS]
         } else {
-            palette(escape_speed)
+            srgb_to_linear_rgb(palette(escape_speed))
         };
 
-        for (c, c_sample) in srgb.iter_mut().zip(srgb_sample) {
+        for (c, c_sample) in linear_rgb.iter_mut().zip(linear_rgb_sample) {
             *c += c_sample;
         }
 
@@ -310,16 +312,14 @@ pub fn supersampled_pixel_color(
         // If we are far from the fractal we do not need to supersample.
         if RESTRICT_SSAA_REGION && escape_speed > SSAA_REGION_CUTOFF {
             if SHOW_SSAA_REGION {
-                srgb = [150.0, 75.0, 0.0];
+                linear_rgb = [150.0 / 255.0, 75.0 / 255.0, 0.0];
             }
 
             break;
         }
     }
 
-    // Insert convertion to sRGB here?
-
-    srgb.map(|c| (c / f64::from(samples)) as u8)
+    linear_rgb_to_srgb(linear_rgb.map(|c| (c / f64::from(samples)))).map(|c| (c * 255.0) as u8)
 }
 
 /// Iterates the Mandelbrot function
