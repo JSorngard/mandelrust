@@ -130,8 +130,7 @@ fn parse_aspect_ratio(s: &str) -> Result<f64, String> {
                     (Ok(_), Err(e)) | (Err(e), Ok(_)) => Err(e.to_string()),
                     (Err(e1), Err(e2)) => Err(format!(
                         "horizontal integer has issue: '{}' vertical integer has issue '{}'",
-                        e1.to_string(),
-                        e2.to_string(),
+                        e1, e2,
                     )),
                 }
             } else {
