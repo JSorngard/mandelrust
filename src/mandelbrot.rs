@@ -14,10 +14,6 @@ use rayon::{
 // Set to true to only super sample close to the border of the set.
 const RESTRICT_SSAA_REGION: bool = true;
 
-// Set to true to show the region where super sampling is skipped as brown.
-// The region will have a black border where partial super sampling is done.
-const SHOW_SSAA_REGION: bool = false;
-
 // If the escape speed of a point is larger than this,
 // supersampling will be aborted.
 const SSAA_REGION_CUTOFF: f64 = 0.95;
@@ -169,20 +165,22 @@ fn color_band(
                 .copy_from_slice(&mirror_src[(mirror_from - NUM_COLOR_CHANNELS)..mirror_from]);
         } else {
             // Otherwise we compute the pixel color as normal by iteration.
-            let escape_speed = supersampled_iterate(
+            let linear_rgb = supersampled_iterate(
                 render_parameters.sqrt_samples_per_pixel,
                 c_real,
                 c_imag,
                 real_delta,
                 imag_delta,
-                render_parameters.max_iterations,
+                render_parameters,
             );
 
-            let colors = if render_parameters.grayscale {
-                [(f64::from(u8::MAX) * escape_speed) as u8; NUM_COLOR_CHANNELS]
-            } else {
-                map_escape_speed_to_color(escape_speed)
-            };
+            let colors = linear_rgb_to_srgb(linear_rgb);
+
+            // let colors = if render_parameters.grayscale {
+            //     [(f64::from(u8::MAX) * escape_speed) as u8; NUM_COLOR_CHANNELS]
+            // } else {
+            //     map_escape_speed_to_color(escape_speed)
+            // };
 
             band[y_index..(NUM_COLOR_CHANNELS + y_index)].copy_from_slice(&colors);
 
@@ -191,6 +189,19 @@ fn color_band(
             mirror_from += NUM_COLOR_CHANNELS;
         }
     }
+}
+
+fn linear_rgb_to_srgb(linear_rgb: [f64; 3]) -> [u8; 3] {
+    //linear_rgb.map(|c| (c*255.0) as u8)
+    linear_rgb.map(|c| (c.sqrt() * 255.0) as u8) // <-- approximation of the below
+    // linear_rgb.map(|c| {
+    //     (255.0
+    //         * if c <= 0.0031308 {
+    //             12.92 * c
+    //         } else {
+    //             1.055 * c.powf(1.0 / 2.4) - 0.055
+    //         }) as u8
+    // })
 }
 
 /// Determines the color of a pixel. The color map that this function uses was taken from the python code in
@@ -202,18 +213,18 @@ fn color_band(
 ///
 /// The function has not been tested for inputs outside the range \[0, 1\]
 /// and makes no guarantees about the output in that case.
-fn map_escape_speed_to_color(esc: f64) -> [u8; NUM_COLOR_CHANNELS] {
+fn palette(esc: f64) -> [f64; NUM_COLOR_CHANNELS] {
     let third_power = esc * esc * esc;
     let ninth_power = third_power * third_power * third_power;
     let eighteenth_power = ninth_power * ninth_power;
     let thirty_sixth_power = eighteenth_power * eighteenth_power;
+    const NORM: f64 = 255.0;
 
     [
-        (esc * 255.0_f64.powf(1.0 - 2.0 * ninth_power * thirty_sixth_power)) as u8,
-        (esc * 70.0 - 880.0 * eighteenth_power + 701.0 * ninth_power) as u8,
+        (esc * 255.0_f64.powf(1.0 - 2.0 * ninth_power * thirty_sixth_power))/NORM,
+        (esc * 70.0 - 880.0 * eighteenth_power + 701.0 * ninth_power)/NORM,
         (esc * 80.0 + ninth_power * 255.0
-            - 950.0 * thirty_sixth_power * thirty_sixth_power * eighteenth_power * ninth_power)
-            as u8,
+            - 950.0 * thirty_sixth_power * thirty_sixth_power * eighteenth_power * ninth_power)/NORM,
     ]
 }
 
@@ -241,19 +252,19 @@ pub fn supersampled_iterate(
     c_imag: f64,
     real_delta: f64,
     imag_delta: f64,
-    max_iterations: NonZeroU32,
-) -> f64 {
+    render_parameters: RenderParameters,
+) -> [f64; 3] {
     let ssaa = sqrt_samples_per_pixel.get();
     let f64ssaa: f64 = ssaa.into();
 
     //samples can be a u16 since the maximum number of samples is u8::MAX^2 which is less than u16::MAX
     let mut samples: u16 = 0;
-    let max_samples: usize = (ssaa * ssaa).into();
+    let max_samples: usize = usize::from(ssaa) * usize::from(ssaa);
 
-    let mut escape_speed: f64 = 0.0;
     let mut coloffset: f64;
     let mut rowoffset: f64;
-    let mut esc: f64;
+
+    let mut linear_rgb = [0.0; 3];
 
     // Supersampling loop.
     for (i, j) in (1..=ssaa)
@@ -269,25 +280,31 @@ pub fn supersampled_iterate(
         rowoffset = (2.0 * f64::from(j) - f64ssaa - 1.0) / f64ssaa;
 
         // Compute escape speed of point.
-        esc = iterate(
+        let escape_speed = iterate(
             c_real + rowoffset * real_delta,
             c_imag + coloffset * imag_delta,
-            max_iterations,
+            render_parameters.max_iterations,
         );
-        escape_speed += esc;
+
+        let linear_rgb_sample = if render_parameters.grayscale {
+            [escape_speed; NUM_COLOR_CHANNELS]
+        } else {
+            palette(escape_speed)
+        };
+
+        for (c, c_sample) in linear_rgb.iter_mut().zip(linear_rgb_sample) {
+            *c += c_sample;
+        }
+
         samples += 1;
 
         // If we are far from the fractal we do not need to supersample.
-        if RESTRICT_SSAA_REGION && esc > SSAA_REGION_CUTOFF {
-            if SHOW_SSAA_REGION {
-                escape_speed = 0.5;
-            }
-
+        if RESTRICT_SSAA_REGION && escape_speed > SSAA_REGION_CUTOFF {
             break;
         }
     }
-    escape_speed /= f64::from(samples);
-    escape_speed
+
+    linear_rgb.map(|c| c / f64::from(samples))
 }
 
 /// Iterates the Mandelbrot function
