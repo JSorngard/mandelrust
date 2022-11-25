@@ -40,14 +40,6 @@ impl LinearRGB {
     pub fn new(r: f64, g: f64, b: f64) -> Self {
         LinearRGB { r, g, b }
     }
-
-    pub fn to_bytes(self) -> [u8; 3] {
-        [
-            (f64::from(u8::MAX) * self.r.clamp(0.0, 1.0)).round() as u8,
-            (f64::from(u8::MAX) * self.g.clamp(0.0, 1.0)).round() as u8,
-            (f64::from(u8::MAX) * self.b.clamp(0.0, 1.0)).round() as u8,
-        ]
-    }
 }
 
 impl Add for LinearRGB {
