@@ -248,14 +248,15 @@ pub fn supersampled_pixel_color(
     let ssaa = sqrt_samples_per_pixel.get();
     let f64ssaa: f64 = ssaa.into();
 
-    //samples can be a u16 since the maximum number of samples is u8::MAX^2 which is less than u16::MAX
+    // `samples` can be a u16 since the maximum number of samples is u8::MAX^2 which is less than u16::MAX
     let mut samples: u16 = 0;
     let max_samples: usize = usize::from(ssaa) * usize::from(ssaa);
 
     let mut coloffset: f64;
     let mut rowoffset: f64;
 
-    let mut linear_rgb = LinearRGB::default();
+    // Initialize the pixel color as black.
+    let mut color = LinearRGB::default();
 
     // Supersampling loop.
     for (i, j) in (1..=ssaa)
@@ -277,34 +278,27 @@ pub fn supersampled_pixel_color(
             render_parameters.max_iterations,
         );
 
-        let linear_rgb_sample = if render_parameters.grayscale {
-            LinearRGB::new(escape_speed, escape_speed, escape_speed)
-        } else {
+        let color_sample = if !render_parameters.grayscale {
             palette(escape_speed)
+        } else {
+            [escape_speed; 3].into()
         };
 
-        linear_rgb += linear_rgb_sample;
-
-        // for (c, c_sample) in linear_rgb.iter_mut().zip(linear_rgb_sample) {
-        //     *c += c_sample;
-        // }
+        color += color_sample;
 
         samples += 1;
 
         // If we are far from the fractal we do not need to supersample.
         if RESTRICT_SSAA_REGION && escape_speed > SSAA_REGION_CUTOFF {
             if SHOW_SSAA_REGION {
-                linear_rgb = LinearRGB::new(150.0 / 255.0, 75.0 / 255.0, 0.0);
+                color = [150.0 / 255.0, 75.0 / 255.0, 0.0].into();
             }
 
             break;
         }
     }
 
-    (linear_rgb * (1.0 / f64::from(samples))).into()
-
-    // Convert to sRGB                            Divide by number of samples                     Represent as a u8 from 0 to 255
-    //linear_rgb_to_srgb(linear_rgb.map(|c| (c / f64::from(samples)))).map(|c| (c * 256.0) as u8)
+    (color / f64::from(samples)).into()
 }
 
 /// Iterates the Mandelbrot function

@@ -1,3 +1,4 @@
+use core::ops::{Div, DivAssign};
 use std::ops::{Add, AddAssign, Mul, MulAssign};
 
 use image::Rgb;
@@ -80,6 +81,19 @@ impl MulAssign<f64> for LinearRGB {
     }
 }
 
+impl Div<f64> for LinearRGB {
+    type Output = Self;
+    fn div(self, rhs: f64) -> Self::Output {
+        self * rhs.recip()
+    }
+}
+
+impl DivAssign<f64> for LinearRGB {
+    fn div_assign(&mut self, rhs: f64) {
+        *self *= rhs.recip();
+    }
+}
+
 impl From<LinearRGB> for Rgb<u8> {
     /// Converts a `LinearRGB` into an `Rgb<u8>` by converting its
     /// underlying data into the nonlinear sRGB color space.
@@ -94,13 +108,20 @@ impl From<LinearRGB> for Rgb<u8> {
 }
 
 impl From<Rgb<f64>> for LinearRGB {
-    /// Converts an sRGB triplet into a linear color space.
+    /// Converts an sRGB triplet into a linear color space where various
+    /// transormations are possible.
     fn from(srgb: Rgb<f64>) -> Self {
         LinearRGB::new(
             srgb_to_linear_rgb(srgb[0]),
             srgb_to_linear_rgb(srgb[1]),
             srgb_to_linear_rgb(srgb[2]),
         )
+    }
+}
+
+impl From<[f64; 3]> for LinearRGB {
+    fn from(data: [f64; 3]) -> Self {
+        LinearRGB::new(data[0], data[1], data[2])
     }
 }
 
