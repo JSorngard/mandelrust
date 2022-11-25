@@ -109,13 +109,19 @@ impl From<LinearRGB> for Rgb<u8> {
 
 impl From<Rgb<f64>> for LinearRGB {
     /// Converts an sRGB triplet into a linear color space where various
-    /// transormations are possible.
+    /// transformations are possible.
     fn from(srgb: Rgb<f64>) -> Self {
         LinearRGB::new(
             srgb_to_linear_rgb(srgb[0]),
             srgb_to_linear_rgb(srgb[1]),
             srgb_to_linear_rgb(srgb[2]),
         )
+    }
+}
+
+impl From<Rgb<u8>> for LinearRGB {
+    fn from(srgb: Rgb<u8>) -> Self {
+        LinearRGB::from(srgb.0.map(|c| SRGB_TO_LINEAR[usize::from(c)]))
     }
 }
 
