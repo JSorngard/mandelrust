@@ -220,7 +220,7 @@ fn palette(escape_speed: f64) -> LinearRGB {
 
 /// Computes the escape speed for the values in a grid
 /// in a small region around the given value, computes their resulting
-/// colors and returns the average color as an sRGB color.
+/// colors and returns the average color as an sRGB value.
 /// If x is the location of `c_real` + `c_imag`*i and
 /// `sqrt_samples_per_pixel` = 3, then the dots are also sampled:
 ///
