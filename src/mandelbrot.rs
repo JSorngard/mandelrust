@@ -252,9 +252,6 @@ pub fn supersampled_pixel_color(
     let mut samples: u16 = 0;
     let max_samples: usize = usize::from(ssaa) * usize::from(ssaa);
 
-    let mut coloffset: f64;
-    let mut rowoffset: f64;
-
     // Initialize the pixel color as black.
     let mut color = LinearRGB::default();
 
@@ -268,8 +265,8 @@ pub fn supersampled_pixel_color(
         .cycle()
         .take(max_samples)
     {
-        coloffset = (2.0 * f64::from(i) - f64ssaa - 1.0) / f64ssaa;
-        rowoffset = (2.0 * f64::from(j) - f64ssaa - 1.0) / f64ssaa;
+        let coloffset = (2.0 * f64::from(i) - f64ssaa - 1.0) / f64ssaa;
+        let rowoffset = (2.0 * f64::from(j) - f64ssaa - 1.0) / f64ssaa;
 
         // Compute escape speed of point.
         let escape_speed = iterate(
