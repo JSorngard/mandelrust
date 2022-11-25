@@ -3,6 +3,34 @@ use core::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Sub, SubAssign};
 use image::Rgb;
 use lazy_static::lazy_static;
 
+/// Determines the color of a pixel in linear RGB color space.
+/// The color map that this function uses was taken from the python code in
+/// [this](https://preshing.com/20110926/high-resolution-mandelbrot-in-obfuscated-python/) blog post.
+///
+/// As the input increases from 0 to 1 the color transitions as
+///
+/// black -> brown -> orange -> yellow -> cyan -> blue -> dark blue -> black.
+///
+/// N.B.: The function has not been tested for inputs outside the range \[0, 1\]
+/// and makes no guarantees about the output in that case.
+pub fn palette(escape_speed: f64) -> LinearRGB {
+    let third_power = escape_speed * escape_speed * escape_speed;
+    let ninth_power = third_power * third_power * third_power;
+    let eighteenth_power = ninth_power * ninth_power;
+    let thirty_sixth_power = eighteenth_power * eighteenth_power;
+
+    LinearRGB::from(Rgb::from([
+        255.0_f64.powf(-2.0 * ninth_power * thirty_sixth_power) * escape_speed,
+        14.0 / 51.0 * escape_speed - 176.0 / 51.0 * eighteenth_power + 701.0 / 255.0 * ninth_power,
+        16.0 / 51.0 * escape_speed + ninth_power
+            - 190.0 / 51.0
+                * thirty_sixth_power
+                * thirty_sixth_power
+                * eighteenth_power
+                * ninth_power,
+    ]))
+}
+
 lazy_static! {
     pub static ref SRGB_TO_LINEAR: Vec<f64> = (0..=u8::MAX)
         .map(|c_srgb| {

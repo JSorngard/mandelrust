@@ -10,7 +10,7 @@ use rayon::{
     prelude::ParallelSliceMut,
 };
 
-use crate::color_space::LinearRGB;
+use crate::color_space::{palette, LinearRGB};
 
 // ----------- DEBUG FLAGS --------------
 // Set to true to only super sample close to the border of the set.
@@ -190,34 +190,6 @@ fn color_band(
     }
 }
 
-/// Determines the color of a pixel in linear RGB color space.
-/// The color map that this function uses was taken from the python code in
-/// [this](https://preshing.com/20110926/high-resolution-mandelbrot-in-obfuscated-python/) blog post.
-///
-/// As the input increases from 0 to 1 the color transitions as
-///
-/// black -> brown -> orange -> yellow -> cyan -> blue -> dark blue -> black.
-///
-/// N.B.: The function has not been tested for inputs outside the range \[0, 1\]
-/// and makes no guarantees about the output in that case.
-fn palette(escape_speed: f64) -> LinearRGB {
-    let third_power = escape_speed * escape_speed * escape_speed;
-    let ninth_power = third_power * third_power * third_power;
-    let eighteenth_power = ninth_power * ninth_power;
-    let thirty_sixth_power = eighteenth_power * eighteenth_power;
-
-    LinearRGB::from(Rgb::from([
-        255.0_f64.powf(-2.0 * ninth_power * thirty_sixth_power) * escape_speed,
-        14.0 / 51.0 * escape_speed - 176.0 / 51.0 * eighteenth_power + 701.0 / 255.0 * ninth_power,
-        16.0 / 51.0 * escape_speed + ninth_power
-            - 190.0 / 51.0
-                * thirty_sixth_power
-                * thirty_sixth_power
-                * eighteenth_power
-                * ninth_power,
-    ]))
-}
-
 /// Computes the escape speed for the values in a grid
 /// in a small region around the given value, computes their resulting
 /// colors and returns the average color as an sRGB value.
@@ -275,13 +247,11 @@ pub fn supersampled_pixel_color(
             render_parameters.max_iterations,
         );
 
-        let color_sample = if !render_parameters.grayscale {
+        color += if !render_parameters.grayscale {
             palette(escape_speed)
         } else {
             [escape_speed; 3].into()
         };
-
-        color += color_sample;
         samples += 1;
 
         // If we are far from the fractal we do not need to supersample.
