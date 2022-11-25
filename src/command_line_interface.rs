@@ -1,4 +1,4 @@
-use core::num::{NonZeroU32, NonZeroU8, NonZeroUsize, ParseFloatError};
+use core::num::{NonZeroU32, NonZeroU8, NonZeroUsize};
 
 use clap::Parser;
 
@@ -32,9 +32,9 @@ pub struct Cli {
     #[arg(
         short,
         long,
-        value_parser(non_negative_double),
         value_name = "ZOOM LEVEL",
-        default_value_t = 0.0
+        default_value_t = 0.0,
+        allow_hyphen_values = true
     )]
     /// A real number describing how far in to zoom on the given center point.
     /// This number works on an exponential scale where 0 means no zoom
@@ -95,17 +95,6 @@ pub struct Cli {
     #[arg(short, long, default_value = "renders", value_name = "OUTPUT FOLDER")]
     /// The folder in which to save the resulting image
     pub output_folder: String,
-}
-
-/// Tries to parse the input string slice into an f64 >= 0.
-fn non_negative_double(s: &str) -> Result<f64, String> {
-    let x: f64 = s.parse().map_err(|e: ParseFloatError| e.to_string())?;
-
-    if x >= 0.0 {
-        Ok(x)
-    } else {
-        Err("the value must not be negative".into())
-    }
 }
 
 /// Tries to interpret the input string as if it is an aspect ratio.
