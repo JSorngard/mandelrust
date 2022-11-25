@@ -1,5 +1,4 @@
-use core::ops::{Div, DivAssign};
-use std::ops::{Add, AddAssign, Mul, MulAssign};
+use core::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Sub, SubAssign};
 
 use image::Rgb;
 use lazy_static::lazy_static;
@@ -52,13 +51,24 @@ impl Add for LinearRGB {
 
 impl AddAssign for LinearRGB {
     fn add_assign(&mut self, rhs: Self) {
-        *self = {
-            Self {
-                r: self.r + rhs.r,
-                g: self.g + rhs.g,
-                b: self.b + rhs.b,
-            }
-        }
+        self.r += rhs.r;
+        self.g += rhs.g;
+        self.b += rhs.b;
+    }
+}
+
+impl Sub for LinearRGB {
+    type Output = Self;
+    fn sub(self, rhs: Self) -> Self::Output {
+        LinearRGB::new(self.r - rhs.r, self.g - rhs.g, self.b - rhs.b)
+    }
+}
+
+impl SubAssign for LinearRGB {
+    fn sub_assign(&mut self, rhs: Self) {
+        self.r -= rhs.r;
+        self.g -= rhs.g;
+        self.b -= rhs.b;
     }
 }
 
@@ -71,13 +81,9 @@ impl Mul<f64> for LinearRGB {
 
 impl MulAssign<f64> for LinearRGB {
     fn mul_assign(&mut self, rhs: f64) {
-        *self = {
-            Self {
-                r: self.r * rhs,
-                g: self.g * rhs,
-                b: self.b * rhs,
-            }
-        }
+        self.r *= rhs;
+        self.g *= rhs;
+        self.b *= rhs;
     }
 }
 
