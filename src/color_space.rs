@@ -94,10 +94,13 @@ impl From<LinearRGB> for Rgb<u8> {
             //     (f64::from(u8::MAX) * linear_rgb.b.clamp(0.0, 1.0)).round() as u8,
             // ]
             [
-                (f64::from(u8::MAX) * linear_rgb_to_srgb(linear_rgb.r).clamp(0.0, 1.0)).round() as u8,
-                (f64::from(u8::MAX) * linear_rgb_to_srgb(linear_rgb.g).clamp(0.0, 1.0)).round() as u8,
-                (f64::from(u8::MAX) * linear_rgb_to_srgb(linear_rgb.b).clamp(0.0, 1.0)).round() as u8,
-            ]
+                (f64::from(u8::MAX) * linear_rgb_to_srgb(linear_rgb.r).clamp(0.0, 1.0)).round()
+                    as u8,
+                (f64::from(u8::MAX) * linear_rgb_to_srgb(linear_rgb.g).clamp(0.0, 1.0)).round()
+                    as u8,
+                (f64::from(u8::MAX) * linear_rgb_to_srgb(linear_rgb.b).clamp(0.0, 1.0)).round()
+                    as u8,
+            ],
         )
     }
 }
