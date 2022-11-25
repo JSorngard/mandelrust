@@ -2,7 +2,7 @@ use core::num::{NonZeroU32, NonZeroU8, NonZeroUsize};
 use std::error::Error;
 use std::io::{stdout, Write};
 
-use image::DynamicImage;
+use image::{DynamicImage, Rgb};
 use indicatif::ParallelProgressIterator;
 use itertools::Itertools;
 use rayon::{
@@ -10,7 +10,7 @@ use rayon::{
     prelude::ParallelSliceMut,
 };
 
-use crate::color_space::{linear_rgb_to_srgb, srgb_to_linear_rgb};
+use crate::color_space::LinearRGB;
 
 // ----------- DEBUG FLAGS --------------
 // Set to true to only super sample close to the border of the set.
@@ -181,7 +181,7 @@ fn color_band(
                 render_parameters,
             );
 
-            band[y_index..(NUM_COLOR_CHANNELS + y_index)].copy_from_slice(&color);
+            band[y_index..(NUM_COLOR_CHANNELS + y_index)].copy_from_slice(&color.0);
 
             // We keep track of how many pixels have been colored
             // in order to potentially mirror them.
@@ -190,7 +190,7 @@ fn color_band(
     }
 }
 
-/// Determines the color of a pixel in linear RGB color space, represented as a triplet of numbers between 0 and 1.
+/// Determines the color of a pixel in linear RGB color space.
 /// The color map that this function uses was taken from the python code in
 /// [this](https://preshing.com/20110926/high-resolution-mandelbrot-in-obfuscated-python/) blog post.
 ///
@@ -200,23 +200,22 @@ fn color_band(
 ///
 /// N.B.: The function has not been tested for inputs outside the range \[0, 1\]
 /// and makes no guarantees about the output in that case.
-fn palette(escape_speed: f64) -> [f64; NUM_COLOR_CHANNELS] {
+fn palette(escape_speed: f64) -> LinearRGB {
     let third_power = escape_speed * escape_speed * escape_speed;
     let ninth_power = third_power * third_power * third_power;
     let eighteenth_power = ninth_power * ninth_power;
     let thirty_sixth_power = eighteenth_power * eighteenth_power;
 
-    srgb_to_linear_rgb([
-        (255.0_f64.powf(-2.0 * ninth_power * thirty_sixth_power) * escape_speed),
-        (14.0 / 51.0 * escape_speed - 176.0 / 51.0 * eighteenth_power
-            + 701.0 / 255.0 * ninth_power),
-        (16.0 / 51.0 * escape_speed + ninth_power
+    LinearRGB::from(Rgb::from([
+        255.0_f64.powf(-2.0 * ninth_power * thirty_sixth_power) * escape_speed,
+        14.0 / 51.0 * escape_speed - 176.0 / 51.0 * eighteenth_power + 701.0 / 255.0 * ninth_power,
+        16.0 / 51.0 * escape_speed + ninth_power
             - 190.0 / 51.0
                 * thirty_sixth_power
                 * thirty_sixth_power
                 * eighteenth_power
-                * ninth_power),
-    ])
+                * ninth_power,
+    ]))
 }
 
 /// Computes the escape speed for the values in a grid
@@ -245,7 +244,7 @@ pub fn supersampled_pixel_color(
     real_delta: f64,
     imag_delta: f64,
     render_parameters: RenderParameters,
-) -> [u8; 3] {
+) -> Rgb<u8> {
     let ssaa = sqrt_samples_per_pixel.get();
     let f64ssaa: f64 = ssaa.into();
 
@@ -256,7 +255,7 @@ pub fn supersampled_pixel_color(
     let mut coloffset: f64;
     let mut rowoffset: f64;
 
-    let mut linear_rgb = [0.0; 3];
+    let mut linear_rgb = LinearRGB::default();
 
     // Supersampling loop.
     for (i, j) in (1..=ssaa)
@@ -279,28 +278,33 @@ pub fn supersampled_pixel_color(
         );
 
         let linear_rgb_sample = if render_parameters.grayscale {
-            [escape_speed; NUM_COLOR_CHANNELS]
+            LinearRGB::new(escape_speed, escape_speed, escape_speed)
         } else {
             palette(escape_speed)
         };
 
-        for (c, c_sample) in linear_rgb.iter_mut().zip(linear_rgb_sample) {
-            *c += c_sample;
-        }
+        linear_rgb += linear_rgb_sample;
+
+        // for (c, c_sample) in linear_rgb.iter_mut().zip(linear_rgb_sample) {
+        //     *c += c_sample;
+        // }
 
         samples += 1;
 
         // If we are far from the fractal we do not need to supersample.
         if RESTRICT_SSAA_REGION && escape_speed > SSAA_REGION_CUTOFF {
             if SHOW_SSAA_REGION {
-                linear_rgb = [150.0 / 255.0, 75.0 / 255.0, 0.0];
+                linear_rgb = LinearRGB::new(150.0 / 255.0, 75.0 / 255.0, 0.0);
             }
 
             break;
         }
     }
+
+    (linear_rgb * (1.0 / f64::from(samples))).into()
+
     // Convert to sRGB                            Divide by number of samples                     Represent as a u8 from 0 to 255
-    linear_rgb_to_srgb(linear_rgb.map(|c| (c / f64::from(samples)))).map(|c| (c * 256.0) as u8)
+    //linear_rgb_to_srgb(linear_rgb.map(|c| (c / f64::from(samples)))).map(|c| (c * 256.0) as u8)
 }
 
 /// Iterates the Mandelbrot function
