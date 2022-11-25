@@ -388,6 +388,7 @@ dependencies = [
  "image",
  "indicatif",
  "itertools",
+ "lazy_static",
  "rayon",
 ]
 

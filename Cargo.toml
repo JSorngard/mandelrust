@@ -12,6 +12,7 @@ image = "0.24"
 rayon = "1.5"
 indicatif = { version = "0.16", features = ["rayon"] }
 itertools = "0.10"
+lazy_static = "1.4"
 
 [profile.release]
 opt-level = 3
