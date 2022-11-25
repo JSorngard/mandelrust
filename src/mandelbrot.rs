@@ -295,6 +295,7 @@ pub fn supersampled_pixel_color(
         }
     }
 
+    // Divive by the number of samples and convert to sRGB
     (color / f64::from(samples)).into()
 }
 
