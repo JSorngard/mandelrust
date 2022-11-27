@@ -131,7 +131,7 @@ impl DivAssign<f64> for LinearRGB {
 impl From<LinearRGB> for Rgb<u8> {
     /// Converts a `LinearRGB` into an `Rgb<u8>` by converting its
     /// underlying data into the nonlinear sRGB color space.
-    /// Clamps the color channels to the range [0, 1] before conversion.
+    /// Clamps the color channels to the range \[0, 1\] before conversion.
     fn from(linear_rgb: LinearRGB) -> Self {
         Rgb::from([
             (f64::from(u8::MAX) * linear_rgb_to_srgb(linear_rgb.r).clamp(0.0, 1.0)).round() as u8,
