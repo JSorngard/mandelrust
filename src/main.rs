@@ -107,3 +107,47 @@ fn give_user_feedback(args: &Cli, rparams: &RenderParameters) -> Result<(), Box<
 
     Ok(())
 }
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use approx::assert_relative_eq;
+    use color_space::LinearRGB;
+    use image::Rgb;
+    use itertools::Itertools;
+    use mandelbrot::iterate;
+    use std::num::NonZeroU32;
+
+    #[test]
+    fn check_some_iterations() {
+        let max_iterations = NonZeroU32::new(255).unwrap();
+        assert_eq!(iterate(0.0, 0.0, max_iterations), 0.0);
+        assert_eq!(iterate(-2.0, 0.0, max_iterations), 0.0);
+    }
+
+    #[test]
+    fn check_reversibillity_of_colorspace_conversions() {
+        let norm = f64::from(u8::MAX);
+        for (r, (g, b)) in
+            (0..u8::MAX).cartesian_product((0..=u8::MAX).cartesian_product(0..=u8::MAX))
+        {
+            let rf = f64::from(r) / norm;
+            let gf = f64::from(g) / norm;
+            let bf = f64::from(b) / norm;
+
+            let linear_rgb = LinearRGB::new(rf, gf, bf);
+            let srgb: Rgb<f64> = linear_rgb.into();
+            let after_conversions: LinearRGB = srgb.into();
+
+            assert_relative_eq!(linear_rgb.r, after_conversions.r);
+            assert_relative_eq!(linear_rgb.g, after_conversions.g);
+            assert_relative_eq!(linear_rgb.b, after_conversions.b);
+        }
+    }
+
+    #[test]
+    fn verify_cli() {
+        use clap::CommandFactory;
+        Cli::command().debug_assert();
+    }
+}

@@ -128,9 +128,3 @@ fn parse_aspect_ratio(s: &str) -> Result<f64, String> {
         }
     }
 }
-
-#[test]
-fn verify_cli() {
-    use clap::CommandFactory;
-    Cli::command().debug_assert()
-}

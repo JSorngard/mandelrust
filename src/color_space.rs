@@ -57,11 +57,11 @@ lazy_static! {
 /// An RGB triplet whose underlying data is not in an sRGB format,
 /// but in a linear format. This means that it can be multiplied by a scalar
 /// and added to another `LinearRGB`.
-#[derive(Clone, Copy, Debug, Default)]
+#[derive(Clone, Copy, Debug, Default, PartialEq)]
 pub struct LinearRGB {
-    r: f64,
-    g: f64,
-    b: f64,
+    pub r: f64,
+    pub g: f64,
+    pub b: f64,
 }
 
 impl LinearRGB {
@@ -150,6 +150,16 @@ impl From<Rgb<f64>> for LinearRGB {
             srgb_to_linear_rgb(srgb[1]),
             srgb_to_linear_rgb(srgb[2]),
         )
+    }
+}
+
+impl From<LinearRGB> for Rgb<f64> {
+    fn from(linear_rgb: LinearRGB) -> Self {
+        Rgb::from([
+            linear_rgb_to_srgb(linear_rgb.r),
+            linear_rgb_to_srgb(linear_rgb.g),
+            linear_rgb_to_srgb(linear_rgb.b),
+        ])
     }
 }
 
