@@ -34,7 +34,7 @@ The program can render a sixteen times supersampled 8k image of the set in just 
 
 # Example images
 Default settings:
-![Full set, default settings (1080p)](/examples/mandelbrot_set.png)
+![Full set, default settings (1080p)](/examples/mandelbrot_set.avif)
 We can zoom in on details in the above image:
 ![Zoomed detail without changing max iterations](/examples/mandelbrot_set_at_re_-0.23_im_-0.72_zoom_6.4_maxiters_255.png)
 If we want to zoom even deeper we can change the maximum number of iterations in order to keep the image crisp:
