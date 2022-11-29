@@ -23,7 +23,7 @@ fn get_inputs(y_res: usize, ssaa: u8, zoom: f64) -> (RenderParameters, Frame) {
     (params, frame)
 }
 
-fn sd_render(c: &mut Criterion) {
+fn sd(c: &mut Criterion) {
     let (params, frame) = get_inputs(480, 3, 1.0);
 
     c.bench_function(
@@ -32,7 +32,7 @@ fn sd_render(c: &mut Criterion) {
     );
 }
 
-fn hd_render(c: &mut Criterion) {
+fn hd(c: &mut Criterion) {
     let (params, frame) = get_inputs(720, 3, 1.0);
 
     c.bench_function(
@@ -41,7 +41,7 @@ fn hd_render(c: &mut Criterion) {
     );
 }
 
-fn full_hd_render(c: &mut Criterion) {
+fn full_hd(c: &mut Criterion) {
     let (params, frame) = get_inputs(1080, 3, 1.0);
 
     c.bench_function(
@@ -50,7 +50,7 @@ fn full_hd_render(c: &mut Criterion) {
     );
 }
 
-fn fourk_render(c: &mut Criterion) {
+fn fourk(c: &mut Criterion) {
     let (params, frame) = get_inputs(2160, 3, 1.0);
 
     c.bench_function(
@@ -59,5 +59,16 @@ fn fourk_render(c: &mut Criterion) {
     );
 }
 
-criterion_group!(benches, sd_render, hd_render, full_hd_render, fourk_render);
+fn no_ssaa_full_hd(c: &mut Criterion) {
+    let (params, frame) = get_inputs(1080, 1, 1.0);
+    c.bench_function(
+        &format!(
+            "{}x{} without SSAA",
+            params.x_resolution, params.y_resolution
+        ),
+        |b| b.iter(|| render(params, frame).unwrap()),
+    );
+}
+
+criterion_group!(benches, sd, hd, full_hd, fourk, no_ssaa_full_hd);
 criterion_main!(benches);
