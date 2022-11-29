@@ -95,6 +95,10 @@ pub struct Cli {
     #[arg(short, long, default_value = "renders", value_name = "OUTPUT FOLDER")]
     /// The folder in which to save the resulting image
     pub output_folder: String,
+
+    #[arg(short, long)]
+    /// Print extra information and show the progress of the rendering process
+    pub verbose: bool,
 }
 
 /// Tries to interpret the input string as if it is an aspect ratio.

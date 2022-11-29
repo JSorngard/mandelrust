@@ -28,7 +28,7 @@ fn sd(c: &mut Criterion) {
 
     c.bench_function(
         &format!("{}x{} render", params.x_resolution, params.y_resolution),
-        |b| b.iter(|| render(params, frame).unwrap()),
+        |b| b.iter(|| render(params, frame, false).unwrap()),
     );
 }
 
@@ -37,7 +37,7 @@ fn hd(c: &mut Criterion) {
 
     c.bench_function(
         &format!("{}x{} render", params.x_resolution, params.y_resolution),
-        |b| b.iter(|| render(params, frame).unwrap()),
+        |b| b.iter(|| render(params, frame, false).unwrap()),
     );
 }
 
@@ -46,7 +46,7 @@ fn full_hd(c: &mut Criterion) {
 
     c.bench_function(
         &format!("{}x{} render", params.x_resolution, params.y_resolution),
-        |b| b.iter(|| render(params, frame).unwrap()),
+        |b| b.iter(|| render(params, frame, false).unwrap()),
     );
 }
 
@@ -55,7 +55,7 @@ fn fourk(c: &mut Criterion) {
 
     c.bench_function(
         &format!("{}x{} render", params.x_resolution, params.y_resolution),
-        |b| b.iter(|| render(params, frame).unwrap()),
+        |b| b.iter(|| render(params, frame, false).unwrap()),
     );
 }
 
@@ -66,7 +66,7 @@ fn no_ssaa_full_hd(c: &mut Criterion) {
             "{}x{} without SSAA",
             params.x_resolution, params.y_resolution
         ),
-        |b| b.iter(|| render(params, frame).unwrap()),
+        |b| b.iter(|| render(params, frame, false).unwrap()),
     );
 }
 

@@ -40,12 +40,16 @@ fn main() -> Result<(), Box<dyn Error>> {
         args.grayscale,
     );
 
-    give_user_feedback(&args, &render_parameters)?;
+    if args.verbose {
+        give_user_feedback(&args, &render_parameters)?;
+    }
 
-    let img = render(render_parameters, draw_region)?;
+    let img = render(render_parameters, draw_region, args.verbose)?;
 
-    print!("\rEncoding and saving image");
-    stdout().flush()?;
+    if args.verbose {
+        print!("\rEncoding and saving image");
+        stdout().flush()?;
+    }
 
     let image_name = if args.record_params {
         format!(
@@ -66,7 +70,10 @@ fn main() -> Result<(), Box<dyn Error>> {
     out_path.push(image_name);
 
     img.save(&out_path)?;
-    println!("\rSaved image as {}", out_path.display());
+
+    if args.verbose {
+        println!("\rSaved image as {}", out_path.display());
+    }
 
     // Everything finished correctly!
     Ok(())

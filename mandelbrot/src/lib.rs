@@ -3,7 +3,7 @@ use std::error::Error;
 use std::io::{stdout, Write};
 
 use image::{DynamicImage, Rgb};
-use indicatif::ParallelProgressIterator;
+use indicatif::{ParallelProgressIterator, ProgressBar};
 use itertools::Itertools;
 use rayon::{
     iter::{IndexedParallelIterator, ParallelIterator},
@@ -69,6 +69,7 @@ const NUM_COLOR_CHANNELS: usize = 3;
 pub fn render(
     render_parameters: RenderParameters,
     draw_region: Frame,
+    verbose: bool,
 ) -> Result<DynamicImage, Box<dyn Error>> {
     // True if the image contains the real axis, false otherwise.
     // If the image contains the real axis we want to mirror
@@ -89,12 +90,18 @@ pub fn render(
 
     let mut pixels: Vec<u8> = vec![0; NUM_COLOR_CHANNELS * x_resolution * y_resolution];
 
+    let progress_bar = if verbose {
+        ProgressBar::new(x_resolution.try_into()?)
+    } else {
+        ProgressBar::hidden()
+    };
+
     pixels
         // Split the image up into vertical bands and iterate over them in parallel.
         .par_chunks_mut(NUM_COLOR_CHANNELS * y_resolution)
         // We enumerate each band to be able to compute the real value of c for that band.
         .enumerate()
-        .progress_count(x_resolution.try_into()?)
+        .progress_with(progress_bar)
         .for_each(|(x_index, band)| {
             color_band(
                 start_real + draw_region.real_distance * (x_index as f64) / (x_resolution as f64),
@@ -116,8 +123,10 @@ pub fn render(
     )
     .ok_or("unable to construct image buffer from generated data")?;
 
-    print!("\rProcessing image");
-    stdout().flush()?;
+    if verbose {
+        print!("\rProcessing image");
+        stdout().flush()?;
+    }
 
     // Undo the transposed state used during rendering and
     img = image::imageops::rotate270(&img);
