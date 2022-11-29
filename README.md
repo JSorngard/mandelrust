@@ -32,7 +32,7 @@ I have tried to make the program faster over time. Some of the techniques used a
 
 The program can render a nine times supersampled 8k image of the set in just over three seconds on my laptop with a quad core i7-7500U CPU, while a non-supersampled 1080p image finishes in around 150 ms. On my desktop with a 5800X3D the same tests finish in just over one second and just under 100 ms respectively.
 
-You can easily test the performance of various renders on your own machine with `cargo bench`. The results will be printed to the terminal, but more detailed data can be found in `target/criterion/report/index.hmtl` in the form of a web page.
+You can easily test the performance of various renders on your own machine with `cargo bench`. The results will be printed to the terminal, but more detailed data can be found in `target/criterion/report/index.hmtl` in the form of a web page. Note that this currently only benchmarks renders of the fully zoomed out default image, no zoomed renders are benchmarked.
 
 # Example images
 Default settings:
