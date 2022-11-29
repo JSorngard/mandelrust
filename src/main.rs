@@ -6,13 +6,11 @@ use std::{
 
 use clap::Parser;
 
-use crate::{
-    command_line_interface::Cli,
-    mandelbrot::{render, Frame, RenderParameters},
-};
+use crate::command_line_interface::Cli;
+
+use mandelbrot::{render, Frame, RenderParameters};
 
 mod command_line_interface;
-use mandelbrot;
 
 const DEFAULT_FILE_NAME: &str = "mandelbrot_set";
 const DEFAULT_FILE_EXTENSION: &str = "png";
