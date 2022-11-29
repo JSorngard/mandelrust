@@ -17,8 +17,13 @@ clap = { version = "4.0", features = ["derive"] }
 approx = "0.5"
 image = "0.24"
 itertools = "0.10"
+criterion = {version = "0.4", features = ["html_reports"]}
 
 [profile.release]
 opt-level = 3
 lto = "thin"
 codegen-units = 1
+
+[[bench]]
+name = "mandelbenches"
+harness = false
