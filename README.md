@@ -30,7 +30,7 @@ I have tried to make the program faster over time. Some of the techniques used a
  6. [Link time optimization](https://doc.rust-lang.org/rustc/codegen-options/index.html#lto) has been enabled, the number of [codegen units](https://doc.rust-lang.org/rustc/codegen-options/index.html#codegen-units) set to 1, and the [opt-level](https://doc.rust-lang.org/rustc/codegen-options/index.html#opt-level) to 3.  
  7. Cargo is set to enable optimization with every instruction set available [on the compiling CPU](https://rust-lang.github.io/packed_simd/perf-guide/target-feature/rustflags.html#target-cpu).
 
-The program can render a nine times supersampled 8k image of the set in just over three seconds on my laptop with a quad core i7-7500U CPU, while a non-supersampled 1080p image finishes in around 150 ms. On my desktop with a 5800X3D the same tests finish in just over one second and just under 100 ms respectively.
+The program can render a nine times supersampled 4k image of the set in just over 800 ms on my laptop with a quad core i7-7500U CPU, while a non-supersampled 1080p image finishes in around 150 ms.
 
 You can easily test the performance of various renders on your own machine with `cargo bench`. The results will be printed to the terminal, but more detailed data can be found in `target/criterion/report/index.hmtl` in the form of a web page. Note that this currently only benchmarks renders of the fully zoomed out default image, no zoomed renders are benchmarked.
 
