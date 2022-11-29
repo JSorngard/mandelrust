@@ -103,6 +103,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "color-space"
+version = "0.2.0"
+dependencies = [
+ "image",
+ "lazy_static",
+]
+
+[[package]]
 name = "color_quant"
 version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -443,16 +451,26 @@ dependencies = [
 ]
 
 [[package]]
+name = "mandelbrot"
+version = "7.2.1"
+dependencies = [
+ "color-space",
+ "image",
+ "indicatif",
+ "itertools",
+ "rayon",
+]
+
+[[package]]
 name = "mandelrust"
 version = "7.2.1"
 dependencies = [
  "approx",
  "clap",
+ "color-space",
  "image",
- "indicatif",
  "itertools",
- "lazy_static",
- "rayon",
+ "mandelbrot",
 ]
 
 [[package]]

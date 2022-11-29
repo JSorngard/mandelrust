@@ -11,9 +11,8 @@ use crate::{
     mandelbrot::{render, Frame, RenderParameters},
 };
 
-mod color_space;
 mod command_line_interface;
-mod mandelbrot;
+use mandelbrot;
 
 const DEFAULT_FILE_NAME: &str = "mandelbrot_set";
 const DEFAULT_FILE_EXTENSION: &str = "png";

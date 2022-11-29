@@ -6,16 +6,17 @@ edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+[workspace]
+
 [dependencies]
+mandelbrot = {path = "mandelbrot"}
+color-space = {path = "color-space"}
 clap = { version = "4.0", features = ["derive"] }
-image = "0.24"
-rayon = "1.5"
-indicatif = { version = "0.16", features = ["rayon"] }
-itertools = "0.10"
-lazy_static = "1.4"
 
 [dev-dependencies]
 approx = "0.5"
+image = "0.24"
+itertools = "0.10"
 
 [profile.release]
 opt-level = 3

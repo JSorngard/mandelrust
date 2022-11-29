@@ -10,7 +10,7 @@ use rayon::{
     prelude::ParallelSliceMut,
 };
 
-use crate::color_space::{palette, LinearRGB};
+use color_space::{palette, LinearRGB};
 
 // ----------- DEBUG FLAGS --------------
 // Set to true to only super sample close to the border of the set.
