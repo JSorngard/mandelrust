@@ -71,7 +71,7 @@ fn slow(c: &mut Criterion) {
         |b| b.iter(|| render(params, frame, false).unwrap()),
     );
 
-    let zoom = 3.778;
+    let zoom = 12.0;
     let (params, frame) = get_inputs(
         1080,
         None,
@@ -83,7 +83,7 @@ fn slow(c: &mut Criterion) {
 
     group.bench_function(
         &format!(
-            "{}x{}, {} iterations, zoomed by {}",
+            "{}x{}, {} iterations, zoomed by 2^{}",
             params.x_resolution, params.y_resolution, params.max_iterations, zoom
         ),
         |b| b.iter(|| render(params, frame, false).unwrap()),
