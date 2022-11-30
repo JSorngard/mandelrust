@@ -30,36 +30,29 @@ fn get_inputs(
     (params, frame)
 }
 
-fn sd(c: &mut Criterion) {
+fn fast(c: &mut Criterion) {
+    let mut group = c.benchmark_group("fast");
+
     let (params, frame) = get_inputs(480, None, None, None, None, None);
-
-    c.bench_function(
+    group.bench_function(
         &format!("{}x{} render", params.x_resolution, params.y_resolution),
         |b| b.iter(|| render(params, frame, false).unwrap()),
     );
-}
 
-fn hd(c: &mut Criterion) {
     let (params, frame) = get_inputs(720, None, None, None, None, None);
-
-    c.bench_function(
+    group.bench_function(
         &format!("{}x{} render", params.x_resolution, params.y_resolution),
         |b| b.iter(|| render(params, frame, false).unwrap()),
     );
-}
 
-fn full_hd(c: &mut Criterion) {
     let (params, frame) = get_inputs(1080, None, None, None, None, None);
-
-    c.bench_function(
+    group.bench_function(
         &format!("{}x{} render", params.x_resolution, params.y_resolution),
         |b| b.iter(|| render(params, frame, false).unwrap()),
     );
-}
 
-fn no_ssaa_full_hd(c: &mut Criterion) {
     let (params, frame) = get_inputs(1080, Some(1), None, None, None, None);
-    c.bench_function(
+    group.bench_function(
         &format!(
             "{}x{} without SSAA",
             params.x_resolution, params.y_resolution
@@ -69,11 +62,10 @@ fn no_ssaa_full_hd(c: &mut Criterion) {
 }
 
 fn slow(c: &mut Criterion) {
-    let (params, frame) = get_inputs(2160, None, None, None, None, None);
-
     let mut group = c.benchmark_group("slow");
     group.sample_size(10);
 
+    let (params, frame) = get_inputs(2160, None, None, None, None, None);
     group.bench_function(
         &format!("{}x{} render", params.x_resolution, params.y_resolution),
         |b| b.iter(|| render(params, frame, false).unwrap()),
@@ -91,12 +83,12 @@ fn slow(c: &mut Criterion) {
 
     group.bench_function(
         &format!(
-            "{}x{} zoomed by {}",
-            params.x_resolution, params.y_resolution, zoom
+            "{}x{}, {} iterations, zoomed by {}",
+            params.x_resolution, params.y_resolution, zoom, params.max_iterations
         ),
         |b| b.iter(|| render(params, frame, false).unwrap()),
     );
 }
 
-criterion_group!(benches, sd, hd, full_hd, no_ssaa_full_hd, slow);
+criterion_group!(benches, fast, slow);
 criterion_main!(benches);
