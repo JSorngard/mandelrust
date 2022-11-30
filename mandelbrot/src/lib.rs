@@ -66,6 +66,8 @@ const NUM_COLOR_CHANNELS: usize = 3;
 /// a point as part of the set.
 ///
 /// If `grayscale` is true the image is rendered in grayscale instead of color.
+/// 
+/// If `verbose` is true the function will use prints to `stderr` to display a progress bar.
 pub fn render(
     render_parameters: RenderParameters,
     draw_region: Frame,
