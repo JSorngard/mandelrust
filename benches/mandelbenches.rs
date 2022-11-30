@@ -84,7 +84,7 @@ fn slow(c: &mut Criterion) {
     group.bench_function(
         &format!(
             "{}x{}, {} iterations, zoomed by {}",
-            params.x_resolution, params.y_resolution, zoom, params.max_iterations
+            params.x_resolution, params.y_resolution, params.max_iterations, zoom
         ),
         |b| b.iter(|| render(params, frame, false).unwrap()),
     );
