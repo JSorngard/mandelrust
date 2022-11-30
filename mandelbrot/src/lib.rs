@@ -20,7 +20,7 @@ const RESTRICT_SSAA_REGION: bool = true;
 // supersampling will be aborted.
 const SSAA_REGION_CUTOFF: f64 = 0.963;
 
-// Set to true to dsiplay the region where supersampling is done
+// Set to true to display the region where supersampling is done
 // as brown. The border region where supersampling is only partially done
 // will appear as black.
 const SHOW_SSAA_REGION: bool = false;
