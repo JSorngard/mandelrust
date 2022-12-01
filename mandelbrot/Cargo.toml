@@ -1,6 +1,6 @@
 [package]
 name = "mandelbrot"
-version = "8.0.0"
+version = "8.0.1"
 authors = ["Johanna Sörngård (jsorngard@gmail.com)"]
 edition = "2021"
 
