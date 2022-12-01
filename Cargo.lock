@@ -177,7 +177,9 @@ dependencies = [
 name = "color-space"
 version = "0.3.0"
 dependencies = [
+ "approx",
  "image",
+ "itertools",
  "lazy_static",
 ]
 
@@ -589,24 +591,21 @@ dependencies = [
 name = "mandelbrot"
 version = "8.0.0"
 dependencies = [
+ "clap 4.0.28",
+ "color-space",
+ "criterion",
+ "mandellib",
+]
+
+[[package]]
+name = "mandellib"
+version = "8.0.0"
+dependencies = [
  "color-space",
  "image",
  "indicatif",
  "itertools",
  "rayon",
-]
-
-[[package]]
-name = "mandelrust"
-version = "8.0.0"
-dependencies = [
- "approx",
- "clap 4.0.28",
- "color-space",
- "criterion",
- "image",
- "itertools",
- "mandelbrot",
 ]
 
 [[package]]

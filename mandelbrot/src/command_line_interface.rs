@@ -70,7 +70,7 @@ pub struct Cli {
         // unwrap is okay because 3 is not 0.
         default_value_t = NonZeroU8::new(3).unwrap(),
     )]
-    /// How many samples to compute for each pixel (along one direction, the actual number of samples is the square of this number).
+    /// How many samples to compute for each pixel along one dimension. The total number of samples per pixel is the square of this number.
     /// If this is set to 1, supersampling is turned off
     pub ssaa: NonZeroU8,
 
@@ -135,5 +135,16 @@ fn parse_aspect_ratio(s: &str) -> Result<f64, String> {
                 Err("input could not be interpreted as an aspect ratio".into())
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod test_cli {
+    use super::*;
+
+    #[test]
+    fn verify_cli() {
+        use clap::CommandFactory;
+        Cli::command().debug_assert();
     }
 }

@@ -196,3 +196,31 @@ fn linear_rgb_to_srgb(c: f64) -> f64 {
     //     1.055 * c.powf(1.0 / 2.4) - 0.055
     // }
 }
+
+#[cfg(test)]
+mod test_color_space {
+    use super::*;
+    use approx::assert_relative_eq;
+    use image::Rgb;
+    use itertools::Itertools;
+
+    #[test]
+    fn check_reversibillity_of_colorspace_conversions() {
+        let norm = f64::from(u8::MAX);
+        for (r, (g, b)) in
+            (0..u8::MAX).cartesian_product((0..=u8::MAX).cartesian_product(0..=u8::MAX))
+        {
+            let rf = f64::from(r) / norm;
+            let gf = f64::from(g) / norm;
+            let bf = f64::from(b) / norm;
+
+            let linear_rgb = LinearRGB::new(rf, gf, bf);
+            let srgb: Rgb<f64> = linear_rgb.into();
+            let after_conversions: LinearRGB = srgb.into();
+
+            assert_relative_eq!(linear_rgb.r, after_conversions.r);
+            assert_relative_eq!(linear_rgb.g, after_conversions.g);
+            assert_relative_eq!(linear_rgb.b, after_conversions.b);
+        }
+    }
+}

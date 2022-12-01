@@ -1,7 +1,7 @@
 use core::num::{NonZeroU32, NonZeroU8, NonZeroUsize};
 
 use criterion::{criterion_group, criterion_main, Criterion};
-use mandelbrot::{render, Frame, RenderParameters};
+use mandellib::{render, Frame, RenderParameters};
 
 fn get_inputs(
     y_res: usize,

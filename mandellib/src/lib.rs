@@ -286,6 +286,20 @@ pub fn supersampled_pixel_color(
 /// on the given c starting with z_0 = c until it either escapes
 /// or the loop exceeds the maximum number of iterations.
 /// Returns the escape speed of the point as a number between 0 and 1.
+/// # Example
+/// ```
+/// # use mandellib::iterate;
+/// # use core::num::NonZeroU32;
+/// let maxiters = NonZeroU32::new(100).unwrap();
+/// // The origin is in the set
+/// assert_eq!(iterate(0.0, 0.0, maxiters), 0.0);
+/// 
+/// // and so is-2
+/// assert_eq!(iterate(-2.0, 0.0, maxiters), 0.0);
+/// 
+/// // but 1 + i is not
+/// assert_ne!(iterate(1.0, 1.0, maxiters), 0.0);
+/// ```
 pub fn iterate(c_re: f64, c_im: f64, max_iterations: NonZeroU32) -> f64 {
     let c_imag_sqr = c_im * c_im;
     let mag_sqr = c_re * c_re + c_imag_sqr;
@@ -380,5 +394,18 @@ impl RenderParameters {
             sqrt_samples_per_pixel,
             grayscale,
         }
+    }
+}
+
+
+#[cfg(test)]
+mod test_iteration {
+    use super::*;
+
+    #[test]
+    fn check_some_iterations() {
+        let max_iterations = NonZeroU32::new(255).unwrap();
+        assert_eq!(iterate(0.0, 0.0, max_iterations), 0.0);
+        assert_eq!(iterate(-2.0, 0.0, max_iterations), 0.0);
     }
 }

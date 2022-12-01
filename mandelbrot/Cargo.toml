@@ -1,11 +1,19 @@
 [package]
 name = "mandelbrot"
 version = "8.0.0"
+authors = ["Johanna Sörngård (jsorngard@gmail.com)"]
 edition = "2021"
 
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
 [dependencies]
+mandellib = {path = "../mandellib"}
 color-space = {path = "../color-space"}
-image = "0.24"
-rayon = "1.5"
-indicatif = { version = "0.16", features = ["rayon"] }
-itertools = "0.10"
+clap = { version = "4.0", features = ["derive"] }
+
+[dev-dependencies]
+criterion = {version = "0.4", features = ["html_reports"]}
+
+[[bench]]
+name = "mandelbenches"
+harness = false
