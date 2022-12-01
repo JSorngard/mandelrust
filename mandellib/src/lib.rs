@@ -290,7 +290,7 @@ pub fn supersampled_pixel_color(
 /// // The origin is in the set
 /// assert_eq!(iterate(0.0, 0.0, maxiters), 0.0);
 ///
-/// // and so is-2
+/// // and so is -2
 /// assert_eq!(iterate(-2.0, 0.0, maxiters), 0.0);
 ///
 /// // but 1 + i is not
