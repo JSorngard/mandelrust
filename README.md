@@ -9,7 +9,7 @@ This was one of my first projects to learn rust.
  3. Clone this git repo with `git clone https://www.github.com/JSorngard/mandelrust.git`
  4. Go into the repository with `cd mandelrust`
  5. Compile the program with `cargo build --release`
- 6. Run the program with `./target/release/mandelbrot.exe`. The resulting image can be found in the `renders` folder.
+ 6. Run the program with `./target/release/mandelbrot.exe`. The resulting image can be found in the `mandelbrot_renders` folder.
  7. You can specify where the image is focused, how zoomed it is and how many iterations to do (among other things) with command line arguments. For an exhaustive list run the program with the `--help` argument
 
 # Prettier mandelbrot rendering
