@@ -22,7 +22,7 @@ fn get_inputs(
 
     let center_real = re.unwrap_or(-0.75);
     let center_imag = im.unwrap_or(0.0);
-    let distance_imag = 8.0 / (3.0 * 2.0_f64.powf(zoom.unwrap_or(1.0)));
+    let distance_imag = 8.0 / (3.0 * 2.0_f64.powf(zoom.unwrap_or(0.0)));
     let distance_real = aspect_ratio * distance_imag;
 
     let frame = Frame::new(center_real, center_imag, distance_real, distance_imag);
