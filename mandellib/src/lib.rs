@@ -175,12 +175,8 @@ fn color_band(
             // mirror that one since the real line is infinitely thin.
             mirror_from -= NUM_COLOR_CHANNELS;
 
-            let (mirror_src, mirror_dst) = band.split_at_mut(y_index);
-
-            // `memcpy` the values of this pixel from one of the
-            // already computed pixels.
-            mirror_dst[0..NUM_COLOR_CHANNELS]
-                .copy_from_slice(&mirror_src[(mirror_from - NUM_COLOR_CHANNELS)..mirror_from]);
+            // `memmove` the data from the already computed pixel into this one.
+            band.copy_within((mirror_from - NUM_COLOR_CHANNELS)..mirror_from, y_index)
         } else {
             // Otherwise we compute the pixel color as normal by iteration.
             let color = supersampled_pixel_color(
