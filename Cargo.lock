@@ -175,7 +175,7 @@ dependencies = [
 
 [[package]]
 name = "color-space"
-version = "0.3.0"
+version = "0.3.1"
 dependencies = [
  "approx",
  "image",
@@ -589,7 +589,7 @@ dependencies = [
 
 [[package]]
 name = "mandelbrot"
-version = "8.0.0"
+version = "8.0.1"
 dependencies = [
  "clap 4.0.28",
  "color-space",
@@ -599,7 +599,7 @@ dependencies = [
 
 [[package]]
 name = "mandellib"
-version = "8.0.0"
+version = "8.0.1"
 dependencies = [
  "color-space",
  "image",
