@@ -293,10 +293,10 @@ pub fn supersampled_pixel_color(
 /// let maxiters = NonZeroU32::new(100).unwrap();
 /// // The origin is in the set
 /// assert_eq!(iterate(0.0, 0.0, maxiters), 0.0);
-/// 
+///
 /// // and so is-2
 /// assert_eq!(iterate(-2.0, 0.0, maxiters), 0.0);
-/// 
+///
 /// // but 1 + i is not
 /// assert_ne!(iterate(1.0, 1.0, maxiters), 0.0);
 /// ```
@@ -396,7 +396,6 @@ impl RenderParameters {
         }
     }
 }
-
 
 #[cfg(test)]
 mod test_iteration {
