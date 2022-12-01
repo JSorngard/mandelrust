@@ -88,6 +88,24 @@ fn slow(c: &mut Criterion) {
         ),
         |b| b.iter(|| render(params, frame, false).unwrap()),
     );
+
+    let zoom = 25.0;
+    let (params, frame) = get_inputs(
+        1080,
+        Some(3),
+        Some(zoom),
+        Some(0.25010021),
+        Some(0.000001586),
+        Some(15000),
+    );
+
+    group.bench_function(
+        &format!(
+            "{}x{}, {} iterations, zoomed by 2^{}",
+            params.x_resolution, params.y_resolution, params.max_iterations, zoom
+        ),
+        |b| b.iter(|| render(params, frame, false).unwrap()),
+    );
 }
 
 criterion_group!(benches, fast, slow);
