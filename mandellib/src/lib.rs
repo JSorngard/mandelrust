@@ -114,11 +114,17 @@ pub fn render(
                 band,
             );
 
+            // If our assumption that we are rendering in the region of the complex plane with
+            // negative imaginary component is false we must flip the vertical band
+            // to get the correct image.
             if need_to_flip {
+                // Flips the band while keeping the ordering of the color channels.
                 for y_index in (0..band.len() / 2).step_by(NUM_COLOR_CHANNELS) {
-                    let opposize_index = band.len() - y_index - NUM_COLOR_CHANNELS;
-                    for i in 0..NUM_COLOR_CHANNELS {
-                        band.swap(y_index + i, opposize_index + i);
+                    for channel_index in 0..NUM_COLOR_CHANNELS {
+                        band.swap(
+                            y_index + channel_index,
+                            band.len() - y_index - NUM_COLOR_CHANNELS + channel_index,
+                        );
                     }
                 }
             }
