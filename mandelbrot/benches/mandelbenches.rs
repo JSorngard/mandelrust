@@ -35,26 +35,35 @@ fn fast(c: &mut Criterion) {
 
     let (params, frame) = get_inputs(480, None, None, None, None, None);
     group.bench_function(
-        &format!("{}x{} render", params.x_resolution, params.y_resolution),
+        &format!(
+            "{}x{} render of full set",
+            params.x_resolution, params.y_resolution
+        ),
         |b| b.iter(|| render(params, frame, false).unwrap()),
     );
 
     let (params, frame) = get_inputs(720, None, None, None, None, None);
     group.bench_function(
-        &format!("{}x{} render", params.x_resolution, params.y_resolution),
+        &format!(
+            "{}x{} render of full set",
+            params.x_resolution, params.y_resolution
+        ),
         |b| b.iter(|| render(params, frame, false).unwrap()),
     );
 
     let (params, frame) = get_inputs(1080, None, None, None, None, None);
     group.bench_function(
-        &format!("{}x{} render", params.x_resolution, params.y_resolution),
+        &format!(
+            "{}x{} render of full set",
+            params.x_resolution, params.y_resolution
+        ),
         |b| b.iter(|| render(params, frame, false).unwrap()),
     );
 
     let (params, frame) = get_inputs(1080, Some(1), None, None, None, None);
     group.bench_function(
         &format!(
-            "{}x{} without SSAA",
+            "{}x{} render  of full set without SSAA",
             params.x_resolution, params.y_resolution
         ),
         |b| b.iter(|| render(params, frame, false).unwrap()),
@@ -67,7 +76,10 @@ fn slow(c: &mut Criterion) {
 
     let (params, frame) = get_inputs(2160, None, None, None, None, None);
     group.bench_function(
-        &format!("{}x{} render", params.x_resolution, params.y_resolution),
+        &format!(
+            "{}x{} render of full set",
+            params.x_resolution, params.y_resolution
+        ),
         |b| b.iter(|| render(params, frame, false).unwrap()),
     );
 
@@ -83,30 +95,11 @@ fn slow(c: &mut Criterion) {
 
     group.bench_function(
         &format!(
-            "{}x{}, {} iterations, zoomed by 2^{}",
+            "{}x{}, {} iterations, zoomed by 2^{}: 'Mandelsun'",
             params.x_resolution, params.y_resolution, params.max_iterations, zoom
         ),
         |b| b.iter(|| render(params, frame, false).unwrap()),
     );
-
-    // Too slow on my laptop
-    // let zoom = 25.0;
-    // let (params, frame) = get_inputs(
-    //     1080,
-    //     None,
-    //     Some(zoom),
-    //     Some(0.25010021),
-    //     Some(0.000001586),
-    //     Some(15000),
-    // );
-
-    // group.bench_function(
-    //     &format!(
-    //         "{}x{}, {} iterations, zoomed by 2^{}",
-    //         params.x_resolution, params.y_resolution, params.max_iterations, zoom
-    //     ),
-    //     |b| b.iter(|| render(params, frame, false).unwrap()),
-    // );
 }
 
 criterion_group!(benches, fast, slow);
