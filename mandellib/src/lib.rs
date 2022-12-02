@@ -112,7 +112,16 @@ pub fn render(
                 start_imag,
                 mirror,
                 band,
-            )
+            );
+
+            if need_to_flip {
+                for y_index in (0..band.len() / 2).step_by(NUM_COLOR_CHANNELS) {
+                    let opposize_index = band.len() - y_index - NUM_COLOR_CHANNELS;
+                    for i in 0..NUM_COLOR_CHANNELS {
+                        band.swap(y_index + i, opposize_index + i);
+                    }
+                }
+            }
         });
 
     // Place the data in an image buffer
@@ -130,12 +139,8 @@ pub fn render(
         stdout().flush()?;
     }
 
-    // Undo the transposed state used during rendering and
+    // Undo the transposed state used during rendering.
     img = image::imageops::rotate270(&img);
-    if need_to_flip {
-        // flip the image vertically if we need to due to mirroring
-        image::imageops::flip_vertical_in_place(&mut img);
-    }
 
     if render_parameters.grayscale {
         Ok(DynamicImage::ImageLuma8(image::imageops::grayscale(&img)))
