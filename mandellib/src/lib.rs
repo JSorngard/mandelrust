@@ -104,9 +104,10 @@ pub fn render(
         // We enumerate each band to be able to compute the real value of c for that band.
         .enumerate()
         .progress_with(progress_bar)
-        .for_each(|(x_index, band)| {
+        .for_each(|(band_index, band)| {
             color_band(
-                start_real + draw_region.real_distance * (x_index as f64) / (x_resolution as f64),
+                start_real
+                    + draw_region.real_distance * (band_index as f64) / (x_resolution as f64),
                 render_parameters,
                 draw_region,
                 start_imag,
@@ -118,12 +119,11 @@ pub fn render(
             // negative imaginary component is false we must flip the vertical band
             // to get the correct image.
             if need_to_flip {
-                // Flips the band while keeping the ordering of the color channels.
-                for y_index in (0..band.len() / 2).step_by(NUM_COLOR_CHANNELS) {
+                for first_pixel_index in (0..band.len() / 2).step_by(NUM_COLOR_CHANNELS) {
                     for channel_index in 0..NUM_COLOR_CHANNELS {
                         band.swap(
-                            y_index + channel_index,
-                            band.len() - y_index - NUM_COLOR_CHANNELS + channel_index,
+                            first_pixel_index + channel_index,
+                            band.len() - first_pixel_index - NUM_COLOR_CHANNELS + channel_index,
                         );
                     }
                 }
