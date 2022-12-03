@@ -139,6 +139,7 @@ fn color_band(
     let mirror = ENABLE_MIRRORING && draw_region.center_imag.abs() < draw_region.imag_distance;
     let start_real = draw_region.center_real - draw_region.real_distance / 2.0;
 
+    // This is the real value of c for this entire band.
     let c_real =
         start_real + draw_region.real_distance * (band_index as f64) / (x_resolution as f64);
 
