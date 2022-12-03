@@ -170,15 +170,10 @@ fn color_band(
             // `memmove` the data from the already computed pixel into this one.
             band.copy_within((mirror_from - NUM_COLOR_CHANNELS)..mirror_from, y_index)
         } else {
+            let pixel_region = Frame::new(c_real, c_imag, real_delta, imag_delta);
+
             // Otherwise we compute the pixel color as normal by iteration.
-            let color = supersampled_pixel_color(
-                render_parameters.sqrt_samples_per_pixel,
-                c_real,
-                c_imag,
-                real_delta,
-                imag_delta,
-                render_parameters,
-            );
+            let color = supersampled_pixel_color(pixel_region, render_parameters);
 
             band[y_index..(NUM_COLOR_CHANNELS + y_index)].copy_from_slice(&color.0);
 
@@ -206,14 +201,14 @@ fn color_band(
 /// Computes the escape speed for the values in a grid
 /// in a small region around the given value, computes their resulting
 /// colors and returns the average color as an sRGB value.
-/// If x is the location of `c_real` + `c_imag`*i and
+/// If x is the center of the pixel region and
 /// `sqrt_samples_per_pixel` = 3, then the dots are also sampled:
 ///
 /// ```text
-///   real_delta
+///  real_distance
 ///    -------
 ///    .  .  .  |
-///    .  x  .  | imag_delta
+///    .  x  .  | imag_distance
 ///    .  .  .  |
 /// ```
 ///
@@ -223,14 +218,10 @@ fn color_band(
 /// N.B.: if `sqrt_samples_per_pixel` is even, the center of
 /// the pixel is never sampled.
 pub fn supersampled_pixel_color(
-    sqrt_samples_per_pixel: NonZeroU8,
-    c_real: f64,
-    c_imag: f64,
-    real_delta: f64,
-    imag_delta: f64,
+    pixel_region: Frame,
     render_parameters: RenderParameters,
 ) -> Rgb<u8> {
-    let ssaa = sqrt_samples_per_pixel.get();
+    let ssaa = render_parameters.sqrt_samples_per_pixel.get();
     let f64ssaa: f64 = ssaa.into();
 
     // `samples` can be a u16 since the maximum number of samples is u8::MAX^2 which is less than u16::MAX
@@ -255,8 +246,8 @@ pub fn supersampled_pixel_color(
 
         // Compute escape speed of point.
         let escape_speed = iterate(
-            c_real + rowoffset * real_delta,
-            c_imag + coloffset * imag_delta,
+            pixel_region.center_real + rowoffset * pixel_region.real_distance,
+            pixel_region.center_imag + coloffset * pixel_region.imag_distance,
             render_parameters.max_iterations,
         );
 
