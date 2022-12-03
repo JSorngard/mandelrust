@@ -188,12 +188,12 @@ fn color_band(
     // to get the correct image.
     if need_to_flip {
         for first_pixel_index in (0..band.len() / 2).step_by(NUM_COLOR_CHANNELS) {
-            let second_pixel_index = band.len() - first_pixel_index - NUM_COLOR_CHANNELS;
+            let opposite_pixel_index = band.len() - first_pixel_index - NUM_COLOR_CHANNELS;
 
             for channel_index in 0..NUM_COLOR_CHANNELS {
                 band.swap(
                     first_pixel_index + channel_index,
-                    second_pixel_index + channel_index,
+                    opposite_pixel_index + channel_index,
                 );
             }
         }
