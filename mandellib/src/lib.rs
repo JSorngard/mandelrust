@@ -73,20 +73,6 @@ pub fn render(
     draw_region: Frame,
     verbose: bool,
 ) -> Result<DynamicImage, Box<dyn Error>> {
-    // True if the image contains the real axis, false otherwise.
-    // If the image contains the real axis we want to mirror
-    // the result of the largest half on to the smallest.
-    let mirror = ENABLE_MIRRORING && draw_region.center_imag.abs() < draw_region.imag_distance;
-
-    // One way of doing this is to always assume that the half with negative
-    // imaginary part is the larger one. If the assumption is false
-    // we only need to flip the image vertically to get the
-    // correct result since it is symmetric under conjugation.
-    let need_to_flip = draw_region.center_imag > 0.0;
-    let start_real = draw_region.center_real - draw_region.real_distance / 2.0;
-    let start_imag = if need_to_flip { -1.0 } else { 1.0 } * draw_region.center_imag
-        - draw_region.imag_distance / 2.0;
-
     let x_resolution = render_parameters.x_resolution.get();
     let y_resolution = render_parameters.y_resolution.get();
 
@@ -106,28 +92,11 @@ pub fn render(
         .progress_with(progress_bar)
         .for_each(|(band_index, band)| {
             color_band(
-                start_real
-                    + draw_region.real_distance * (band_index as f64) / (x_resolution as f64),
                 render_parameters,
                 draw_region,
-                start_imag,
-                mirror,
+                band_index,
                 band,
-            );
-
-            // If our assumption that we are rendering in the region of the complex plane with
-            // negative imaginary component is false we must flip the vertical band
-            // to get the correct image.
-            if need_to_flip {
-                for first_pixel_index in (0..band.len() / 2).step_by(NUM_COLOR_CHANNELS) {
-                    for channel_index in 0..NUM_COLOR_CHANNELS {
-                        band.swap(
-                            first_pixel_index + channel_index,
-                            band.len() - first_pixel_index - NUM_COLOR_CHANNELS + channel_index,
-                        );
-                    }
-                }
-            }
+            )
         });
 
     // Place the data in an image buffer
@@ -157,18 +126,34 @@ pub fn render(
 
 /// Computes the colors of the pixels in a y-axis band of the image of the mandelbrot set.
 fn color_band(
-    c_real: f64,
     render_parameters: RenderParameters,
     draw_region: Frame,
-    start_imag: f64,
-    mirror: bool,
+    band_index: usize,
     band: &mut [u8],
 ) {
+    let x_resolution = render_parameters.x_resolution.get();
     let y_resolution = render_parameters.y_resolution.get();
 
     let mut mirror_from: usize = 0;
-    let real_delta = draw_region.real_distance / (render_parameters.x_resolution.get() - 1) as f64;
+    let real_delta = draw_region.real_distance / (x_resolution - 1) as f64;
     let imag_delta = draw_region.imag_distance / (y_resolution - 1) as f64;
+
+    // True if the image contains the real axis, false otherwise.
+    // If the image contains the real axis we want to mirror
+    // the result of the largest half on to the smallest.
+    let mirror = ENABLE_MIRRORING && draw_region.center_imag.abs() < draw_region.imag_distance;
+    let start_real = draw_region.center_real - draw_region.real_distance / 2.0;
+
+    let c_real = start_real
+    + draw_region.real_distance * (band_index as f64) / (x_resolution as f64);
+
+    // One way of doing this is to always assume that the half with negative
+    // imaginary part is the larger one. If the assumption is false
+    // we only need to flip the image vertically to get the
+    // correct result since it is symmetric under conjugation.
+    let need_to_flip = draw_region.center_imag > 0.0;
+    let start_imag = if need_to_flip { -1.0 } else { 1.0 } * draw_region.center_imag
+        - draw_region.imag_distance / 2.0;
 
     for y_index in (0..y_resolution * NUM_COLOR_CHANNELS).step_by(NUM_COLOR_CHANNELS) {
         // Compute the imaginary part at this pixel
@@ -204,6 +189,20 @@ fn color_band(
             // We keep track of how many pixels have been colored
             // in order to potentially mirror them.
             mirror_from += NUM_COLOR_CHANNELS;
+        }
+    }
+
+    // If our assumption that we are rendering in the region of the complex plane with
+    // negative imaginary component is false we must flip the vertical band
+    // to get the correct image.
+    if need_to_flip {
+        for first_pixel_index in (0..band.len() / 2).step_by(NUM_COLOR_CHANNELS) {
+            for channel_index in 0..NUM_COLOR_CHANNELS {
+                band.swap(
+                    first_pixel_index + channel_index,
+                    band.len() - first_pixel_index - NUM_COLOR_CHANNELS + channel_index,
+                );
+            }
         }
     }
 }
