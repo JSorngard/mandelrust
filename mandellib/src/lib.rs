@@ -198,11 +198,11 @@ fn color_band(
     }
 }
 
-/// Computes the escape speed for the values in a grid
-/// in a small region around the given value, computes their resulting
-/// colors and returns the average color as an sRGB value.
-/// If x is the center of the pixel region and
-/// `sqrt_samples_per_pixel` = 3, then the dots are also sampled:
+/// Computes the escape speed for samples in a grid inside
+/// the pixel region, works out the color of each sample and
+/// returns the average color as an sRGB value. If x is the center
+/// of the pixel region and `sqrt_samples_per_pixel` = 3, 
+/// then the dots are also sampled:
 ///
 /// ```text
 ///  real_distance
