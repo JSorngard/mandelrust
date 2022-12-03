@@ -91,12 +91,7 @@ pub fn render(
         .enumerate()
         .progress_with(progress_bar)
         .for_each(|(band_index, band)| {
-            color_band(
-                render_parameters,
-                draw_region,
-                band_index,
-                band,
-            )
+            color_band(render_parameters, draw_region, band_index, band)
         });
 
     // Place the data in an image buffer
@@ -144,8 +139,8 @@ fn color_band(
     let mirror = ENABLE_MIRRORING && draw_region.center_imag.abs() < draw_region.imag_distance;
     let start_real = draw_region.center_real - draw_region.real_distance / 2.0;
 
-    let c_real = start_real
-    + draw_region.real_distance * (band_index as f64) / (x_resolution as f64);
+    let c_real =
+        start_real + draw_region.real_distance * (band_index as f64) / (x_resolution as f64);
 
     // One way of doing this is to always assume that the half with negative
     // imaginary part is the larger one. If the assumption is false
