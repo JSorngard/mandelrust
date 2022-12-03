@@ -36,7 +36,7 @@ const NUM_COLOR_CHANNELS: usize = 3;
 ///
 /// `render_parameters` contains `x_resolution`, `y_resolution`, `max_iterations`, `sqrt_samples_per_pixel` and `grayscale`.
 ///
-/// `draw_region` contains `center_real`, `centar_imag`, `real_distance` and `imag_distance`.
+/// `render_region` contains `center_real`, `centar_imag`, `real_distance` and `imag_distance`.
 ///
 /// `x_resolution` and `y_resolution` is the resolution in pixels in the real
 /// and imaginary direction respectively.
@@ -70,7 +70,7 @@ const NUM_COLOR_CHANNELS: usize = 3;
 /// If `verbose` is true the function will use prints to `stderr` to display a progress bar.
 pub fn render(
     render_parameters: RenderParameters,
-    draw_region: Frame,
+    render_region: Frame,
     verbose: bool,
 ) -> Result<DynamicImage, Box<dyn Error>> {
     let x_resolution = render_parameters.x_resolution.get();
@@ -91,7 +91,7 @@ pub fn render(
         .enumerate()
         .progress_with(progress_bar)
         .for_each(|(band_index, band)| {
-            color_band(render_parameters, draw_region, band_index, band)
+            color_band(render_parameters, render_region, band_index, band)
         });
 
     // Place the data in an image buffer
@@ -122,7 +122,7 @@ pub fn render(
 /// Computes the colors of the pixels in a y-axis band of the image of the mandelbrot set.
 fn color_band(
     render_parameters: RenderParameters,
-    draw_region: Frame,
+    render_region: Frame,
     band_index: usize,
     band: &mut [u8],
 ) {
@@ -130,31 +130,31 @@ fn color_band(
     let y_resolution = render_parameters.y_resolution.get();
 
     let mut mirror_from: usize = 0;
-    let real_delta = draw_region.real_distance / (x_resolution - 1) as f64;
-    let imag_delta = draw_region.imag_distance / (y_resolution - 1) as f64;
+    let real_delta = render_region.real_distance / (x_resolution - 1) as f64;
+    let imag_delta = render_region.imag_distance / (y_resolution - 1) as f64;
 
     // True if the image contains the real axis, false otherwise.
     // If the image contains the real axis we want to mirror
     // the result of the largest half on to the smallest.
-    let mirror = ENABLE_MIRRORING && draw_region.center_imag.abs() < draw_region.imag_distance;
-    let start_real = draw_region.center_real - draw_region.real_distance / 2.0;
+    let mirror = ENABLE_MIRRORING && render_region.center_imag.abs() < render_region.imag_distance;
+    let start_real = render_region.center_real - render_region.real_distance / 2.0;
 
     // This is the real value of c for this entire band.
     let c_real =
-        start_real + draw_region.real_distance * (band_index as f64) / (x_resolution as f64);
+        start_real + render_region.real_distance * (band_index as f64) / (x_resolution as f64);
 
     // One way of doing this is to always assume that the half with negative
     // imaginary part is the larger one. If the assumption is false
     // we only need to flip the image vertically to get the
     // correct result since it is symmetric under conjugation.
-    let need_to_flip = draw_region.center_imag > 0.0;
-    let start_imag = if need_to_flip { -1.0 } else { 1.0 } * draw_region.center_imag
-        - draw_region.imag_distance / 2.0;
+    let need_to_flip = render_region.center_imag > 0.0;
+    let start_imag = if need_to_flip { -1.0 } else { 1.0 } * render_region.center_imag
+        - render_region.imag_distance / 2.0;
 
     for y_index in (0..y_resolution * NUM_COLOR_CHANNELS).step_by(NUM_COLOR_CHANNELS) {
         // Compute the imaginary part at this pixel
         let c_imag = start_imag
-            + draw_region.imag_distance * (y_index as f64)
+            + render_region.imag_distance * (y_index as f64)
                 / (NUM_COLOR_CHANNELS as f64 * y_resolution as f64);
 
         if mirror && c_imag > 0.0 {
