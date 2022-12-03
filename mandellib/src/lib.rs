@@ -173,7 +173,7 @@ fn color_band(
             let pixel_region = Frame::new(c_real, c_imag, real_delta, imag_delta);
 
             // Otherwise we compute the pixel color as normal by iteration.
-            let color = supersampled_pixel_color(pixel_region, render_parameters);
+            let color = pixel_color(pixel_region, render_parameters);
 
             band[y_index..(NUM_COLOR_CHANNELS + y_index)].copy_from_slice(&color.0);
 
@@ -217,9 +217,10 @@ fn color_band(
 /// The gap between the sample points at the edge and the
 /// edge of the pixel is the same as between the points.
 ///
-/// N.B.: if `sqrt_samples_per_pixel` is even, the center of
-/// the pixel is never sampled.
-pub fn supersampled_pixel_color(
+/// N.B.: if `sqrt_samples_per_pixel` is even the center of
+/// the pixel is never sampled, and if it is 1 no super
+/// sampling is done (only the center is sampled).
+pub fn pixel_color(
     pixel_region: Frame,
     render_parameters: RenderParameters,
 ) -> Rgb<u8> {
