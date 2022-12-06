@@ -94,6 +94,11 @@ pub fn render(
             color_band(render_parameters, render_region, band_index, band)
         });
 
+    if verbose {
+        print!("\rProcessing image");
+        stdout().flush()?;
+    }
+
     // The image is stored in a transposed fashion so that the pixels
     // of a column of the image lie contiguous in the backing vector.
     // Here we undo this transposed state.
@@ -106,11 +111,6 @@ pub fn render(
         )
         .ok_or("unable to construct image buffer from generated data")?,
     );
-
-    if verbose {
-        print!("\rProcessing image");
-        stdout().flush()?;
-    }
 
     if render_parameters.grayscale {
         Ok(DynamicImage::ImageLuma8(image::imageops::grayscale(&img)))
