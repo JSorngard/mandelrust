@@ -2,7 +2,7 @@ use core::num::{NonZeroU32, NonZeroU8, NonZeroUsize};
 use std::error::Error;
 use std::io::{stdout, Write};
 
-use image::{DynamicImage, Rgb};
+use image::{imageops, DynamicImage, ImageBuffer, Rgb};
 use indicatif::{ParallelProgressIterator, ProgressBar};
 use itertools::Itertools;
 use rayon::{
@@ -94,23 +94,23 @@ pub fn render(
             color_band(render_parameters, render_region, band_index, band)
         });
 
-    // Place the data in an image buffer
-    let mut img = image::ImageBuffer::<image::Rgb<u8>, Vec<u8>>::from_vec(
-        // The image is stored in a transposed fashion so that the pixels
-        // of a column of the image lie contiguous in the backing vector.
-        y_resolution.try_into()?,
-        x_resolution.try_into()?,
-        pixels,
-    )
-    .ok_or("unable to construct image buffer from generated data")?;
+    // The image is stored in a transposed fashion so that the pixels
+    // of a column of the image lie contiguous in the backing vector.
+    // Here we undo this transposed state.
+    let img = imageops::rotate270(
+        &ImageBuffer::<image::Rgb<u8>, Vec<u8>>::from_vec(
+            // This is also the reason for the flipped x and y resolutions here.
+            y_resolution.try_into()?,
+            x_resolution.try_into()?,
+            pixels,
+        )
+        .ok_or("unable to construct image buffer from generated data")?,
+    );
 
     if verbose {
         print!("\rProcessing image");
         stdout().flush()?;
     }
-
-    // Undo the transposed state used during rendering.
-    img = image::imageops::rotate270(&img);
 
     if render_parameters.grayscale {
         Ok(DynamicImage::ImageLuma8(image::imageops::grayscale(&img)))
