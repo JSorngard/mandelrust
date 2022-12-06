@@ -220,10 +220,7 @@ fn color_band(
 /// N.B.: if `sqrt_samples_per_pixel` is even the center of
 /// the pixel is never sampled, and if it is 1 no super
 /// sampling is done (only the center is sampled).
-pub fn pixel_color(
-    pixel_region: Frame,
-    render_parameters: RenderParameters,
-) -> Rgb<u8> {
+pub fn pixel_color(pixel_region: Frame, render_parameters: RenderParameters) -> Rgb<u8> {
     let ssaa = render_parameters.sqrt_samples_per_pixel.get();
     let f64ssaa: f64 = ssaa.into();
 
