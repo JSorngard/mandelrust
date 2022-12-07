@@ -118,13 +118,15 @@ impl MulAssign<f64> for LinearRGB {
 impl Div<f64> for LinearRGB {
     type Output = Self;
     fn div(self, rhs: f64) -> Self::Output {
-        self * rhs.recip()
+        LinearRGB::new(self.r / rhs, self.g / rhs, self.b / rhs)
     }
 }
 
 impl DivAssign<f64> for LinearRGB {
     fn div_assign(&mut self, rhs: f64) {
-        *self *= rhs.recip();
+        self.r /= rhs;
+        self.g /= rhs;
+        self.b /= rhs;
     }
 }
 
