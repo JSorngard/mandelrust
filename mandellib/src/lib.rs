@@ -76,7 +76,7 @@ pub fn render(
     let x_resolution = render_parameters.x_resolution.get();
     let y_resolution = render_parameters.y_resolution.get();
 
-    let mut pixels: Vec<u8> = vec![0; NUM_COLOR_CHANNELS * x_resolution * y_resolution];
+    let mut pixel_bytes: Vec<u8> = vec![0; NUM_COLOR_CHANNELS * x_resolution * y_resolution];
 
     let progress_bar = if verbose {
         ProgressBar::new(x_resolution.try_into()?)
@@ -84,7 +84,7 @@ pub fn render(
         ProgressBar::hidden()
     };
 
-    pixels
+    pixel_bytes
         // Split the image up into vertical bands and iterate over them in parallel.
         .par_chunks_mut(NUM_COLOR_CHANNELS * y_resolution)
         // We enumerate each band to be able to compute the real value of c for that band.
@@ -99,15 +99,15 @@ pub fn render(
         stdout().flush()?;
     }
 
-    // The image is stored in a transposed fashion so that the pixels
-    // of a column of the image lie contiguous in the backing vector.
-    // Here we undo this transposed state.
+    // The image is stored in a rotated fashion during rendering so that
+    // the pixels of a column of the image lie contiguous in the backing vector.
+    // Here we undo this rotation.
     let img = imageops::rotate270(
         &ImageBuffer::<image::Rgb<u8>, Vec<u8>>::from_vec(
-            // This is also the reason for the flipped x and y resolutions here.
+            // This rotated state is the reason for the flipped image dimensions here.
             y_resolution.try_into()?,
             x_resolution.try_into()?,
-            pixels,
+            pixel_bytes,
         )
         .ok_or("unable to construct image buffer from generated data")?,
     );
@@ -339,6 +339,37 @@ pub fn iterate(c_re: f64, c_im: f64, max_iterations: NonZeroU32) -> f64 {
         (f64::from(max_iterations - iterations) - 3.8 + (z_re_sqr + z_im_sqr).ln().log2())
             / f64::from(max_iterations)
     }
+}
+
+/// Rotates the image stored `pixel_bytes` by 270 degrees clockwise (also known as 90 degrees counter clockwise).
+/// This function has the same effect as storing the pixel bytes in an `image::ImageBuffer` and then using
+/// `image::imageops::rotate_270`, but this function is parallel.
+fn rotate_270(pixel_bytes: &[u8], render_parameters: RenderParameters) -> Vec<u8> {
+    let x_resolution = render_parameters.x_resolution.get();
+    let y_resolution = render_parameters.y_resolution.get();
+
+    let mut rotated = vec![0; NUM_COLOR_CHANNELS * x_resolution * y_resolution];
+
+    rotated
+        .par_chunks_mut(NUM_COLOR_CHANNELS * x_resolution)
+        .enumerate()
+        .for_each(|(target_pixel_y_index, target_band)| {
+            for (target_pixel_x_index, target_pixel) in
+                target_band.chunks_mut(NUM_COLOR_CHANNELS).enumerate()
+            {
+                let target_pixel_index = target_pixel_x_index + target_pixel_y_index * x_resolution;
+
+                let src_pixel_index = ((y_resolution - 1 - target_pixel_index / x_resolution
+                    + target_pixel_index * y_resolution)
+                    % (x_resolution * y_resolution))
+                    * NUM_COLOR_CHANNELS;
+
+                target_pixel.copy_from_slice(
+                    &pixel_bytes[src_pixel_index..src_pixel_index + NUM_COLOR_CHANNELS],
+                );
+            }
+        });
+    rotated
 }
 
 /// Contains information about a rectangle-shaped region in the complex plane.
