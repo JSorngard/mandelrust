@@ -2,7 +2,7 @@ use core::num::{NonZeroU32, NonZeroU8, NonZeroUsize};
 use std::error::Error;
 use std::io::{stdout, Write};
 
-use image::{DynamicImage, Rgb};
+use image::{imageops, DynamicImage, ImageBuffer, Rgb};
 use indicatif::{ParallelProgressIterator, ProgressBar};
 use itertools::Itertools;
 use rayon::{
@@ -76,7 +76,7 @@ pub fn render(
     let x_resolution = render_parameters.x_resolution.get();
     let y_resolution = render_parameters.y_resolution.get();
 
-    let mut pixels: Vec<u8> = vec![0; NUM_COLOR_CHANNELS * x_resolution * y_resolution];
+    let mut pixel_bytes: Vec<u8> = vec![0; NUM_COLOR_CHANNELS * x_resolution * y_resolution];
 
     let progress_bar = if verbose {
         ProgressBar::new(x_resolution.try_into()?)
@@ -84,7 +84,7 @@ pub fn render(
         ProgressBar::hidden()
     };
 
-    pixels
+    pixel_bytes
         // Split the image up into vertical bands and iterate over them in parallel.
         .par_chunks_mut(NUM_COLOR_CHANNELS * y_resolution)
         // We enumerate each band to be able to compute the real value of c for that band.
@@ -94,23 +94,23 @@ pub fn render(
             color_band(render_parameters, render_region, band_index, band)
         });
 
-    // Place the data in an image buffer
-    let mut img = image::ImageBuffer::<image::Rgb<u8>, Vec<u8>>::from_vec(
-        // The image is stored in a transposed fashion so that the pixels
-        // of a column of the image lie contiguous in the backing vector.
-        y_resolution.try_into()?,
-        x_resolution.try_into()?,
-        pixels,
-    )
-    .ok_or("unable to construct image buffer from generated data")?;
-
     if verbose {
         print!("\rProcessing image");
         stdout().flush()?;
     }
 
-    // Undo the transposed state used during rendering.
-    img = image::imageops::rotate270(&img);
+    // The image is stored in a rotated fashion during rendering so that
+    // the pixels of a column of the image lie contiguous in the backing vector.
+    // Here we undo this rotation.
+    let img = imageops::rotate270(
+        &ImageBuffer::<Rgb<u8>, Vec<u8>>::from_vec(
+            // This rotated state is the reason for the flipped image dimensions here.
+            y_resolution.try_into()?,
+            x_resolution.try_into()?,
+            pixel_bytes,
+        )
+        .ok_or("unable to construct image buffer from generated data")?,
+    );
 
     if render_parameters.grayscale {
         Ok(DynamicImage::ImageLuma8(image::imageops::grayscale(&img)))
@@ -220,10 +220,7 @@ fn color_band(
 /// N.B.: if `sqrt_samples_per_pixel` is even the center of
 /// the pixel is never sampled, and if it is 1 no super
 /// sampling is done (only the center is sampled).
-pub fn pixel_color(
-    pixel_region: Frame,
-    render_parameters: RenderParameters,
-) -> Rgb<u8> {
+pub fn pixel_color(pixel_region: Frame, render_parameters: RenderParameters) -> Rgb<u8> {
     let ssaa = render_parameters.sqrt_samples_per_pixel.get();
     let f64ssaa: f64 = ssaa.into();
 
