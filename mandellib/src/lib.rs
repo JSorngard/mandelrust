@@ -103,7 +103,7 @@ pub fn render(
     // the pixels of a column of the image lie contiguous in the backing vector.
     // Here we undo this rotation.
     let img = imageops::rotate270(
-        &ImageBuffer::<image::Rgb<u8>, Vec<u8>>::from_vec(
+        &ImageBuffer::<Rgb<u8>, Vec<u8>>::from_vec(
             // This rotated state is the reason for the flipped image dimensions here.
             y_resolution.try_into()?,
             x_resolution.try_into()?,
