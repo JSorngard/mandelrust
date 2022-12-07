@@ -341,37 +341,6 @@ pub fn iterate(c_re: f64, c_im: f64, max_iterations: NonZeroU32) -> f64 {
     }
 }
 
-/// Rotates the image stored `pixel_bytes` by 270 degrees clockwise (also known as 90 degrees counter clockwise).
-/// This function has the same effect as storing the pixel bytes in an `image::ImageBuffer` and then using
-/// `image::imageops::rotate_270`, but this function is parallel.
-fn rotate_270(pixel_bytes: &[u8], render_parameters: RenderParameters) -> Vec<u8> {
-    let x_resolution = render_parameters.x_resolution.get();
-    let y_resolution = render_parameters.y_resolution.get();
-
-    let mut rotated = vec![0; NUM_COLOR_CHANNELS * x_resolution * y_resolution];
-
-    rotated
-        .par_chunks_mut(NUM_COLOR_CHANNELS * x_resolution)
-        .enumerate()
-        .for_each(|(target_pixel_y_index, target_band)| {
-            for (target_pixel_x_index, target_pixel) in
-                target_band.chunks_mut(NUM_COLOR_CHANNELS).enumerate()
-            {
-                let target_pixel_index = target_pixel_x_index + target_pixel_y_index * x_resolution;
-
-                let src_pixel_index = ((y_resolution - 1 - target_pixel_index / x_resolution
-                    + target_pixel_index * y_resolution)
-                    % (x_resolution * y_resolution))
-                    * NUM_COLOR_CHANNELS;
-
-                target_pixel.copy_from_slice(
-                    &pixel_bytes[src_pixel_index..src_pixel_index + NUM_COLOR_CHANNELS],
-                );
-            }
-        });
-    rotated
-}
-
 /// Contains information about a rectangle-shaped region in the complex plane.
 #[derive(Clone, Copy)]
 pub struct Frame {
