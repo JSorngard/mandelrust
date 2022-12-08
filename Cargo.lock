@@ -589,7 +589,7 @@ dependencies = [
 
 [[package]]
 name = "mandelbrot"
-version = "8.0.1"
+version = "8.0.2"
 dependencies = [
  "clap 4.0.29",
  "color-space",
