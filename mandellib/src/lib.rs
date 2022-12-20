@@ -335,8 +335,8 @@ pub fn iterate(c_re: f64, c_im: f64, max_iterations: NonZeroU32) -> f64 {
     } else {
         // This takes the escape distance and the number of iterations to escape
         // and maps it smoothly to the range [0, 1] using the potential function to reduce color banding.
-        // The shift of -3.8 is chosen for aesthetic reasons.
-        (f64::from(max_iterations - iterations) - 3.8 + (z_re_sqr + z_im_sqr).ln().log2())
+        // The shift of -2.8 is chosen for aesthetic reasons.
+        (f64::from(max_iterations - iterations) - 2.8 + (z_re_sqr + z_im_sqr).ln().log2() - 1.0)
             / f64::from(max_iterations)
     }
 }
