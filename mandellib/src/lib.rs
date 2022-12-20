@@ -1,5 +1,4 @@
-use core::num::{NonZeroU32, NonZeroU8, NonZeroUsize};
-use std::error::Error;
+use core::num::{NonZeroU32, NonZeroU8, NonZeroUsize, TryFromIntError};
 use std::io::{stdout, Write};
 
 use image::{imageops, DynamicImage, ImageBuffer, Rgb};
@@ -9,6 +8,7 @@ use rayon::{
     iter::{IndexedParallelIterator, ParallelIterator},
     prelude::ParallelSliceMut,
 };
+use thiserror::Error;
 
 use color_space::{palette, LinearRGB};
 
@@ -30,6 +30,18 @@ const ENABLE_MIRRORING: bool = true;
 // --------------------------------------
 
 const NUM_COLOR_CHANNELS: usize = 3;
+
+#[derive(Error, Debug)]
+pub enum RenderError {
+    #[error("the given resolution results in an image that is too large to fit in memory")]
+    ResolutionOverflow,
+    #[error("the given resolution is too large to fit in a u32")]
+    TryFromInt(#[from] TryFromIntError),
+    #[error("could not flush stdout")]
+    Io(#[from] std::io::Error),
+    #[error("unable to construct an image buffer from the generated data")]
+    BufferConstruction,
+}
 
 /// Takes in variables describing where to render and at what resolution
 /// and produces an image of the Mandelbrot set.
@@ -72,11 +84,18 @@ pub fn render(
     render_parameters: RenderParameters,
     render_region: Frame,
     verbose: bool,
-) -> Result<DynamicImage, Box<dyn Error>> {
+) -> Result<DynamicImage, RenderError> {
     let x_resolution = render_parameters.x_resolution.get();
     let y_resolution = render_parameters.y_resolution.get();
+    let x_resolution_u32: u32 = x_resolution.try_into()?;
+    let y_resolution_u32: u32 = y_resolution.try_into()?;
 
-    let mut pixel_bytes: Vec<u8> = vec![0; NUM_COLOR_CHANNELS * x_resolution * y_resolution];
+    let num_bytes = NUM_COLOR_CHANNELS
+        .checked_mul(y_resolution)
+        .ok_or(RenderError::ResolutionOverflow)?
+        .checked_mul(x_resolution)
+        .ok_or(RenderError::ResolutionOverflow)?;
+    let mut pixel_bytes: Vec<u8> = vec![0; num_bytes];
 
     let progress_bar = if verbose {
         ProgressBar::new(x_resolution.try_into()?)
@@ -105,11 +124,11 @@ pub fn render(
     let img = imageops::rotate270(
         &ImageBuffer::<Rgb<u8>, Vec<u8>>::from_vec(
             // This rotated state is the reason for the flipped image dimensions here.
-            y_resolution.try_into()?,
-            x_resolution.try_into()?,
+            y_resolution_u32,
+            x_resolution_u32,
             pixel_bytes,
         )
-        .ok_or("unable to construct image buffer from generated data")?,
+        .ok_or(RenderError::BufferConstruction)?,
     );
 
     if render_parameters.grayscale {
