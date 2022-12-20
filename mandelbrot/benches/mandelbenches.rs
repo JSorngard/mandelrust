@@ -1,10 +1,10 @@
-use core::num::{NonZeroU32, NonZeroU8, NonZeroUsize};
+use core::num::{NonZeroU32, NonZeroU8};
 
 use criterion::{criterion_group, criterion_main, Criterion};
 use mandellib::{render, Frame, RenderParameters};
 
 fn get_inputs(
-    y_res: usize,
+    y_res: u32,
     ssaa: Option<u8>,
     zoom: Option<f64>,
     re: Option<f64>,
@@ -12,13 +12,13 @@ fn get_inputs(
     miters: Option<u32>,
 ) -> (RenderParameters, Frame) {
     let aspect_ratio = 1.5;
-    let x_res = NonZeroUsize::new((aspect_ratio * y_res as f64) as usize).unwrap();
-    let y_res = NonZeroUsize::new(y_res).unwrap();
+    let x_res = NonZeroU32::new((aspect_ratio * y_res as f64) as u32).unwrap();
+    let y_res = NonZeroU32::new(y_res).unwrap();
     let ssaa = NonZeroU8::new(ssaa.unwrap_or(3)).unwrap();
     let grayscale = false;
     let max_iters = NonZeroU32::new(miters.unwrap_or(255)).unwrap();
 
-    let params = RenderParameters::new(x_res, y_res, max_iters, ssaa, grayscale);
+    let params = RenderParameters::new(x_res, y_res, max_iters, ssaa, grayscale).unwrap();
 
     let center_real = re.unwrap_or(-0.75);
     let center_imag = im.unwrap_or(0.0);
@@ -37,7 +37,7 @@ fn fast(c: &mut Criterion) {
     group.bench_function(
         &format!(
             "{}x{} render of full set",
-            params.x_resolution, params.y_resolution
+            params.x_resolution_u32, params.y_resolution_u32
         ),
         |b| b.iter(|| render(params, frame, false).unwrap()),
     );
@@ -46,7 +46,7 @@ fn fast(c: &mut Criterion) {
     group.bench_function(
         &format!(
             "{}x{} render of full set",
-            params.x_resolution, params.y_resolution
+            params.x_resolution_u32, params.y_resolution_u32
         ),
         |b| b.iter(|| render(params, frame, false).unwrap()),
     );
@@ -55,7 +55,7 @@ fn fast(c: &mut Criterion) {
     group.bench_function(
         &format!(
             "{}x{} render of full set",
-            params.x_resolution, params.y_resolution
+            params.x_resolution_u32, params.y_resolution_u32
         ),
         |b| b.iter(|| render(params, frame, false).unwrap()),
     );
@@ -64,7 +64,7 @@ fn fast(c: &mut Criterion) {
     group.bench_function(
         &format!(
             "{}x{} render  of full set without SSAA",
-            params.x_resolution, params.y_resolution
+            params.x_resolution_u32, params.y_resolution_u32
         ),
         |b| b.iter(|| render(params, frame, false).unwrap()),
     );
@@ -78,7 +78,7 @@ fn slow(c: &mut Criterion) {
     group.bench_function(
         &format!(
             "{}x{} render of full set",
-            params.x_resolution, params.y_resolution
+            params.x_resolution_u32, params.y_resolution_u32
         ),
         |b| b.iter(|| render(params, frame, false).unwrap()),
     );
@@ -96,7 +96,7 @@ fn slow(c: &mut Criterion) {
     group.bench_function(
         &format!(
             "{}x{}, {} iterations, zoomed by 2^{}: 'Mandelsun'",
-            params.x_resolution, params.y_resolution, params.max_iterations, zoom
+            params.x_resolution_u32, params.y_resolution_u32, params.max_iterations, zoom
         ),
         |b| b.iter(|| render(params, frame, false).unwrap()),
     );

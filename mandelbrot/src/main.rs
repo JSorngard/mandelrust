@@ -18,7 +18,7 @@ const DEFAULT_FILE_EXTENSION: &str = "png";
 fn main() -> Result<(), Box<dyn Error>> {
     let args = Cli::parse();
 
-    let x_resolution = (args.aspect_ratio * (args.pixels.get() as f64)) as usize;
+    let x_resolution = (args.aspect_ratio * (args.pixels.get() as f64)) as u32;
 
     let zoom = 2.0_f64.powf(args.zoom);
 
@@ -38,7 +38,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         args.max_iterations,
         args.ssaa,
         args.grayscale,
-    );
+    )?;
 
     if args.verbose {
         give_user_feedback(&args, &render_parameters)?;
@@ -95,7 +95,7 @@ fn give_user_feedback(args: &Cli, rparams: &RenderParameters) -> Result<(), Box<
     write!(
         &mut header,
         " image with a resolution of {} by {} pixels",
-        rparams.x_resolution,
+        rparams.x_resolution_u32,
         args.pixels.get(),
     )?;
     if args.zoom > 0.0 {

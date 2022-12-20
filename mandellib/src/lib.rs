@@ -31,16 +31,15 @@ const ENABLE_MIRRORING: bool = true;
 
 const NUM_COLOR_CHANNELS: usize = 3;
 
+/// The error is returned when the rendering process fails.
 #[derive(Error, Debug)]
 pub enum RenderError {
-    #[error("the given resolution results in an image that is too large to fit in memory")]
-    ResolutionOverflow,
-    #[error("the given resolution is too large to fit in a u32")]
-    TryFromInt(#[from] TryFromIntError),
-    #[error("could not flush stdout")]
+    #[error("the given resolution results in an image buffer that is too large to fit in memory")]
+    ImageBufferTooLarge,
+    #[error("the given resolution is too large to fit in a usize")]
+    ResolutionTooLage(#[from] TryFromIntError),
+    #[error("unable to flush stdout")]
     Io(#[from] std::io::Error),
-    #[error("unable to construct an image buffer from the generated data")]
-    BufferConstruction,
 }
 
 /// Takes in variables describing where to render and at what resolution
@@ -85,27 +84,22 @@ pub fn render(
     render_region: Frame,
     verbose: bool,
 ) -> Result<DynamicImage, RenderError> {
-    let x_resolution = render_parameters.x_resolution.get();
-    let y_resolution = render_parameters.y_resolution.get();
-    let x_resolution_u32: u32 = x_resolution.try_into()?;
-    let y_resolution_u32: u32 = y_resolution.try_into()?;
-
-    let num_bytes = NUM_COLOR_CHANNELS
-        .checked_mul(y_resolution)
-        .ok_or(RenderError::ResolutionOverflow)?
-        .checked_mul(x_resolution)
-        .ok_or(RenderError::ResolutionOverflow)?;
+    let num_bytes: usize = NUM_COLOR_CHANNELS
+        .checked_mul(render_parameters.y_resolution_usize.get())
+        .ok_or(RenderError::ImageBufferTooLarge)?
+        .checked_mul(render_parameters.x_resolution_usize.get())
+        .ok_or(RenderError::ImageBufferTooLarge)?;
     let mut pixel_bytes: Vec<u8> = vec![0; num_bytes];
 
     let progress_bar = if verbose {
-        ProgressBar::new(x_resolution.try_into()?)
+        ProgressBar::new(render_parameters.x_resolution_u32.get().into())
     } else {
         ProgressBar::hidden()
     };
 
     pixel_bytes
         // Split the image up into vertical bands and iterate over them in parallel.
-        .par_chunks_mut(NUM_COLOR_CHANNELS * y_resolution)
+        .par_chunks_mut(NUM_COLOR_CHANNELS * render_parameters.y_resolution_usize.get())
         // We enumerate each band to be able to compute the real value of c for that band.
         .enumerate()
         .progress_with(progress_bar)
@@ -124,11 +118,11 @@ pub fn render(
     let img = imageops::rotate270(
         &ImageBuffer::<Rgb<u8>, Vec<u8>>::from_vec(
             // This rotated state is the reason for the flipped image dimensions here.
-            y_resolution_u32,
-            x_resolution_u32,
+            render_parameters.y_resolution_u32.get(),
+            render_parameters.x_resolution_u32.get(),
             pixel_bytes,
         )
-        .ok_or(RenderError::BufferConstruction)?,
+        .expect("`pixel_bytes` is allocated to the correct size of 3*xres*yres"),
     );
 
     if render_parameters.grayscale {
@@ -145,12 +139,12 @@ fn color_band(
     band_index: usize,
     band: &mut [u8],
 ) {
-    let x_resolution = render_parameters.x_resolution.get();
-    let y_resolution = render_parameters.y_resolution.get();
+    let x_resolution_f64 = f64::from(render_parameters.x_resolution_u32.get());
+    let y_resolution_f64 = f64::from(render_parameters.y_resolution_u32.get());
 
     let mut mirror_from: usize = 0;
-    let real_delta = render_region.real_distance / (x_resolution - 1) as f64;
-    let imag_delta = render_region.imag_distance / (y_resolution - 1) as f64;
+    let real_delta = render_region.real_distance / (x_resolution_f64 - 1.0);
+    let imag_delta = render_region.imag_distance / (y_resolution_f64 - 1.0);
 
     // True if the image contains the real axis, false otherwise.
     // If the image contains the real axis we want to mirror
@@ -159,8 +153,7 @@ fn color_band(
     let start_real = render_region.center_real - render_region.real_distance / 2.0;
 
     // This is the real value of c for this entire band.
-    let c_real =
-        start_real + render_region.real_distance * (band_index as f64) / (x_resolution as f64);
+    let c_real = start_real + render_region.real_distance * (band_index as f64) / x_resolution_f64;
 
     // One way of doing this is to always assume that the half with negative
     // imaginary part is the larger one. If the assumption is false
@@ -170,11 +163,13 @@ fn color_band(
     let start_imag = if need_to_flip { -1.0 } else { 1.0 } * render_region.center_imag
         - render_region.imag_distance / 2.0;
 
-    for y_index in (0..y_resolution * NUM_COLOR_CHANNELS).step_by(NUM_COLOR_CHANNELS) {
+    for y_index in (0..render_parameters.y_resolution_usize.get() * NUM_COLOR_CHANNELS)
+        .step_by(NUM_COLOR_CHANNELS)
+    {
         // Compute the imaginary part at this pixel
         let c_imag = start_imag
             + render_region.imag_distance * (y_index as f64)
-                / (NUM_COLOR_CHANNELS as f64 * y_resolution as f64);
+                / (NUM_COLOR_CHANNELS as f64 * y_resolution_f64);
 
         if mirror && c_imag > 0.0 {
             // We have rendered every pixel with negative imaginary part.
@@ -241,7 +236,7 @@ fn color_band(
 /// sampling is done (only the center is sampled).
 pub fn pixel_color(pixel_region: Frame, render_parameters: RenderParameters) -> Rgb<u8> {
     let ssaa = render_parameters.sqrt_samples_per_pixel.get();
-    let f64ssaa: f64 = ssaa.into();
+    let ssaa_f64: f64 = ssaa.into();
 
     // `samples` can be a u16 since the maximum number of samples is u8::MAX^2 which is less than u16::MAX
     let mut samples: u16 = 0;
@@ -260,8 +255,8 @@ pub fn pixel_color(pixel_region: Frame, render_parameters: RenderParameters) -> 
         .cycle()
         .take(max_samples)
     {
-        let coloffset = (2.0 * f64::from(i) - f64ssaa - 1.0) / f64ssaa;
-        let rowoffset = (2.0 * f64::from(j) - f64ssaa - 1.0) / f64ssaa;
+        let coloffset = (2.0 * f64::from(i) - ssaa_f64 - 1.0) / ssaa_f64;
+        let rowoffset = (2.0 * f64::from(j) - ssaa_f64 - 1.0) / ssaa_f64;
 
         // Compute escape speed of point.
         let escape_speed = iterate(
@@ -382,10 +377,12 @@ impl Frame {
 
 /// Contains information about the mandelbrot image
 /// that is relevant to the rendering process.
-#[derive(Clone, Copy)]
+#[derive(Debug, Clone, Copy)]
 pub struct RenderParameters {
-    pub x_resolution: NonZeroUsize,
-    pub y_resolution: NonZeroUsize,
+    pub x_resolution_u32: NonZeroU32,
+    pub x_resolution_usize: NonZeroUsize,
+    pub y_resolution_u32: NonZeroU32,
+    pub y_resolution_usize: NonZeroUsize,
     pub max_iterations: NonZeroU32,
     pub sqrt_samples_per_pixel: NonZeroU8,
     pub grayscale: bool,
@@ -393,19 +390,21 @@ pub struct RenderParameters {
 
 impl RenderParameters {
     pub fn new(
-        x_resolution: NonZeroUsize,
-        y_resolution: NonZeroUsize,
+        x_resolution_u32: NonZeroU32,
+        y_resolution_u32: NonZeroU32,
         max_iterations: NonZeroU32,
         sqrt_samples_per_pixel: NonZeroU8,
         grayscale: bool,
-    ) -> Self {
-        RenderParameters {
-            x_resolution,
-            y_resolution,
+    ) -> Result<Self, RenderError> {
+        Ok(RenderParameters {
+            x_resolution_u32,
+            x_resolution_usize: x_resolution_u32.try_into()?,
+            y_resolution_u32,
+            y_resolution_usize: y_resolution_u32.try_into()?,
             max_iterations,
             sqrt_samples_per_pixel,
             grayscale,
-        }
+        })
     }
 }
 

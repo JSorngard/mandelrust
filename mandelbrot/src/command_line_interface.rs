@@ -1,4 +1,4 @@
-use core::num::{NonZeroU32, NonZeroU8, NonZeroUsize};
+use core::num::{NonZeroU32, NonZeroU8};
 
 use clap::Parser;
 
@@ -46,10 +46,10 @@ pub struct Cli {
         short,
         long,
         // unwrap is okay because 2160 is not 0.
-        default_value_t = NonZeroUsize::new(2160).unwrap(),
+        default_value_t = NonZeroU32::new(2160).unwrap(),
     )]
     /// The number of pixels along the y-axis of the image
-    pub pixels: NonZeroUsize,
+    pub pixels: NonZeroU32,
 
     #[arg(
         short,
