@@ -1,5 +1,11 @@
-use core::num::{NonZeroU32, NonZeroU8, NonZeroUsize, TryFromIntError};
-use std::io::{stdout, Write};
+use core::{
+    fmt::Display,
+    num::{NonZeroU32, NonZeroU8, NonZeroUsize, TryFromIntError},
+};
+use std::{
+    error::Error,
+    io::{stdout, Write},
+};
 
 use image::{imageops, DynamicImage, ImageBuffer, Rgb};
 use indicatif::{ParallelProgressIterator, ProgressBar};
@@ -8,7 +14,6 @@ use rayon::{
     iter::{IndexedParallelIterator, ParallelIterator},
     prelude::ParallelSliceMut,
 };
-use thiserror::Error;
 
 use color_space::{palette, LinearRGB};
 
@@ -30,24 +35,6 @@ const ENABLE_MIRRORING: bool = true;
 // --------------------------------------
 
 const NUM_COLOR_CHANNELS: usize = 3;
-
-/// This error is returned when the rendering process fails.
-/// This can happen if the requested resolution is too large
-/// to be adressed properly by the computer.
-/// This should not be possible in most situations without the
-/// program crashing anyway due to memory allocation failure.
-#[derive(Error, Debug)]
-pub enum RenderError {
-    #[error(
-        "the requested resolution would result in an image buffer that is too large to be adressed"
-    )]
-    ImageBufferTooLarge,
-    #[error("the requested resolution (either vertical or horizontal) is too large to fit in a memory adress")]
-    ResolutionTooLarge {
-        #[from]
-        source: TryFromIntError,
-    },
-}
 
 /// Takes in variables describing where to render and at what resolution
 /// and produces an image of the Mandelbrot set.
@@ -91,12 +78,17 @@ pub fn render(
     render_region: Frame,
     verbose: bool,
 ) -> Result<DynamicImage, RenderError> {
+    // Work out the size of the image in bytes and error early if
+    // it is too large.
     let num_bytes: usize = NUM_COLOR_CHANNELS
         .checked_mul(render_parameters.y_resolution_usize.get())
-        .ok_or(RenderError::ImageBufferTooLarge)?
+        .ok_or_else(RenderError::new)?
         .checked_mul(render_parameters.x_resolution_usize.get())
-        .ok_or(RenderError::ImageBufferTooLarge)?;
-    isize::try_from(num_bytes)?;
+        .ok_or_else(RenderError::new)?;
+    if num_bytes > isize::MAX as usize {
+        return Err(RenderError::new());
+    }
+
     let mut pixel_bytes: Vec<u8> = vec![0; num_bytes];
 
     let progress_bar = if verbose {
@@ -406,11 +398,19 @@ impl RenderParameters {
         sqrt_samples_per_pixel: u8,
         grayscale: bool,
     ) -> Result<Self, TryFromIntError> {
+        isize::try_from(x_resolution_u32)?;
+        isize::try_from(y_resolution_u32)?;
+
+        // The unwraps are okay since we just checked if the (unsigned) values fit in an `isize`.
+        // This means that they are smaller than usize::MAX and non-negative, which means they fit in a usize.
+        let x_resolution_usize = usize::try_from(x_resolution_u32).unwrap();
+        let y_resolution_usize = usize::try_from(y_resolution_u32).unwrap();
+
         Ok(RenderParameters {
             x_resolution_u32: x_resolution_u32.try_into()?,
-            x_resolution_usize: usize::try_from(x_resolution_u32)?.try_into()?,
+            x_resolution_usize: x_resolution_usize.try_into()?,
             y_resolution_u32: y_resolution_u32.try_into()?,
-            y_resolution_usize: usize::try_from(y_resolution_u32)?.try_into()?,
+            y_resolution_usize: y_resolution_usize.try_into()?,
             max_iterations: max_iterations.try_into()?,
             sqrt_samples_per_pixel: sqrt_samples_per_pixel.try_into()?,
             grayscale,
@@ -429,3 +429,25 @@ mod test_iteration {
         assert_eq!(iterate(-2.0, 0.0, max_iterations), 0.0);
     }
 }
+
+/// This error is returned when the rendering process fails.
+/// This can happen if the requested resolution is too large
+/// for the image to be adressed by the computer.
+/// This should not be possible in most situations without the
+/// program crashing anyway due to memory allocation failure.
+#[derive(Debug)]
+pub struct RenderError {}
+
+impl RenderError {
+    fn new() -> Self {
+        Self {}
+    }
+}
+
+impl Display for RenderError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "the requested resolution would result in an image buffer that is too large to be adressed")
+    }
+}
+
+impl Error for RenderError {}

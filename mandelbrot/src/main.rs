@@ -40,7 +40,7 @@ fn main() {
         args.grayscale,
     ) {
         Ok(r) => r,
-        Err(e) => panic!("{e}"),
+        Err(e) => panic!("the given runtime parameters were not valid: {e}"),
     };
 
     if args.verbose {
