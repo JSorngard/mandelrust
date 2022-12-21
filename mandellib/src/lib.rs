@@ -400,19 +400,19 @@ pub struct RenderParameters {
 
 impl RenderParameters {
     pub fn new(
-        x_resolution_u32: NonZeroU32,
-        y_resolution_u32: NonZeroU32,
-        max_iterations: NonZeroU32,
-        sqrt_samples_per_pixel: NonZeroU8,
+        x_resolution_u32: u32,
+        y_resolution_u32: u32,
+        max_iterations: u32,
+        sqrt_samples_per_pixel: u8,
         grayscale: bool,
-    ) -> Result<Self, RenderError> {
+    ) -> Result<Self, TryFromIntError> {
         Ok(RenderParameters {
-            x_resolution_u32,
-            x_resolution_usize: x_resolution_u32.try_into()?,
-            y_resolution_u32,
-            y_resolution_usize: y_resolution_u32.try_into()?,
-            max_iterations,
-            sqrt_samples_per_pixel,
+            x_resolution_u32: x_resolution_u32.try_into()?,
+            x_resolution_usize: usize::try_from(x_resolution_u32)?.try_into()?,
+            y_resolution_u32: y_resolution_u32.try_into()?,
+            y_resolution_usize: usize::try_from(y_resolution_u32)?.try_into()?,
+            max_iterations: max_iterations.try_into()?,
+            sqrt_samples_per_pixel: sqrt_samples_per_pixel.try_into()?,
             grayscale,
         })
     }

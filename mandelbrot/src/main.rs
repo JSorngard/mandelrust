@@ -33,10 +33,10 @@ fn main() {
     );
 
     let render_parameters = match RenderParameters::new(
-        x_resolution.try_into().unwrap(),
-        args.pixels,
-        args.max_iterations,
-        args.ssaa,
+        x_resolution,
+        args.pixels.get(),
+        args.max_iterations.get(),
+        args.ssaa.get(),
         args.grayscale,
     ) {
         Ok(r) => r,

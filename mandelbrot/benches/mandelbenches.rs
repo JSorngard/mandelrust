@@ -1,5 +1,3 @@
-use core::num::{NonZeroU32, NonZeroU8};
-
 use criterion::{criterion_group, criterion_main, Criterion};
 use mandellib::{render, Frame, RenderParameters};
 
@@ -12,11 +10,10 @@ fn get_inputs(
     miters: Option<u32>,
 ) -> (RenderParameters, Frame) {
     let aspect_ratio = 1.5;
-    let x_res = NonZeroU32::new((aspect_ratio * y_res as f64) as u32).unwrap();
-    let y_res = NonZeroU32::new(y_res).unwrap();
-    let ssaa = NonZeroU8::new(ssaa.unwrap_or(3)).unwrap();
+    let x_res = (aspect_ratio * y_res as f64) as u32;
+    let ssaa = ssaa.unwrap_or(3);
     let grayscale = false;
-    let max_iters = NonZeroU32::new(miters.unwrap_or(255)).unwrap();
+    let max_iters = miters.unwrap_or(255);
 
     let params = RenderParameters::new(x_res, y_res, max_iters, ssaa, grayscale).unwrap();
 
