@@ -31,12 +31,16 @@ const ENABLE_MIRRORING: bool = true;
 
 const NUM_COLOR_CHANNELS: usize = 3;
 
-/// The error is returned when the rendering process fails.
+/// This error is returned when the rendering process fails.
+/// This can happen if the requested resolution is too large
+/// to be adressed properly by the computer.
+/// This should not be possible in most situations without the
+/// program crashing anyway due to memory allocation failure.
 #[derive(Error, Debug)]
 pub enum RenderError {
-    #[error("the given resolution results in an image buffer that is too large to be adressed")]
+    #[error("the requested resolution would result in an image buffer that is too large to be adressed")]
     ImageBufferTooLarge,
-    #[error("the given resolution is too large to fit in a usize")]
+    #[error("the requested resolution (either vertical or horizontal) is too large to fit in a memory adress")]
     ResolutionTooLage(#[from] TryFromIntError),
 }
 
