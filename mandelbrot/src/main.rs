@@ -48,7 +48,9 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     if args.verbose {
         print!("\rEncoding and saving image");
-        stdout().flush()?;
+        if stdout().flush().is_err() {
+            eprintln!("unable to flush stdout, continuing anyway");
+        }
     }
 
     let image_name = if args.record_params {

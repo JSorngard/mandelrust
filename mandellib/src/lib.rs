@@ -34,12 +34,10 @@ const NUM_COLOR_CHANNELS: usize = 3;
 /// The error is returned when the rendering process fails.
 #[derive(Error, Debug)]
 pub enum RenderError {
-    #[error("the given resolution results in an image buffer that is too large to fit in memory")]
+    #[error("the given resolution results in an image buffer that is too large to be adressed")]
     ImageBufferTooLarge,
     #[error("the given resolution is too large to fit in a usize")]
     ResolutionTooLage(#[from] TryFromIntError),
-    #[error("unable to flush stdout")]
-    Io(#[from] std::io::Error),
 }
 
 /// Takes in variables describing where to render and at what resolution
@@ -109,7 +107,9 @@ pub fn render(
 
     if verbose {
         print!("\rProcessing image");
-        stdout().flush()?;
+        if stdout().flush().is_err() {
+            eprintln!("unable to flush stdout, continuing anyway");
+        }
     }
 
     // The image is stored in a rotated fashion during rendering so that
