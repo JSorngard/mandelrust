@@ -117,8 +117,8 @@ pub fn render(
 
     if verbose {
         print!("\rProcessing image");
-        if stdout().flush().is_err() {
-            eprintln!("unable to flush stdout, continuing anyway");
+        if let Err(e) = stdout().flush() {
+            eprintln!("unable to flush stdout (due to: {e}), continuing with rendering anyway");
         }
     }
 
