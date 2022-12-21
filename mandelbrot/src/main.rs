@@ -15,7 +15,7 @@ mod command_line_interface;
 const DEFAULT_FILE_NAME: &str = "mandelbrot_set";
 const DEFAULT_FILE_EXTENSION: &str = "png";
 
-fn main() -> Result<(), Box<dyn Error>> {
+fn main() {
     let args = Cli::parse();
 
     let x_resolution = (args.aspect_ratio * (args.pixels.get() as f64)) as u32;
@@ -32,24 +32,34 @@ fn main() -> Result<(), Box<dyn Error>> {
         imag_distance,
     );
 
-    let render_parameters = RenderParameters::new(
-        x_resolution.try_into()?,
+    let render_parameters = match RenderParameters::new(
+        x_resolution.try_into().unwrap(),
         args.pixels,
         args.max_iterations,
         args.ssaa,
         args.grayscale,
-    )?;
+    ) {
+        Ok(r) => r,
+        Err(e) => panic!("{e}"),
+    };
 
     if args.verbose {
-        give_user_feedback(&args, &render_parameters)?;
+        if let Err(e) = give_user_feedback(&args, &render_parameters) {
+            eprintln!(
+                "printing of user feedback failed (due to: {e}), attempting to save the image anyway"
+            );
+        }
     }
 
-    let img = render(render_parameters, draw_region, args.verbose)?;
+    let img = match render(render_parameters, draw_region, args.verbose) {
+        Ok(i) => i,
+        Err(e) => panic!("{e}"),
+    };
 
     if args.verbose {
         print!("\rEncoding and saving image");
-        if stdout().flush().is_err() {
-            eprintln!("unable to flush stdout, continuing anyway");
+        if let Err(e) = stdout().flush() {
+            eprintln!("unable to flush stdout (due to: {e}), attempting to save the image anyway");
         }
     }
 
@@ -67,18 +77,19 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     // If the output folder does not exist, we create it
     if !out_path.is_dir() {
-        std::fs::create_dir(&out_path)?;
+        if let Err(e) = std::fs::create_dir(&out_path) {
+            panic!("{e}");
+        }
     }
     out_path.push(image_name);
 
-    img.save(&out_path)?;
+    if let Err(e) = img.save(&out_path) {
+        panic!("{e}");
+    }
 
     if args.verbose {
         println!("\rSaved image as {}", out_path.display());
     }
-
-    // Everything finished correctly!
-    Ok(())
 }
 
 /// Output some basic information about what the program will be rendering.

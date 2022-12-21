@@ -38,10 +38,15 @@ const NUM_COLOR_CHANNELS: usize = 3;
 /// program crashing anyway due to memory allocation failure.
 #[derive(Error, Debug)]
 pub enum RenderError {
-    #[error("the requested resolution would result in an image buffer that is too large to be adressed")]
+    #[error(
+        "the requested resolution would result in an image buffer that is too large to be adressed"
+    )]
     ImageBufferTooLarge,
     #[error("the requested resolution (either vertical or horizontal) is too large to fit in a memory adress")]
-    ResolutionTooLage(#[from] TryFromIntError),
+    ResolutionTooLarge {
+        #[from]
+        source: TryFromIntError,
+    },
 }
 
 /// Takes in variables describing where to render and at what resolution
@@ -91,6 +96,7 @@ pub fn render(
         .ok_or(RenderError::ImageBufferTooLarge)?
         .checked_mul(render_parameters.x_resolution_usize.get())
         .ok_or(RenderError::ImageBufferTooLarge)?;
+    isize::try_from(num_bytes)?;
     let mut pixel_bytes: Vec<u8> = vec![0; num_bytes];
 
     let progress_bar = if verbose {
