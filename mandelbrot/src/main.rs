@@ -1,6 +1,7 @@
 use std::{
     error::Error,
     io::{stdout, Write},
+    num::NonZeroU32,
     path::PathBuf,
 };
 
@@ -15,10 +16,11 @@ mod command_line_interface;
 const DEFAULT_FILE_NAME: &str = "mandelbrot_set";
 const DEFAULT_FILE_EXTENSION: &str = "png";
 
-fn main() {
+fn main() -> Result<(), Box<dyn Error>> {
     let args = Cli::parse();
 
-    let x_resolution = (args.aspect_ratio * (args.pixels.get() as f64)) as u32;
+    let x_resolution = NonZeroU32::new((args.aspect_ratio * (args.pixels.get() as f64)) as u32)
+        .ok_or("the vertical resolution and aspect ratio must be such that the horizontal resolution is non-zero")?;
 
     let zoom = 2.0_f64.powf(args.zoom);
 
@@ -32,29 +34,23 @@ fn main() {
         imag_distance,
     );
 
-    let render_parameters = match RenderParameters::new(
+    let render_parameters = RenderParameters::new(
         x_resolution,
-        args.pixels.get(),
-        args.max_iterations.get(),
-        args.ssaa.get(),
+        args.pixels,
+        args.max_iterations,
+        args.ssaa,
         args.grayscale,
-    ) {
-        Ok(r) => r,
-        Err(e) => panic!("the given runtime parameters were not valid: {e}"),
-    };
+    )?;
 
     if args.verbose {
         if let Err(e) = give_user_feedback(&args, &render_parameters) {
             eprintln!(
-                "printing of user feedback failed (due to: {e}), attempting to save the image anyway"
+                "printing of user feedback failed (due to: {e}), attempting to render the image anyway"
             );
         }
     }
 
-    let img = match render(&render_parameters, &draw_region, args.verbose) {
-        Ok(i) => i,
-        Err(e) => panic!("{e}"),
-    };
+    let img = render(&render_parameters, &draw_region, args.verbose)?;
 
     if args.verbose {
         print!("\rEncoding and saving image");
@@ -77,19 +73,17 @@ fn main() {
 
     // If the output folder does not exist, we create it
     if !out_path.is_dir() {
-        if let Err(e) = std::fs::create_dir(&out_path) {
-            panic!("{e}");
-        }
+        std::fs::create_dir(&out_path)?;
     }
     out_path.push(image_name);
 
-    if let Err(e) = img.save(&out_path) {
-        panic!("{e}");
-    }
+    img.save(&out_path)?;
 
     if args.verbose {
         println!("\rSaved image as {}", out_path.display());
     }
+
+    Ok(())
 }
 
 /// Output some basic information about what the program will be rendering.

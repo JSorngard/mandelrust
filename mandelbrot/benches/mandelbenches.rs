@@ -15,7 +15,14 @@ fn get_inputs(
     let grayscale = false;
     let max_iters = miters.unwrap_or(255);
 
-    let params = RenderParameters::new(x_res, y_res, max_iters, ssaa, grayscale).unwrap();
+    let params = RenderParameters::new(
+        x_res.try_into().unwrap(),
+        y_res.try_into().unwrap(),
+        max_iters.try_into().unwrap(),
+        ssaa.try_into().unwrap(),
+        grayscale,
+    )
+    .unwrap();
 
     let center_real = re.unwrap_or(-0.75);
     let center_imag = im.unwrap_or(0.0);
