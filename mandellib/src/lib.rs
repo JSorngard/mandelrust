@@ -1,11 +1,5 @@
-use core::{
-    fmt::Display,
-    num::{NonZeroU32, NonZeroU8, NonZeroUsize, TryFromIntError},
-};
-use std::{
-    error::Error,
-    io::{stdout, Write},
-};
+use core::num::{NonZeroU32, NonZeroU8, NonZeroUsize, TryFromIntError};
+use std::io::{stdout, Write};
 
 use image::{imageops, DynamicImage, ImageBuffer, Rgb};
 use indicatif::{ParallelProgressIterator, ProgressBar};
@@ -74,37 +68,32 @@ const NUM_COLOR_CHANNELS: usize = 3;
 ///
 /// If `verbose` is true the function will use prints to `stderr` to display a progress bar.
 pub fn render(
-    render_parameters: &RenderParameters,
-    render_region: &Frame,
+    render_parameters: RenderParameters,
+    render_region: Frame,
     verbose: bool,
-) -> Result<DynamicImage, RenderError> {
-    // Work out the size of the image in bytes and error early if
-    // it is too large.
-    let num_bytes: usize = NUM_COLOR_CHANNELS
-        .checked_mul(render_parameters.y_resolution_usize.get())
-        .ok_or_else(RenderError::new)?
-        .checked_mul(render_parameters.x_resolution_usize.get())
-        .ok_or_else(RenderError::new)?;
-    if num_bytes > isize::MAX as usize {
-        return Err(RenderError::new());
-    }
+) -> DynamicImage {
+    let x_resolution_usize = render_parameters.x_resolution_usize.get();
+    let x_resolution_u32 = render_parameters.x_resolution_u32.get();
+    let y_resolution_usize = render_parameters.y_resolution_usize.get();
+    let y_resolution_u32 = render_parameters.y_resolution_u32.get();
 
-    let mut pixel_bytes: Vec<u8> = vec![0; num_bytes];
+    let mut pixel_bytes: Vec<u8> =
+        vec![0; NUM_COLOR_CHANNELS * x_resolution_usize * y_resolution_usize];
 
     let progress_bar = if verbose {
-        ProgressBar::new(render_parameters.x_resolution_u32.get().into())
+        ProgressBar::new(x_resolution_u32.into())
     } else {
         ProgressBar::hidden()
     };
 
     pixel_bytes
         // Split the image up into vertical bands and iterate over them in parallel.
-        .par_chunks_mut(NUM_COLOR_CHANNELS * render_parameters.y_resolution_usize.get())
+        .par_chunks_mut(NUM_COLOR_CHANNELS * y_resolution_usize)
         // We enumerate each band to be able to compute the real value of c for that band.
         .enumerate()
         .progress_with(progress_bar)
         .for_each(|(band_index, band)| {
-            color_band(render_parameters, &render_region, band_index, band)
+            color_band(render_parameters, render_region, band_index, band)
         });
 
     if verbose {
@@ -120,24 +109,24 @@ pub fn render(
     let img = imageops::rotate270(
         &ImageBuffer::<Rgb<u8>, Vec<u8>>::from_vec(
             // This rotated state is the reason for the flipped image dimensions here.
-            render_parameters.y_resolution_u32.get(),
-            render_parameters.x_resolution_u32.get(),
+            y_resolution_u32,
+            x_resolution_u32,
             pixel_bytes,
         )
         .expect("`pixel_bytes` is allocated to the correct size of 3*xres*yres"),
     );
 
     if render_parameters.grayscale {
-        Ok(DynamicImage::ImageLuma8(image::imageops::grayscale(&img)))
+        DynamicImage::ImageLuma8(image::imageops::grayscale(&img))
     } else {
-        Ok(DynamicImage::ImageRgb8(img))
+        DynamicImage::ImageRgb8(img)
     }
 }
 
 /// Computes the colors of the pixels in a y-axis band of the image of the mandelbrot set.
 fn color_band(
-    render_parameters: &RenderParameters,
-    render_region: &Frame,
+    render_parameters: RenderParameters,
+    render_region: Frame,
     band_index: usize,
     band: &mut [u8],
 ) {
@@ -236,7 +225,7 @@ fn color_band(
 /// N.B.: if `sqrt_samples_per_pixel` is even the center of
 /// the pixel is never sampled, and if it is 1 no super
 /// sampling is done (only the center is sampled).
-pub fn pixel_color(pixel_region: Frame, render_parameters: &RenderParameters) -> Rgb<u8> {
+pub fn pixel_color(pixel_region: Frame, render_parameters: RenderParameters) -> Rgb<u8> {
     let ssaa = render_parameters.sqrt_samples_per_pixel.get();
     let ssaa_f64: f64 = ssaa.into();
 
@@ -358,7 +347,7 @@ pub fn iterate(c_re: f64, c_im: f64, max_iterations: NonZeroU32) -> f64 {
 }
 
 /// Contains information about a rectangle-shaped region in the complex plane.
-#[derive(Clone)]
+#[derive(Clone, Copy)]
 pub struct Frame {
     pub center_real: f64,
     pub center_imag: f64,
@@ -379,7 +368,7 @@ impl Frame {
 
 /// Contains information about the mandelbrot image
 /// that is relevant to the rendering process.
-#[derive(Debug, Clone)]
+#[derive(Clone, Copy)]
 pub struct RenderParameters {
     pub x_resolution_u32: NonZeroU32,
     pub x_resolution_usize: NonZeroUsize,
@@ -421,25 +410,3 @@ mod test_iteration {
         assert_eq!(iterate(-2.0, 0.0, max_iterations), 0.0);
     }
 }
-
-/// This error is returned when the rendering process fails.
-/// This can happen if the requested resolution is too large
-/// for the image to be adressed by the computer.
-/// This should not be possible in most situations without the
-/// program crashing anyway due to memory allocation failure.
-#[derive(Debug)]
-pub struct RenderError {}
-
-impl RenderError {
-    fn new() -> Self {
-        Self {}
-    }
-}
-
-impl Display for RenderError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "the requested resolution would result in an image buffer that is too large to be adressed")
-    }
-}
-
-impl Error for RenderError {}

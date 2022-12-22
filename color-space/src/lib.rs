@@ -66,14 +66,14 @@ pub struct LinearRGB {
 
 impl LinearRGB {
     pub fn new(r: f64, g: f64, b: f64) -> Self {
-        LinearRGB { r, g, b }
+        Self { r, g, b }
     }
 }
 
 impl Add for LinearRGB {
     type Output = Self;
     fn add(self, rhs: Self) -> Self::Output {
-        LinearRGB::new(self.r + rhs.r, self.g + rhs.g, self.b + rhs.b)
+        Self::new(self.r + rhs.r, self.g + rhs.g, self.b + rhs.b)
     }
 }
 
@@ -88,7 +88,7 @@ impl AddAssign for LinearRGB {
 impl Sub for LinearRGB {
     type Output = Self;
     fn sub(self, rhs: Self) -> Self::Output {
-        LinearRGB::new(self.r - rhs.r, self.g - rhs.g, self.b - rhs.b)
+        Self::new(self.r - rhs.r, self.g - rhs.g, self.b - rhs.b)
     }
 }
 
@@ -103,7 +103,7 @@ impl SubAssign for LinearRGB {
 impl Mul<f64> for LinearRGB {
     type Output = Self;
     fn mul(self, rhs: f64) -> Self::Output {
-        LinearRGB::new(self.r * rhs, self.g * rhs, self.b * rhs)
+        Self::new(self.r * rhs, self.g * rhs, self.b * rhs)
     }
 }
 
@@ -118,7 +118,7 @@ impl MulAssign<f64> for LinearRGB {
 impl Div<f64> for LinearRGB {
     type Output = Self;
     fn div(self, rhs: f64) -> Self::Output {
-        LinearRGB::new(self.r / rhs, self.g / rhs, self.b / rhs)
+        Self::new(self.r / rhs, self.g / rhs, self.b / rhs)
     }
 }
 
@@ -147,7 +147,7 @@ impl From<Rgb<f64>> for LinearRGB {
     /// Converts an sRGB triplet into a linear color space where various
     /// transformations are possible.
     fn from(srgb: Rgb<f64>) -> Self {
-        LinearRGB::new(
+        Self::new(
             srgb_to_linear_rgb(srgb[0]),
             srgb_to_linear_rgb(srgb[1]),
             srgb_to_linear_rgb(srgb[2]),
@@ -167,13 +167,13 @@ impl From<LinearRGB> for Rgb<f64> {
 
 impl From<Rgb<u8>> for LinearRGB {
     fn from(srgb: Rgb<u8>) -> Self {
-        LinearRGB::from(srgb.0.map(|c| SRGB_TO_LINEAR[usize::from(c)]))
+        Self::from(srgb.0.map(|c| SRGB_TO_LINEAR[usize::from(c)]))
     }
 }
 
 impl From<[f64; 3]> for LinearRGB {
     fn from(data: [f64; 3]) -> Self {
-        LinearRGB::new(data[0], data[1], data[2])
+        Self::new(data[0], data[1], data[2])
     }
 }
 

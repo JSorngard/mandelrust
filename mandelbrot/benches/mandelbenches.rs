@@ -43,7 +43,7 @@ fn fast(c: &mut Criterion) {
             "{}x{} render of full set",
             params.x_resolution_u32, params.y_resolution_u32
         ),
-        |b| b.iter(|| render(&params, &frame, false).unwrap()),
+        |b| b.iter(|| render(params, frame, false)),
     );
 
     let (params, frame) = get_inputs(720, None, None, None, None, None);
@@ -52,7 +52,7 @@ fn fast(c: &mut Criterion) {
             "{}x{} render of full set",
             params.x_resolution_u32, params.y_resolution_u32
         ),
-        |b| b.iter(|| render(&params, &frame, false).unwrap()),
+        |b| b.iter(|| render(params, frame, false)),
     );
 
     let (params, frame) = get_inputs(1080, None, None, None, None, None);
@@ -61,7 +61,7 @@ fn fast(c: &mut Criterion) {
             "{}x{} render of full set",
             params.x_resolution_u32, params.y_resolution_u32
         ),
-        |b| b.iter(|| render(&params, &frame, false).unwrap()),
+        |b| b.iter(|| render(params, frame, false)),
     );
 
     let (params, frame) = get_inputs(1080, Some(1), None, None, None, None);
@@ -70,7 +70,7 @@ fn fast(c: &mut Criterion) {
             "{}x{} render  of full set without SSAA",
             params.x_resolution_u32, params.y_resolution_u32
         ),
-        |b| b.iter(|| render(&params, &frame, false).unwrap()),
+        |b| b.iter(|| render(params, frame, false)),
     );
 }
 
@@ -84,7 +84,7 @@ fn slow(c: &mut Criterion) {
             "{}x{} render of full set",
             params.x_resolution_u32, params.y_resolution_u32
         ),
-        |b| b.iter(|| render(&params, &frame, false).unwrap()),
+        |b| b.iter(|| render(params, frame, false)),
     );
 
     let zoom = 12.0;
@@ -102,7 +102,7 @@ fn slow(c: &mut Criterion) {
             "{}x{}, {} iterations, zoomed by 2^{}: 'Mandelsun'",
             params.x_resolution_u32, params.y_resolution_u32, params.max_iterations, zoom
         ),
-        |b| b.iter(|| render(&params, &frame, false).unwrap()),
+        |b| b.iter(|| render(params, frame, false)),
     );
 }
 

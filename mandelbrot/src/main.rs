@@ -50,7 +50,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         }
     }
 
-    let img = render(&render_parameters, &draw_region, args.verbose)?;
+    let img = render(render_parameters, draw_region, args.verbose);
 
     if args.verbose {
         print!("\rEncoding and saving image");
