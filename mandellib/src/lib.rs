@@ -74,8 +74,8 @@ const NUM_COLOR_CHANNELS: usize = 3;
 ///
 /// If `verbose` is true the function will use prints to `stderr` to display a progress bar.
 pub fn render(
-    render_parameters: RenderParameters,
-    render_region: Frame,
+    render_parameters: &RenderParameters,
+    render_region: &Frame,
     verbose: bool,
 ) -> Result<DynamicImage, RenderError> {
     // Work out the size of the image in bytes and error early if
@@ -104,7 +104,7 @@ pub fn render(
         .enumerate()
         .progress_with(progress_bar)
         .for_each(|(band_index, band)| {
-            color_band(render_parameters, render_region, band_index, band)
+            color_band(render_parameters, &render_region, band_index, band)
         });
 
     if verbose {
@@ -136,8 +136,8 @@ pub fn render(
 
 /// Computes the colors of the pixels in a y-axis band of the image of the mandelbrot set.
 fn color_band(
-    render_parameters: RenderParameters,
-    render_region: Frame,
+    render_parameters: &RenderParameters,
+    render_region: &Frame,
     band_index: usize,
     band: &mut [u8],
 ) {
@@ -236,7 +236,7 @@ fn color_band(
 /// N.B.: if `sqrt_samples_per_pixel` is even the center of
 /// the pixel is never sampled, and if it is 1 no super
 /// sampling is done (only the center is sampled).
-pub fn pixel_color(pixel_region: Frame, render_parameters: RenderParameters) -> Rgb<u8> {
+pub fn pixel_color(pixel_region: Frame, render_parameters: &RenderParameters) -> Rgb<u8> {
     let ssaa = render_parameters.sqrt_samples_per_pixel.get();
     let ssaa_f64: f64 = ssaa.into();
 
@@ -358,7 +358,7 @@ pub fn iterate(c_re: f64, c_im: f64, max_iterations: NonZeroU32) -> f64 {
 }
 
 /// Contains information about a rectangle-shaped region in the complex plane.
-#[derive(Clone, Copy)]
+#[derive(Clone)]
 pub struct Frame {
     pub center_real: f64,
     pub center_imag: f64,
@@ -379,7 +379,7 @@ impl Frame {
 
 /// Contains information about the mandelbrot image
 /// that is relevant to the rendering process.
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone)]
 pub struct RenderParameters {
     pub x_resolution_u32: NonZeroU32,
     pub x_resolution_usize: NonZeroUsize,

@@ -51,7 +51,7 @@ fn main() {
         }
     }
 
-    let img = match render(render_parameters, draw_region, args.verbose) {
+    let img = match render(&render_parameters, &draw_region, args.verbose) {
         Ok(i) => i,
         Err(e) => panic!("{e}"),
     };
