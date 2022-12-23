@@ -72,23 +72,21 @@ pub fn render(
     render_region: Frame,
     verbose: bool,
 ) -> DynamicImage {
-    let x_resolution_usize = render_parameters.x_resolution_usize.get();
-    let x_resolution_u32 = render_parameters.x_resolution_u32.get();
-    let y_resolution_usize = render_parameters.y_resolution_usize.get();
-    let y_resolution_u32 = render_parameters.y_resolution_u32.get();
+    let x_resolution = render_parameters.x_resolution;
+    let y_resolution = render_parameters.y_resolution;
 
     let mut pixel_bytes: Vec<u8> =
-        vec![0; NUM_COLOR_CHANNELS * x_resolution_usize * y_resolution_usize];
+        vec![0; NUM_COLOR_CHANNELS * x_resolution.usize.get() * y_resolution.usize.get()];
 
     let progress_bar = if verbose {
-        ProgressBar::new(x_resolution_u32.into())
+        ProgressBar::new(x_resolution.u32.get().into())
     } else {
         ProgressBar::hidden()
     };
 
     pixel_bytes
         // Split the image up into vertical bands and iterate over them in parallel.
-        .par_chunks_mut(NUM_COLOR_CHANNELS * y_resolution_usize)
+        .par_chunks_mut(NUM_COLOR_CHANNELS * y_resolution.usize.get())
         // We enumerate each band to be able to compute the real value of c for that band.
         .enumerate()
         .progress_with(progress_bar)
@@ -109,8 +107,8 @@ pub fn render(
     let img = imageops::rotate270(
         &ImageBuffer::<Rgb<u8>, Vec<u8>>::from_vec(
             // This rotated state is the reason for the flipped image dimensions here.
-            y_resolution_u32,
-            x_resolution_u32,
+            y_resolution.u32.get(),
+            x_resolution.u32.get(),
             pixel_bytes,
         )
         .expect("`pixel_bytes` is allocated to the correct size of 3*xres*yres"),
@@ -130,8 +128,8 @@ fn color_band(
     band_index: usize,
     band: &mut [u8],
 ) {
-    let x_resolution_f64 = f64::from(render_parameters.x_resolution_u32.get());
-    let y_resolution_f64 = f64::from(render_parameters.y_resolution_u32.get());
+    let x_resolution_f64 = f64::from(render_parameters.x_resolution.u32.get());
+    let y_resolution_f64 = f64::from(render_parameters.y_resolution.u32.get());
 
     let mut mirror_from: usize = 0;
     let real_delta = render_region.real_distance / (x_resolution_f64 - 1.0);
@@ -154,7 +152,7 @@ fn color_band(
     let start_imag = if need_to_flip { -1.0 } else { 1.0 } * render_region.center_imag
         - render_region.imag_distance / 2.0;
 
-    for y_index in (0..render_parameters.y_resolution_usize.get() * NUM_COLOR_CHANNELS)
+    for y_index in (0..render_parameters.y_resolution.usize.get() * NUM_COLOR_CHANNELS)
         .step_by(NUM_COLOR_CHANNELS)
     {
         // Compute the imaginary part at this pixel
@@ -370,10 +368,8 @@ impl Frame {
 /// that is relevant to the rendering process.
 #[derive(Clone, Copy)]
 pub struct RenderParameters {
-    pub x_resolution_u32: NonZeroU32,
-    pub x_resolution_usize: NonZeroUsize,
-    pub y_resolution_u32: NonZeroU32,
-    pub y_resolution_usize: NonZeroUsize,
+    pub x_resolution: Resolution,
+    pub y_resolution: Resolution,
     pub max_iterations: NonZeroU32,
     pub sqrt_samples_per_pixel: NonZeroU8,
     pub grayscale: bool,
@@ -381,20 +377,34 @@ pub struct RenderParameters {
 
 impl RenderParameters {
     pub fn new(
-        x_resolution_u32: NonZeroU32,
-        y_resolution_u32: NonZeroU32,
+        x_resolution: NonZeroU32,
+        y_resolution: NonZeroU32,
         max_iterations: NonZeroU32,
         sqrt_samples_per_pixel: NonZeroU8,
         grayscale: bool,
     ) -> Result<Self, TryFromIntError> {
         Ok(RenderParameters {
-            x_resolution_u32,
-            x_resolution_usize: x_resolution_u32.try_into()?,
-            y_resolution_u32,
-            y_resolution_usize: y_resolution_u32.try_into()?,
+            x_resolution: x_resolution.try_into()?,
+            y_resolution: y_resolution.try_into()?,
             max_iterations,
             sqrt_samples_per_pixel,
             grayscale,
+        })
+    }
+}
+
+#[derive(Clone, Copy)]
+pub struct Resolution {
+    pub u32: NonZeroU32,
+    pub usize: NonZeroUsize,
+}
+
+impl TryFrom<NonZeroU32> for Resolution {
+    type Error = TryFromIntError;
+    fn try_from(value: NonZeroU32) -> Result<Self, Self::Error> {
+        Ok(Self {
+            u32: value,
+            usize: value.try_into()?,
         })
     }
 }

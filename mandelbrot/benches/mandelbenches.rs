@@ -41,7 +41,7 @@ fn fast(c: &mut Criterion) {
     group.bench_function(
         &format!(
             "{}x{} render of full set",
-            params.x_resolution_u32, params.y_resolution_u32
+            params.x_resolution.u32, params.y_resolution.u32
         ),
         |b| b.iter(|| render(params, frame, false)),
     );
@@ -50,7 +50,7 @@ fn fast(c: &mut Criterion) {
     group.bench_function(
         &format!(
             "{}x{} render of full set",
-            params.x_resolution_u32, params.y_resolution_u32
+            params.x_resolution.u32, params.y_resolution.u32
         ),
         |b| b.iter(|| render(params, frame, false)),
     );
@@ -59,7 +59,7 @@ fn fast(c: &mut Criterion) {
     group.bench_function(
         &format!(
             "{}x{} render of full set",
-            params.x_resolution_u32, params.y_resolution_u32
+            params.x_resolution.u32, params.y_resolution.u32
         ),
         |b| b.iter(|| render(params, frame, false)),
     );
@@ -68,7 +68,7 @@ fn fast(c: &mut Criterion) {
     group.bench_function(
         &format!(
             "{}x{} render  of full set without SSAA",
-            params.x_resolution_u32, params.y_resolution_u32
+            params.x_resolution.u32, params.y_resolution.u32
         ),
         |b| b.iter(|| render(params, frame, false)),
     );
@@ -82,7 +82,7 @@ fn slow(c: &mut Criterion) {
     group.bench_function(
         &format!(
             "{}x{} render of full set",
-            params.x_resolution_u32, params.y_resolution_u32
+            params.x_resolution.u32, params.y_resolution.u32
         ),
         |b| b.iter(|| render(params, frame, false)),
     );
@@ -100,7 +100,7 @@ fn slow(c: &mut Criterion) {
     group.bench_function(
         &format!(
             "{}x{}, {} iterations, zoomed by 2^{}: 'Mandelsun'",
-            params.x_resolution_u32, params.y_resolution_u32, params.max_iterations, zoom
+            params.x_resolution.u32, params.y_resolution.u32, params.max_iterations, zoom
         ),
         |b| b.iter(|| render(params, frame, false)),
     );

@@ -1,8 +1,10 @@
 use std::{
     error::Error,
+    fs,
     io::{stdout, Write},
     num::NonZeroU32,
     path::PathBuf,
+    str,
 };
 
 use clap::Parser;
@@ -22,7 +24,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     let x_resolution = NonZeroU32::new((args.aspect_ratio * (args.pixels.get() as f64)) as u32)
         .ok_or("the vertical resolution and aspect ratio must be such that the horizontal resolution is non-zero")?;
 
-    let zoom = 2.0_f64.powf(args.zoom);
+    let zoom = 2.0_f64.powf(args.zoom_level);
 
     let imag_distance = 8.0 / (3.0 * zoom);
     let real_distance = args.aspect_ratio * imag_distance;
@@ -62,7 +64,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     let image_name = if args.record_params {
         format!(
             "{DEFAULT_FILE_NAME}_at_re_{}_im_{}_zoom_{}_maxiters_{}.{DEFAULT_FILE_EXTENSION}",
-            args.real_center, args.imag_center, args.zoom, args.max_iterations,
+            args.real_center, args.imag_center, args.zoom_level, args.max_iterations,
         )
     } else {
         format!("{DEFAULT_FILE_NAME}.{DEFAULT_FILE_EXTENSION}")
@@ -73,7 +75,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     // If the output folder does not exist, we create it
     if !out_path.is_dir() {
-        std::fs::create_dir(&out_path)?;
+        fs::create_dir(&out_path)?;
     }
     out_path.push(image_name);
 
@@ -102,19 +104,19 @@ fn give_user_feedback(args: &Cli, rparams: &RenderParameters) -> Result<(), Box<
     write!(
         &mut header,
         " image with a resolution of {} by {} pixels",
-        rparams.x_resolution_u32,
+        rparams.x_resolution.u32,
         args.pixels.get(),
     )?;
-    if args.zoom > 0.0 {
+    if args.zoom_level > 0.0 {
         write!(
             &mut header,
             " zoomed by a factor of {}",
-            2.0_f64.powf(args.zoom)
+            2.0_f64.powf(args.zoom_level)
         )?;
     }
     write!(&mut header, " ----")?;
 
-    println!("{}", std::str::from_utf8(&header)?);
+    println!("{}", str::from_utf8(&header)?);
 
     Ok(())
 }

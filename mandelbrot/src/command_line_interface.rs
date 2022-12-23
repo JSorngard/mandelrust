@@ -1,4 +1,5 @@
 use core::num::{NonZeroU32, NonZeroU8};
+use std::num::NonZeroUsize;
 
 use clap::Parser;
 
@@ -29,35 +30,24 @@ pub struct Cli {
     /// The imaginary part of the center point of the image
     pub imag_center: f64,
 
-    #[arg(
-        short,
-        long,
-        value_name = "ZOOM LEVEL",
-        default_value_t = 0.0,
-        allow_hyphen_values = true
-    )]
+    #[arg(short, long, default_value_t = 0.0, allow_hyphen_values = true)]
     /// A real number describing how far in to zoom on the given center point.
     /// This number works on an exponential scale where 0 means no zoom
     /// and every time it is increased by 1 the vertical and horizontal
     /// distances covered by the image are halved
-    pub zoom: f64,
+    pub zoom_level: f64,
 
     #[arg(
         short,
         long,
+        value_parser(parse_resolution),
         // unwrap is okay because 2160 is not 0.
         default_value_t = NonZeroU32::new(2160).unwrap(),
     )]
     /// The number of pixels along the y-axis of the image
     pub pixels: NonZeroU32,
 
-    #[arg(
-        short,
-        long,
-        value_name = "ASPECT RATIO",
-        value_parser(parse_aspect_ratio),
-        default_value_t = 1.5
-    )]
+    #[arg(short, long, value_parser(parse_aspect_ratio), default_value_t = 1.5)]
     /// The aspect ratio of the image. The horizontal pixel resolution is calculated by multiplying the
     /// vertical pixel resolution by this number. The aspect ratio can be entered as a real number and also in the format x:y,
     /// where x and y are integers, e.g. 3:2
@@ -66,7 +56,7 @@ pub struct Cli {
     #[arg(
         short,
         long,
-        value_name = "SQRT(SSAA FACTOR)",
+        value_name = "SQRT(SSAA_FACTOR)",
         // unwrap is okay because 3 is not 0.
         default_value_t = NonZeroU8::new(3).unwrap(),
     )]
@@ -77,7 +67,6 @@ pub struct Cli {
     #[arg(
         short,
         long,
-        value_name = "MAX ITERATIONS",
         // unwrap is okay because 255 is not 0
         default_value_t = NonZeroU32::new(255).unwrap(),
     )]
@@ -92,12 +81,7 @@ pub struct Cli {
     /// Save information about the image location in the complex plane in the file name
     pub record_params: bool,
 
-    #[arg(
-        short,
-        long,
-        default_value = "mandelbrot_renders",
-        value_name = "OUTPUT FOLDER"
-    )]
+    #[arg(short, long, default_value = "mandelbrot_renders")]
     /// The folder in which to save the resulting image
     pub output_folder: String,
 
@@ -136,6 +120,19 @@ fn parse_aspect_ratio(s: &str) -> Result<f64, String> {
             }
         }
     }
+}
+
+fn parse_resolution(s: &str) -> Result<NonZeroU32, String> {
+    let candidate: NonZeroU32 = match s.parse() {
+        Ok(res) => res,
+        Err(e) => return Err(e.to_string()),
+    };
+
+    if NonZeroUsize::try_from(candidate).is_err() {
+        return Err("given resolution would not fit in both a u32 and usize".to_owned());
+    };
+
+    Ok(candidate)
 }
 
 #[cfg(test)]
