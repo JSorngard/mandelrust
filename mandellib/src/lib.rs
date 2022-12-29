@@ -86,7 +86,7 @@ pub fn render(
 
     pixel_bytes
         // Split the image up into vertical bands and iterate over them in parallel.
-        .par_chunks_mut(NUM_COLOR_CHANNELS * y_resolution.usize.get())
+        .par_chunks_exact_mut(NUM_COLOR_CHANNELS * y_resolution.usize.get())
         // We enumerate each band to be able to compute the real value of c for that band.
         .enumerate()
         .progress_with(progress_bar)
