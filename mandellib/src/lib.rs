@@ -141,9 +141,6 @@ fn color_band(
     let mirror = ENABLE_MIRRORING && render_region.center_imag.abs() < render_region.imag_distance;
     let start_real = render_region.center_real - render_region.real_distance / 2.0;
 
-    // This is the real value of c for this entire band.
-    let c_real = start_real + render_region.real_distance * (band_index as f64) / x_resolution_f64;
-
     // One way of doing this is to always assume that the half with negative
     // imaginary part is the larger one. If the assumption is false
     // we only need to flip the image vertically to get the
@@ -151,6 +148,9 @@ fn color_band(
     let need_to_flip = render_region.center_imag > 0.0;
     let start_imag = if need_to_flip { -1.0 } else { 1.0 } * render_region.center_imag
         - render_region.imag_distance / 2.0;
+
+    // This is the real value of c for this entire band.
+    let c_real = start_real + render_region.real_distance * (band_index as f64) / x_resolution_f64;
 
     for y_index in (0..render_parameters.y_resolution.usize.get() * NUM_COLOR_CHANNELS)
         .step_by(NUM_COLOR_CHANNELS)
