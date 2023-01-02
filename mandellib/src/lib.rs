@@ -393,6 +393,8 @@ impl RenderParameters {
     }
 }
 
+/// A struct containing a resolution that is known
+/// to fit in both a u32 and usize type.
 #[derive(Clone, Copy)]
 pub struct Resolution {
     pub u32: NonZeroU32,
