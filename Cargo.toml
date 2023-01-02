@@ -3,6 +3,7 @@ members = [
     "color-space",
     "mandellib",
     "mandelbrot",
+    "mandelview",
 ]
 
 [profile.release]
