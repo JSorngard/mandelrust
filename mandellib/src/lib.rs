@@ -355,7 +355,7 @@ pub struct Frame {
 
 impl Frame {
     pub fn new(center_real: f64, center_imag: f64, real_distance: f64, imag_distance: f64) -> Self {
-        Frame {
+        Self {
             center_real,
             center_imag,
             real_distance,
@@ -383,7 +383,7 @@ impl RenderParameters {
         sqrt_samples_per_pixel: NonZeroU8,
         grayscale: bool,
     ) -> Result<Self, TryFromIntError> {
-        Ok(RenderParameters {
+        Ok(Self {
             x_resolution: x_resolution.try_into()?,
             y_resolution: y_resolution.try_into()?,
             max_iterations,
