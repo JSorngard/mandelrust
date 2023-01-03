@@ -7,3 +7,4 @@ edition = "2021"
 
 [dependencies]
 mandellib = {path = "../mandellib"}
+iced = "0.6"

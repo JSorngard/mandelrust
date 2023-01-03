@@ -1,13 +1,45 @@
-use mandellib::{render, Frame, RenderParameters};
+use iced::{widget::{button, column, text}, Element, Sandbox, Settings, Alignment};
 
-fn main() {
-    let p = RenderParameters::new(
-        10.try_into().unwrap(),
-        10.try_into().unwrap(),
-        255.try_into().unwrap(),
-        3.try_into().unwrap(),
-        false,
-    ).unwrap();
-    let f = Frame::new(-0.75, 0.0, 1.0, 1.0);
-    println!("{:?}", render(p, f, false));
+fn main() -> iced::Result {
+    Counter::run(Settings::default())
+}
+
+struct Counter {
+    value: i32
+}
+
+#[derive(Debug, Clone, Copy)]
+enum Message {
+    Increment,
+    Decrement
+}
+
+impl Sandbox for Counter {
+    type Message = Message;
+
+    fn new() -> Self {
+        Self { value : 0 }
+    }
+
+    fn title(&self) -> String {
+        "Counter test".into()
+    }
+
+    fn update(&mut self, message: Self::Message) {
+        match message {
+            Message::Increment => self.value += 1,
+            Message::Decrement => self.value -= 1,
+        }
+    }
+
+    fn view(&self) -> Element<Self::Message> {
+        column![
+            button("+").on_press(Message::Increment),
+            text(self.value).size(50),
+            button("-").on_press(Message::Decrement),
+        ]
+        .padding(20)
+        .align_items(Alignment::Center)
+        .into()
+    }
 }
