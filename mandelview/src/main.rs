@@ -1,24 +1,27 @@
-use iced::{widget::{button, column, text}, Element, Sandbox, Settings, Alignment};
+use iced::{
+    widget::{button, column, text},
+    Alignment, Element, Sandbox, Settings,
+};
 
 fn main() -> iced::Result {
     Counter::run(Settings::default())
 }
 
 struct Counter {
-    value: i32
+    value: i32,
 }
 
 #[derive(Debug, Clone, Copy)]
 enum Message {
     Increment,
-    Decrement
+    Decrement,
 }
 
 impl Sandbox for Counter {
     type Message = Message;
 
     fn new() -> Self {
-        Self { value : 0 }
+        Self { value: 0 }
     }
 
     fn title(&self) -> String {
