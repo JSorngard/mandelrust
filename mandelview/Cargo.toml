@@ -8,3 +8,4 @@ edition = "2021"
 [dependencies]
 mandellib = {path = "../mandellib"}
 iced = "0.6"
+image = {version = "0.24", default-features = false, features = ["png"]}
