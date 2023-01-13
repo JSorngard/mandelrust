@@ -4,11 +4,11 @@ use std::io::{stdout, Write};
 use image::{imageops, DynamicImage, ImageBuffer, Rgb};
 use indicatif::{ParallelProgressIterator, ProgressBar};
 use itertools::Itertools;
+use multiversion::multiversion;
 use rayon::{
     iter::{IndexedParallelIterator, ParallelIterator},
     prelude::ParallelSliceMut,
 };
-use multiversion::multiversion;
 
 use color_space::{palette, LinearRGB};
 

@@ -6,6 +6,7 @@ edition = "2021"
 [dependencies]
 image = {version = "0.24", default-features = false, features = ["png"]}
 lazy_static = "1.4"
+multiversion = "0.7"
 
 [dev-dependencies]
 approx = "0.5"
