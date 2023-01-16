@@ -52,16 +52,6 @@ impl Application for MandelViewer {
             rgb8_to_rgba8(render(params, frame, false).into_bytes()),
         );
 
-        // let image_handle = match f(1920, 1080) {
-        //     DynamicImage::ImageRgb8(img) => {
-        //         Handle::from_pixels(1920, 1080, rgb8_to_rgba8(img.into_raw()))
-        //     }
-        //     DynamicImage::ImageLuma8(img) => {
-        //         Handle::from_pixels(1920, 1080, rgb8_to_rgba8(img.into_raw()))
-        //     }
-        //     _ => Handle::from_memory(PRERENDERED),
-        // };
-
         let image = Image::new(image_handle)
             .width(Length::Fill)
             .height(Length::Fill);
