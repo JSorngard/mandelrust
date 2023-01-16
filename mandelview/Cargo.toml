@@ -11,3 +11,4 @@ iced = {version="0.6", features = ["image"]}
 iced_native = "0.8"
 iced_graphics = "0.6"
 image = {version = "0.24", default-features = false, features = ["png"]}
+rayon = "1.6"

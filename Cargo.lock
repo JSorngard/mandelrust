@@ -1618,6 +1618,7 @@ dependencies = [
  "iced_native 0.8.0",
  "image",
  "mandellib",
+ "rayon",
 ]
 
 [[package]]

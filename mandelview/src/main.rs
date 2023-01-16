@@ -4,6 +4,8 @@ use iced::{
     Application, Command, Element, Length, Settings, Theme,
 };
 
+use rayon::prelude::*;
+
 use mandellib::{render, Frame, RenderParameters};
 
 fn main() {
@@ -75,7 +77,7 @@ impl Application for MandelViewer {
 
 fn rgb8_to_rgba8(pixel_bytes: Vec<u8>) -> Vec<u8> {
     pixel_bytes
-        .chunks_exact(3)
+        .par_chunks_exact(3)
         .flat_map(|rgb| [rgb[0], rgb[1], rgb[2], u8::MAX])
         .collect()
 }
