@@ -240,8 +240,8 @@ pub fn pixel_color(pixel_region: Frame, render_parameters: RenderParameters) -> 
         // We start the super sampling loop in the middle in order to ensure
         // that if we abort supersampling, we have sampled some of the points
         // that are the closest to the center of the pixel first.
-        .skip(max_samples / 2)
         .cycle()
+        .skip(max_samples / 2)
         .take(max_samples)
     {
         let coloffset = (2.0 * f64::from(i) - ssaa_f64 - 1.0) / ssaa_f64;
