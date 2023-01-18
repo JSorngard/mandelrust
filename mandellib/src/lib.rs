@@ -153,9 +153,7 @@ fn color_band(
     // This is the real value of c for this entire band.
     let c_real = start_real + render_region.real_distance * (band_index as f64) / x_resolution_f64;
 
-    for y_index in (0..render_parameters.y_resolution.usize.get() * NUM_COLOR_CHANNELS)
-        .step_by(NUM_COLOR_CHANNELS)
-    {
+    for y_index in (0..band.len()).step_by(NUM_COLOR_CHANNELS) {
         // Compute the imaginary part at this pixel
         let c_imag = start_imag
             + render_region.imag_distance * (y_index as f64)
