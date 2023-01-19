@@ -12,7 +12,4 @@ macro_rules! path_sep {
     };
 }
 
-// pub static PRERENDERED: &[u8] =
-//     include_bytes!(concat!("resources", path_sep!(), "prerendered.png"));
-
 pub static ICON: &[u8] = include_bytes!(concat!("resources", path_sep!(), "icon.png"));
