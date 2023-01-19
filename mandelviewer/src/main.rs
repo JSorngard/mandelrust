@@ -51,7 +51,7 @@ const INITIAL_X_RES: u32 = 1920;
 const INITIAL_Y_RES: u32 = 1080;
 const INITIAL_IMAG_DISTANCE: f64 = 8.0 / 3.0;
 const INITIAL_SSAA_FACTOR: u8 = 3;
-const INITIAL_MAX_ITERATIONS: u32 = 255;
+const INITIAL_MAX_ITERATIONS: u32 = 256;
 const INITIAL_REAL_CENTER: f64 = -0.75;
 const INITIAL_IMAG_CENTER: f64 = 0.0;
 const PROGRAM_NAME: &str = "Mandelviewer";
@@ -106,7 +106,10 @@ impl Application for MandelViewer {
                 render_in_progress: true,
                 live_preview: false,
             },
-            Command::perform(render(params, view_region), Message::RenderFinished),
+            Command::batch([
+                window::maximize(true),
+                Command::perform(render(params, view_region), Message::RenderFinished),
+            ]),
         )
     }
 
@@ -167,7 +170,7 @@ impl Application for MandelViewer {
                 if let Some(ref img) = self.image {
                     match FileDialog::new()
                         .set_file_name("mandelbrot_set.png")
-                        .add_filter("image", &["png"])
+                        .add_filter("image", &["png", "jpg", "gif", "bmp", "tiff", "webp"])
                         .save_file()
                     {
                         Some(out_path) => {
@@ -175,7 +178,7 @@ impl Application for MandelViewer {
                                 eprintln!("{e}");
                             }
                         }
-                        None => (),
+                        None => (), // User cancelled save operation, do nothing.
                     }
                 }
                 Command::none()
@@ -234,6 +237,7 @@ impl Application for MandelViewer {
                 widget::checkbox::Checkbox::new(self.live_preview, "Live preview", |status| {
                     Message::LiveCheckboxToggled(status)
                 }),
+                widget::Space::with_height(Length::Fill),
                 button("Save current view").on_press(Message::SavePressed),
             ],
         ]
