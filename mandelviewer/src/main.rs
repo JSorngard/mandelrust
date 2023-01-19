@@ -1,10 +1,21 @@
 mod embedded_resources;
 
 use core::time::Duration;
+use std::num::{NonZeroU32, TryFromIntError};
 
 use iced::{
     self, executor,
-    widget::{self, button, column, image::Handle, row, Image},
+    widget::{
+        button,
+        button::Button,
+        checkbox::Checkbox,
+        column,
+        image::{Handle, Viewer},
+        row,
+        text::Text,
+        text_input::TextInput,
+        Space,
+    },
     window, Application, Command, Element, Length, Theme,
 };
 
@@ -31,6 +42,16 @@ fn main() {
     MandelViewer::run(program_settings).unwrap();
 }
 
+const INITIAL_X_RES: u32 = 1920;
+const INITIAL_Y_RES: u32 = 1080;
+const ASPECT_RATIO: f64 = 16.0 / 9.0;
+const INITIAL_IMAG_DISTANCE: f64 = 8.0 / 3.0;
+const INITIAL_SSAA_FACTOR: u8 = 3;
+const INITIAL_MAX_ITERATIONS: u32 = 256;
+const INITIAL_REAL_CENTER: f64 = -0.75;
+const INITIAL_IMAG_CENTER: f64 = 0.0;
+const PROGRAM_NAME: &str = "Mandelviewer";
+
 struct MandelViewer {
     image: Option<ImageBuffer<Rgba<u8>, Vec<u8>>>,
     params: RenderParameters,
@@ -44,21 +65,15 @@ struct MandelViewer {
 enum Message {
     ReRenderPressed,
     RenderFinished(ImageBuffer<Rgba<u8>, Vec<u8>>),
-    MaxItersUpdated(u32),
+    MaxItersUpdated(NonZeroU32),
     PushNotification(String),
     PopNotification,
     LiveCheckboxToggled(bool),
     GrayscaleToggled(bool),
     SavePressed,
+    VerticalResolutionUpdated(NonZeroU32),
+    SuperSamplingToggled(bool),
 }
-const INITIAL_X_RES: u32 = 1920;
-const INITIAL_Y_RES: u32 = 1080;
-const INITIAL_IMAG_DISTANCE: f64 = 8.0 / 3.0;
-const INITIAL_SSAA_FACTOR: u8 = 3;
-const INITIAL_MAX_ITERATIONS: u32 = 256;
-const INITIAL_REAL_CENTER: f64 = -0.75;
-const INITIAL_IMAG_CENTER: f64 = 0.0;
-const PROGRAM_NAME: &str = "Mandelviewer";
 
 async fn render(params: RenderParameters, frame: Frame) -> ImageBuffer<Rgba<u8>, Vec<u8>> {
     sync_render(params, frame, false).to_rgba8()
@@ -69,18 +84,11 @@ async fn background_timer(duration: Duration) {
 }
 
 impl MandelViewer {
-    fn low_res(&self) -> RenderParameters {
-        let mut low_res_params = self.params.clone();
-        let aspect_ratio = f64::from(low_res_params.x_resolution.u32.get())
-            / f64::from(low_res_params.y_resolution.u32.get());
-        low_res_params.y_resolution = 480
-            .try_into()
-            .expect("480 fits in both a u32 and a usize and is nonzero");
-        low_res_params.x_resolution = ((f64::from(low_res_params.y_resolution.u32.get())
-            * aspect_ratio) as u32)
-            .try_into()
-            .expect("x-resolution should be valid when scaled down");
-        low_res_params
+    fn change_resolution(&self, y_res: NonZeroU32) -> Result<RenderParameters, TryFromIntError> {
+        let mut new_params = self.params;
+        new_params.y_resolution = y_res.try_into()?;
+        new_params.x_resolution = ((f64::from(y_res.get()) * ASPECT_RATIO) as u32).try_into()?;
+        Ok(new_params)
     }
 }
 
@@ -134,10 +142,14 @@ impl Application for MandelViewer {
     fn update(&mut self, message: Self::Message) -> Command<Self::Message> {
         match message {
             Message::MaxItersUpdated(max_iters) => {
-                self.params.max_iterations = max_iters.try_into().expect("max_iters is not zero");
+                self.params.max_iterations = max_iters;
                 if self.live_preview {
                     Command::perform(
-                        render(self.low_res(), self.view_region),
+                        render(
+                            self.change_resolution(480.try_into().expect("480 is not zero"))
+                                .expect("480 is a valid resolution"),
+                            self.view_region,
+                        ),
                         Message::RenderFinished,
                     )
                 } else {
@@ -170,7 +182,11 @@ impl Application for MandelViewer {
                 self.params.grayscale = state;
                 if self.live_preview {
                     Command::perform(
-                        render(self.low_res(), self.view_region),
+                        render(
+                            self.change_resolution(480.try_into().expect("480 is not zero"))
+                                .expect("480 is a valid resolution"),
+                            self.view_region,
+                        ),
                         Message::RenderFinished,
                     )
                 } else {
@@ -191,18 +207,55 @@ impl Application for MandelViewer {
                                     Message::PopNotification
                                 })
                             } else {
-                                Command::none()
+                                Command::none() // We succeeded in saving the image, do nothing.
                             }
                         }
-                        None => Command::none(), // User cancelled save operation, do nothing.
+                        None => Command::none(), // The user cancelled the save operation, do nothing.
                     }
                 } else {
-                    Command::none()
+                    self.notifications.push("no image to save".to_string());
+                    Command::perform(background_timer(Duration::from_secs(5)), |_| {
+                        Message::PopNotification
+                    })
                 }
             }
             Message::PopNotification => {
                 self.notifications.drain(..=0);
                 Command::none()
+            }
+            Message::VerticalResolutionUpdated(y_res) => match self.change_resolution(y_res) {
+                Ok(params) => {
+                    self.params = params;
+                    if self.live_preview {
+                        Command::perform(
+                            render(self.params, self.view_region),
+                            Message::RenderFinished,
+                        )
+                    } else {
+                        Command::none()
+                    }
+                }
+                Err(e) => {
+                    self.notifications.push(e.to_string());
+                    Command::perform(background_timer(Duration::from_secs(5)), |_| {
+                        Message::PopNotification
+                    })
+                }
+            },
+            Message::SuperSamplingToggled(status) => {
+                self.params.sqrt_samples_per_pixel = if status {
+                    3.try_into().expect("3 is not zero")
+                } else {
+                    1.try_into().expect("1 is not zero")
+                };
+                if self.live_preview {
+                    Command::perform(
+                        render(self.params, self.view_region),
+                        Message::RenderFinished,
+                    )
+                } else {
+                    Command::none()
+                }
             }
         }
     }
@@ -214,61 +267,90 @@ impl Application for MandelViewer {
         };
 
         row![
-            column![Image::new(image_handle).height(Length::Fill), {
-                let notification_text: String = self
-                    .notifications
-                    .iter()
-                    .cloned()
-                    .map(|s| format!("{s}\n"))
-                    .collect();
-                widget::tooltip(
-                    widget::text::Text::new(notification_text),
-                    "",
-                    widget::tooltip::Position::Bottom,
+            column![
+                Viewer::new(image_handle).height(Length::Fill),
+                Text::new(
+                    self.notifications
+                        .iter()
+                        .cloned()
+                        .map(|s| format!("{s}\n"))
+                        .collect::<String>()
                 )
-            },]
+            ]
             .width(Length::FillPortion(9)),
             column![
-                widget::text::Text::new("Iterations"),
+                Text::new("Vertical resolution"),
+                row![
+                    button("÷2").on_press(Message::VerticalResolutionUpdated(
+                        (self.params.y_resolution.u32.get() / 2)
+                            .max(1)
+                            .try_into()
+                            .expect("never zero")
+                    )),
+                    TextInput::new(
+                        "Vertical resolution",
+                        &self.params.y_resolution.u32.get().to_string(),
+                        |yres| match yres.parse() {
+                            Ok(mi) => {
+                                Message::VerticalResolutionUpdated(mi)
+                            }
+                            Err(e) => Message::PushNotification(e.to_string()),
+                        }
+                    )
+                    .on_submit(Message::ReRenderPressed),
+                    button("·2").on_press(Message::VerticalResolutionUpdated(
+                        (self.params.y_resolution.u32.get() * 2)
+                            .try_into()
+                            .expect("doubling a number never gives zero")
+                    ))
+                ],
+                Text::new("Iterations"),
                 row![
                     button("÷2").on_press(Message::MaxItersUpdated(
-                        (self.params.max_iterations.get() / 2).max(1)
+                        (self.params.max_iterations.get() / 2)
+                            .max(1)
+                            .try_into()
+                            .expect("never zero")
                     )),
-                    widget::text_input::TextInput::new(
+                    TextInput::new(
                         "Iterations",
                         &self.params.max_iterations.to_string(),
                         |max_iters| match max_iters.parse() {
-                            Ok(mi) =>
-                                if mi > 0 {
-                                    Message::MaxItersUpdated(mi)
-                                } else {
-                                    Message::PushNotification(
-                                        "the number of iterations must be at least 1".into(),
-                                    )
-                                },
+                            Ok(mi) => {
+                                Message::MaxItersUpdated(mi)
+                            }
                             Err(e) => {
                                 Message::PushNotification(e.to_string())
                             }
                         }
-                    ),
+                    )
+                    .on_submit(Message::ReRenderPressed),
                     button("·2").on_press(Message::MaxItersUpdated(
-                        self.params.max_iterations.get() * 2
+                        (self.params.max_iterations.get() * 2)
+                            .try_into()
+                            .expect("doubling a number never gives zero")
                     )),
                 ],
-                widget::checkbox::Checkbox::new(self.params.grayscale, "Grayscale", |status| {
+                Checkbox::new(self.params.grayscale, "Grayscale", |status| {
                     Message::GrayscaleToggled(status)
                 }),
+                Checkbox::new(
+                    self.params.sqrt_samples_per_pixel.get() > 1,
+                    "SSAA",
+                    |status| { Message::SuperSamplingToggled(status) }
+                ),
+                Space::new(Length::Shrink, Length::Units(40)),
                 {
-                    let mut render_button = widget::Button::new("re-render view");
+                    let mut render_button = Button::new("re-render view");
                     if !self.render_in_progress {
                         render_button = render_button.on_press(Message::ReRenderPressed)
                     }
                     render_button
                 },
-                widget::checkbox::Checkbox::new(self.live_preview, "Live preview", |status| {
+                Checkbox::new(self.live_preview, "Live preview", |status| {
                     Message::LiveCheckboxToggled(status)
                 }),
-                widget::vertical_space(Length::Fill),
+                Space::new(Length::Shrink, Length::Fill),
                 button("Save current view").on_press(Message::SavePressed),
             ]
             .width(Length::FillPortion(1)),
