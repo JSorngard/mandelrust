@@ -32,6 +32,7 @@ struct MandelViewer {
     params: RenderParameters,
     view_region: Frame,
     render_in_progress: bool,
+    live_preview: bool,
 }
 
 #[derive(Debug, Clone)]
@@ -40,6 +41,8 @@ enum Message {
     RenderFinished(ImageBuffer<Rgba<u8>, Vec<u8>>),
     MaxItersUpdated(u32),
     InputParseFail(String),
+    LiveCheckboxToggled(bool),
+    GrayscaleToggled(bool),
 }
 const INITIAL_X_RES: u32 = 1920;
 const INITIAL_Y_RES: u32 = 1080;
@@ -49,10 +52,25 @@ const INITIAL_MAX_ITERATIONS: u32 = 255;
 const INITIAL_REAL_CENTER: f64 = -0.75;
 const INITIAL_IMAG_CENTER: f64 = 0.0;
 const PROGRAM_NAME: &str = "Mandelviewer";
-const SETTING_SEPARATION: u16 = 10;
 
 async fn render(params: RenderParameters, frame: Frame) -> ImageBuffer<Rgba<u8>, Vec<u8>> {
     sync_render(params, frame, false).to_rgba8()
+}
+
+impl MandelViewer {
+    fn low_res(&self) -> RenderParameters {
+        let mut low_res_params = self.params.clone();
+        let aspect_ratio = f64::from(low_res_params.x_resolution.u32.get())
+            / f64::from(low_res_params.y_resolution.u32.get());
+        low_res_params.y_resolution = 480
+            .try_into()
+            .expect("480 fits in both a u32 and a usize and is nonzero");
+        low_res_params.x_resolution = ((f64::from(low_res_params.y_resolution.u32.get())
+            * aspect_ratio) as u32)
+            .try_into()
+            .expect("x-resolution should be valid when scaled down");
+        low_res_params
+    }
 }
 
 impl Application for MandelViewer {
@@ -83,6 +101,7 @@ impl Application for MandelViewer {
                 params,
                 view_region,
                 render_in_progress: true,
+                live_preview: false,
             },
             Command::perform(render(params, view_region), Message::RenderFinished),
         )
@@ -101,7 +120,14 @@ impl Application for MandelViewer {
         match message {
             Message::MaxItersUpdated(max_iters) => {
                 self.params.max_iterations = max_iters.try_into().expect("max_iters is not zero");
-                Command::none()
+                if self.live_preview {
+                    Command::perform(
+                        render(self.low_res(), self.view_region),
+                        Message::RenderFinished,
+                    )
+                } else {
+                    Command::none()
+                }
             }
             Message::ReRenderPressed => {
                 self.render_in_progress = true;
@@ -118,6 +144,21 @@ impl Application for MandelViewer {
                 self.render_in_progress = false;
                 self.image = Some(buf);
                 Command::none()
+            }
+            Message::LiveCheckboxToggled(state) => {
+                self.live_preview = state;
+                Command::none()
+            }
+            Message::GrayscaleToggled(state) => {
+                self.params.grayscale = state;
+                if self.live_preview {
+                    Command::perform(
+                        render(self.low_res(), self.view_region),
+                        Message::RenderFinished,
+                    )
+                } else {
+                    Command::none()
+                }
             }
         }
     }
@@ -152,8 +193,10 @@ impl Application for MandelViewer {
                     button("·2").on_press(Message::MaxItersUpdated(
                         self.params.max_iterations.get() * 2
                     )),
-                ]
-                .padding(SETTING_SEPARATION),
+                ],
+                widget::checkbox::Checkbox::new(self.params.grayscale, "Grayscale", |status| {
+                    Message::GrayscaleToggled(status)
+                }),
                 {
                     let mut render_button = widget::Button::new("re-render view");
                     if !self.render_in_progress {
@@ -161,6 +204,9 @@ impl Application for MandelViewer {
                     }
                     render_button
                 },
+                widget::checkbox::Checkbox::new(self.live_preview, "Live preview", |status| {
+                    Message::LiveCheckboxToggled(status)
+                }),
             ]
         ]
         .into()
