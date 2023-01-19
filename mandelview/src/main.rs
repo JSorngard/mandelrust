@@ -8,9 +8,9 @@ use iced::{
 
 use image::{ImageBuffer, Rgba};
 
-use mandellib::{render, Frame, RenderParameters};
+use mandellib::{render as sync_render, Frame, RenderParameters};
 
-use embedded_resources::ICON;
+use embedded_resources::{ICON, RENDERING_IN_PROGRESS};
 
 fn main() {
     let program_settings = iced::Settings {
@@ -31,6 +31,7 @@ struct MandelViewer {
     image: Option<ImageBuffer<Rgba<u8>, Vec<u8>>>,
     params: RenderParameters,
     view_region: Frame,
+    render_in_progress: bool,
 }
 
 #[derive(Debug, Clone)]
@@ -50,8 +51,8 @@ const INITIAL_IMAG_CENTER: f64 = 0.0;
 const PROGRAM_NAME: &str = "Mandelviewer";
 const SETTING_SEPARATION: u16 = 10;
 
-async fn async_render(params: RenderParameters, frame: Frame) -> ImageBuffer<Rgba<u8>, Vec<u8>> {
-    render(params, frame, false).to_rgba8()
+async fn render(params: RenderParameters, frame: Frame) -> ImageBuffer<Rgba<u8>, Vec<u8>> {
+    sync_render(params, frame, false).to_rgba8()
 }
 
 impl Application for MandelViewer {
@@ -81,8 +82,9 @@ impl Application for MandelViewer {
                 image: None,
                 params,
                 view_region,
+                render_in_progress: true,
             },
-            Command::perform(async_render(params, view_region), Message::RenderFinished),
+            Command::perform(render(params, view_region), Message::RenderFinished),
         )
     }
 
@@ -102,9 +104,9 @@ impl Application for MandelViewer {
                 Command::none()
             }
             Message::ReRenderPressed => {
-                //self.image = Some(render(self.params, self.view_region, false).into_rgba8())
+                self.render_in_progress = true;
                 Command::perform(
-                    async_render(self.params, self.view_region),
+                    render(self.params, self.view_region),
                     Message::RenderFinished,
                 )
             }
@@ -113,6 +115,7 @@ impl Application for MandelViewer {
                 Command::none()
             }
             Message::RenderFinished(buf) => {
+                self.render_in_progress = false;
                 self.image = Some(buf);
                 Command::none()
             }
@@ -122,8 +125,7 @@ impl Application for MandelViewer {
     fn view(&self) -> Element<Self::Message> {
         let image_handle = match &self.image {
             Some(img) => Handle::from_pixels(img.width(), img.height(), img.clone().into_raw()),
-            // If there is no rendered image, show the program icon.
-            None => Handle::from_memory(ICON),
+            None => Handle::from_memory(RENDERING_IN_PROGRESS),
         };
 
         row![
@@ -152,7 +154,13 @@ impl Application for MandelViewer {
                     )),
                 ]
                 .padding(SETTING_SEPARATION),
-                button("re-render view").on_press(Message::ReRenderPressed),
+                {
+                    let mut render_button = widget::Button::new("re-render view");
+                    if !self.render_in_progress {
+                        render_button = render_button.on_press(Message::ReRenderPressed)
+                    }
+                    render_button
+                },
             ]
         ]
         .into()
