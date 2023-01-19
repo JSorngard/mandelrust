@@ -6,7 +6,9 @@ use iced::{
     window, Application, Command, Element, Length, Theme,
 };
 
-use image::{ImageBuffer, Rgba};
+use image::{DynamicImage, ImageBuffer, Rgba};
+
+use rfd::FileDialog;
 
 use mandellib::{render as sync_render, Frame, RenderParameters};
 
@@ -43,6 +45,7 @@ enum Message {
     InputParseFail(String),
     LiveCheckboxToggled(bool),
     GrayscaleToggled(bool),
+    SavePressed,
 }
 const INITIAL_X_RES: u32 = 1920;
 const INITIAL_Y_RES: u32 = 1080;
@@ -160,6 +163,23 @@ impl Application for MandelViewer {
                     Command::none()
                 }
             }
+            Message::SavePressed => {
+                if let Some(ref img) = self.image {
+                    match FileDialog::new()
+                        .set_file_name("mandelbrot_set.png")
+                        .add_filter("image", &["png"])
+                        .save_file()
+                    {
+                        Some(out_path) => {
+                            if let Err(e) = DynamicImage::ImageRgba8(img.clone()).save(out_path) {
+                                eprintln!("{e}");
+                            }
+                        }
+                        None => (),
+                    }
+                }
+                Command::none()
+            }
         }
     }
 
@@ -214,7 +234,8 @@ impl Application for MandelViewer {
                 widget::checkbox::Checkbox::new(self.live_preview, "Live preview", |status| {
                     Message::LiveCheckboxToggled(status)
                 }),
-            ]
+                button("Save current view").on_press(Message::SavePressed),
+            ],
         ]
         .into()
     }
