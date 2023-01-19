@@ -1,5 +1,5 @@
 [package]
-name = "mandelview"
+name = "mandelviewer"
 version = "0.1.0"
 edition = "2021"
 
@@ -10,5 +10,6 @@ mandellib = {path = "../mandellib"}
 iced = {version="0.6", features = ["image"]}
 iced_native = "0.8"
 iced_graphics = "0.6"
-image = {version = "0.24", default-features = false, features = ["png"]}
+image = "0.24"
 rayon = "1.6"
+rfd = "0.10.0"

@@ -3,7 +3,7 @@ members = [
     "color-space",
     "mandellib",
     "mandelbrot",
-    "mandelview",
+    "mandelviewer",
 ]
 resolver = "2"
 

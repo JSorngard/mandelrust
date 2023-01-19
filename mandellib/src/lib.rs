@@ -412,6 +412,17 @@ impl TryFrom<NonZeroU32> for Resolution {
     }
 }
 
+impl TryFrom<u32> for Resolution {
+    type Error = TryFromIntError;
+    fn try_from(value: u32) -> Result<Self, Self::Error> {
+        let nzvalue: NonZeroU32 = value.try_into()?;
+        Ok(Self {
+            u32: nzvalue,
+            usize: nzvalue.try_into()?,
+        })
+    }
+}
+
 #[cfg(test)]
 mod test_iteration {
     use super::*;
