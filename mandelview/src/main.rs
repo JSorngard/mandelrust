@@ -31,12 +31,12 @@ struct MandelViewer {
     image: Option<ImageBuffer<Rgba<u8>, Vec<u8>>>,
     params: RenderParameters,
     view_region: Frame,
-    window_title: String,
 }
 
 #[derive(Debug, Clone)]
 enum Message {
     ReRenderPressed,
+    RenderFinished(ImageBuffer<Rgba<u8>, Vec<u8>>),
     MaxItersUpdated(u32),
     InputParseFail(String),
 }
@@ -48,6 +48,11 @@ const INITIAL_MAX_ITERATIONS: u32 = 255;
 const INITIAL_REAL_CENTER: f64 = -0.75;
 const INITIAL_IMAG_CENTER: f64 = 0.0;
 const PROGRAM_NAME: &str = "Mandelviewer";
+const SETTING_SEPARATION: u16 = 10;
+
+async fn async_render(params: RenderParameters, frame: Frame) -> ImageBuffer<Rgba<u8>, Vec<u8>> {
+    render(params, frame, false).to_rgba8()
+}
 
 impl Application for MandelViewer {
     type Executor = executor::Default;
@@ -71,36 +76,47 @@ impl Application for MandelViewer {
             INITIAL_IMAG_DISTANCE,
         );
 
-        let image = render(params, view_region, false).into_rgba8();
-
         (
             MandelViewer {
-                image: Some(image),
+                image: None,
                 params,
                 view_region,
-                window_title: PROGRAM_NAME.into(),
             },
-            Command::none(),
+            Command::perform(async_render(params, view_region), Message::RenderFinished),
         )
     }
 
     fn title(&self) -> String {
-        self.window_title.clone()
+        PROGRAM_NAME.to_owned()
+            + ": "
+            + &self.view_region.center_real.to_string()
+            + " + "
+            + &self.view_region.center_imag.to_string()
+            + "i"
     }
 
     fn update(&mut self, message: Self::Message) -> Command<Self::Message> {
         match message {
             Message::MaxItersUpdated(max_iters) => {
                 self.params.max_iterations = max_iters.try_into().expect("max_iters is not zero");
+                Command::none()
             }
             Message::ReRenderPressed => {
-                self.image = Some(render(self.params, self.view_region, false).into_rgba8())
+                //self.image = Some(render(self.params, self.view_region, false).into_rgba8())
+                Command::perform(
+                    async_render(self.params, self.view_region),
+                    Message::RenderFinished,
+                )
             }
             Message::InputParseFail(e) => {
-                eprintln!("{e}")
+                eprintln!("{e}");
+                Command::none()
+            }
+            Message::RenderFinished(buf) => {
+                self.image = Some(buf);
+                Command::none()
             }
         }
-        Command::none()
     }
 
     fn view(&self) -> Element<Self::Message> {
@@ -115,21 +131,27 @@ impl Application for MandelViewer {
                 .width(Length::Fill)
                 .height(Length::Fill),
             column![
-                widget::text_input::TextInput::new(
-                    "Max iterations",
-                    &self.params.max_iterations.to_string(),
-                    |max_iters| match max_iters.parse() {
-                        Ok(mi) => Message::MaxItersUpdated(mi),
-                        Err(e) => {
-                            Message::InputParseFail(e.to_string())
+                widget::text::Text::new("Iterations"),
+                row![
+                    button("÷2").on_press(Message::MaxItersUpdated(
+                        self.params.max_iterations.get() / 2
+                    )),
+                    widget::text_input::TextInput::new(
+                        "Iterations",
+                        &self.params.max_iterations.to_string(),
+                        |max_iters| match max_iters.parse() {
+                            Ok(mi) => Message::MaxItersUpdated(mi),
+                            Err(e) => {
+                                Message::InputParseFail(e.to_string())
+                            }
                         }
-                    }
-                )
-                .width(Length::Units(100)),
-                widget::slider::Slider::new(1..=u32::MAX, INITIAL_MAX_ITERATIONS, |max_iters| {
-                    Message::MaxItersUpdated(max_iters)
-                })
-                .width(Length::Units(100)),
+                    )
+                    .width(Length::Units(100)),
+                    button("·2").on_press(Message::MaxItersUpdated(
+                        self.params.max_iterations.get() * 2
+                    )),
+                ]
+                .padding(SETTING_SEPARATION),
                 button("re-render view").on_press(Message::ReRenderPressed),
             ]
         ]
