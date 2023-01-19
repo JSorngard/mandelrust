@@ -17,7 +17,7 @@ fn main() {
         window: window::Settings {
             icon: Some(
                 window::Icon::from_file_data(ICON, None)
-                    .expect("embedded resources are present and correct"),
+                    .expect("embedded resources are correctly formatted images"),
             ),
             ..Default::default()
         },
