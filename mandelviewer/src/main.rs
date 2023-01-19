@@ -177,13 +177,20 @@ impl Application for MandelViewer {
                 widget::text::Text::new("Iterations"),
                 row![
                     button("÷2").on_press(Message::MaxItersUpdated(
-                        self.params.max_iterations.get() / 2
+                        (self.params.max_iterations.get() / 2).max(1)
                     )),
                     widget::text_input::TextInput::new(
                         "Iterations",
                         &self.params.max_iterations.to_string(),
                         |max_iters| match max_iters.parse() {
-                            Ok(mi) => Message::MaxItersUpdated(mi),
+                            Ok(mi) =>
+                                if mi > 0 {
+                                    Message::MaxItersUpdated(mi)
+                                } else {
+                                    Message::InputParseFail(
+                                        "the number of iterations must be at least 1".into(),
+                                    )
+                                },
                             Err(e) => {
                                 Message::InputParseFail(e.to_string())
                             }
