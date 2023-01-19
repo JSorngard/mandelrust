@@ -1,5 +1,7 @@
 mod embedded_resources;
 
+use core::time::Duration;
+
 use iced::{
     self, executor,
     widget::{self, button, column, image::Handle, row, Image},
@@ -35,6 +37,7 @@ struct MandelViewer {
     view_region: Frame,
     render_in_progress: bool,
     live_preview: bool,
+    notifications: Vec<String>,
 }
 
 #[derive(Debug, Clone)]
@@ -42,7 +45,8 @@ enum Message {
     ReRenderPressed,
     RenderFinished(ImageBuffer<Rgba<u8>, Vec<u8>>),
     MaxItersUpdated(u32),
-    InputParseFail(String),
+    PushNotification(String),
+    PopNotification,
     LiveCheckboxToggled(bool),
     GrayscaleToggled(bool),
     SavePressed,
@@ -58,6 +62,10 @@ const PROGRAM_NAME: &str = "Mandelviewer";
 
 async fn render(params: RenderParameters, frame: Frame) -> ImageBuffer<Rgba<u8>, Vec<u8>> {
     sync_render(params, frame, false).to_rgba8()
+}
+
+async fn background_timer(duration: Duration) {
+    std::thread::sleep(duration)
 }
 
 impl MandelViewer {
@@ -105,6 +113,7 @@ impl Application for MandelViewer {
                 view_region,
                 render_in_progress: true,
                 live_preview: false,
+                notifications: Vec::new(),
             },
             Command::batch([
                 window::maximize(true),
@@ -142,9 +151,11 @@ impl Application for MandelViewer {
                     Message::RenderFinished,
                 )
             }
-            Message::InputParseFail(e) => {
-                eprintln!("{e}");
-                Command::none()
+            Message::PushNotification(e) => {
+                self.notifications.push(e);
+                Command::perform(background_timer(Duration::from_secs(5)), |_| {
+                    Message::PopNotification
+                })
             }
             Message::RenderFinished(buf) => {
                 self.render_in_progress = false;
@@ -175,12 +186,22 @@ impl Application for MandelViewer {
                     {
                         Some(out_path) => {
                             if let Err(e) = DynamicImage::ImageRgba8(img.clone()).save(out_path) {
-                                eprintln!("{e}");
+                                self.notifications.push(e.to_string());
+                                Command::perform(background_timer(Duration::from_secs(5)), |_| {
+                                    Message::PopNotification
+                                })
+                            } else {
+                                Command::none()
                             }
                         }
-                        None => (), // User cancelled save operation, do nothing.
+                        None => Command::none(), // User cancelled save operation, do nothing.
                     }
+                } else {
+                    Command::none()
                 }
+            }
+            Message::PopNotification => {
+                self.notifications.drain(..=0);
                 Command::none()
             }
         }
@@ -193,9 +214,20 @@ impl Application for MandelViewer {
         };
 
         row![
-            Image::new(image_handle)
-                .width(Length::Fill)
-                .height(Length::Fill),
+            column![Image::new(image_handle).height(Length::Fill), {
+                let notification_text: String = self
+                    .notifications
+                    .iter()
+                    .cloned()
+                    .map(|s| format!("{s}\n"))
+                    .collect();
+                widget::tooltip(
+                    widget::text::Text::new(notification_text),
+                    "",
+                    widget::tooltip::Position::Bottom,
+                )
+            },]
+            .width(Length::FillPortion(9)),
             column![
                 widget::text::Text::new("Iterations"),
                 row![
@@ -210,16 +242,15 @@ impl Application for MandelViewer {
                                 if mi > 0 {
                                     Message::MaxItersUpdated(mi)
                                 } else {
-                                    Message::InputParseFail(
+                                    Message::PushNotification(
                                         "the number of iterations must be at least 1".into(),
                                     )
                                 },
                             Err(e) => {
-                                Message::InputParseFail(e.to_string())
+                                Message::PushNotification(e.to_string())
                             }
                         }
-                    )
-                    .width(Length::Units(100)),
+                    ),
                     button("·2").on_press(Message::MaxItersUpdated(
                         self.params.max_iterations.get() * 2
                     )),
@@ -237,9 +268,10 @@ impl Application for MandelViewer {
                 widget::checkbox::Checkbox::new(self.live_preview, "Live preview", |status| {
                     Message::LiveCheckboxToggled(status)
                 }),
-                widget::Space::with_height(Length::Fill),
+                widget::vertical_space(Length::Fill),
                 button("Save current view").on_press(Message::SavePressed),
-            ],
+            ]
+            .width(Length::FillPortion(1)),
         ]
         .into()
     }
