@@ -122,6 +122,15 @@ pub fn render(
     }
 }
 
+/// The same as [render], but asynchronous.
+pub async fn asynchronous_render(
+    params: RenderParameters,
+    frame: Frame,
+    verbose: bool,
+) -> DynamicImage {
+    render(params, frame, verbose)
+}
+
 /// Computes the colors of the pixels in a y-axis band of the image of the mandelbrot set.
 fn color_band(
     render_parameters: RenderParameters,

@@ -22,7 +22,7 @@ use image::DynamicImage;
 
 use rfd::FileDialog;
 
-use mandellib::{render as sync_render, Frame, RenderParameters};
+use mandellib::{asynchronous_render as render, Frame, RenderParameters};
 
 use embedded_resources::{ICON, RENDERING_IN_PROGRESS};
 
@@ -73,10 +73,6 @@ enum Message {
     SavePressed,
     VerticalResolutionUpdated(NonZeroU32),
     SuperSamplingToggled(bool),
-}
-
-async fn render(params: RenderParameters, frame: Frame) -> DynamicImage {
-    sync_render(params, frame, false)
 }
 
 async fn background_timer(duration: Duration) {
@@ -133,7 +129,7 @@ impl Application for MandelViewer {
             },
             Command::batch([
                 window::maximize(true),
-                Command::perform(render(params, view_region), Message::RenderFinished),
+                Command::perform(render(params, view_region, false), Message::RenderFinished),
             ]),
         )
     }
@@ -157,6 +153,7 @@ impl Application for MandelViewer {
                             self.change_resolution(480.try_into().expect("480 is not zero"))
                                 .expect("480 is a valid resolution"),
                             self.view_region,
+                            false,
                         ),
                         Message::RenderFinished,
                     )
@@ -167,7 +164,7 @@ impl Application for MandelViewer {
             Message::ReRenderPressed => {
                 self.render_in_progress = true;
                 Command::perform(
-                    render(self.params, self.view_region),
+                    render(self.params, self.view_region, false),
                     Message::RenderFinished,
                 )
             }
@@ -189,6 +186,7 @@ impl Application for MandelViewer {
                             self.change_resolution(480.try_into().expect("480 is not zero"))
                                 .expect("480 is a valid resolution"),
                             self.view_region,
+                            false,
                         ),
                         Message::RenderFinished,
                     )
@@ -207,10 +205,10 @@ impl Application for MandelViewer {
                             if let Err(e) = img.save(out_path) {
                                 self.push_notification(e.to_string())
                             } else {
-                                Command::none() // We succeeded in saving the image, do nothing.
+                                self.push_notification("save operation successfull".into())
                             }
                         }
-                        None => Command::none(), // The user cancelled the save operation, do nothing.
+                        None => self.push_notification("save operation cancelled".into()),
                     }
                 } else {
                     self.push_notification("no image to save".into())
@@ -228,7 +226,7 @@ impl Application for MandelViewer {
                         self.params = params;
                         if self.live_preview {
                             Command::perform(
-                                render(self.params, self.view_region),
+                                render(self.params, self.view_region, false),
                                 Message::RenderFinished,
                             )
                         } else {
@@ -248,7 +246,7 @@ impl Application for MandelViewer {
                 };
                 if self.live_preview {
                     Command::perform(
-                        render(self.params, self.view_region),
+                        render(self.params, self.view_region, false),
                         Message::RenderFinished,
                     )
                 } else {
@@ -266,14 +264,15 @@ impl Application for MandelViewer {
 
         row![
             column![
-                Viewer::new(image_handle).height(Length::Fill),
                 Text::new(
                     self.notifications
                         .iter()
+                        .rev()
                         .cloned()
                         .map(|s| format!("{s}\n"))
                         .collect::<String>()
-                )
+                ),
+                Viewer::new(image_handle).height(Length::Fill),
             ]
             .width(Length::FillPortion(9)),
             column![
