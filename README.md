@@ -1,4 +1,7 @@
 # mandelrust
+
+**THIS BRANCH SEES ACTIVE DEVELOPMENT, THE CODE IS NOT STABLE**
+
 Renders a supersampled image of the Mandelbrot set to a png file. It is possible to change which part of the set is rendered, how zoomed in the image is, the number of iterations to use, as well as a few other things.
 
 This was one of my first projects to learn rust.
