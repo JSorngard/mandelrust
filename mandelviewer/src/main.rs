@@ -288,6 +288,7 @@ impl Application for MandelViewer {
 
     fn view(&self) -> Element<Self::Message> {
         row![
+            // An image viewer with an expanding notification field above it.
             column![
                 Text::new(
                     self.notifications
@@ -311,7 +312,9 @@ impl Application for MandelViewer {
             ]
             .width(Length::FillPortion(8)),
             Space::new(Length::Units(20), Length::Shrink),
+            // A column with rendering settings
             column![
+                // A text input field for the y-resolution with buttons on either side to halve or double it.
                 Text::new("Vertical resolution"),
                 row![
                     Button::new("÷2").on_press(Message::VerticalResolutionUpdated(
@@ -341,6 +344,7 @@ impl Application for MandelViewer {
                             .expect("doubling a number never gives zero")
                     ))
                 ],
+                // A text input field for the number of iterations with buttons on either side to halve or double it.
                 Text::new("Iterations"),
                 row![
                     Button::new("÷2").on_press(Message::MaxItersUpdated(
@@ -374,9 +378,12 @@ impl Application for MandelViewer {
                             .expect("doubling a number never gives zero")
                     )),
                 ],
+                // A checkbox for rendering the image in grayscale.
                 Checkbox::new(self.params.grayscale, "Grayscale", |status| {
                     Message::GrayscaleToggled(status)
                 }),
+                // A slider for determining the number of samples per pixels when doing SSAA,
+                // as well as a toggle for enabling or disabling SSAA.
                 row![
                     Tooltip::new(
                         Slider::new(2..=10, self.slider_ssaa_factor.get(), |ssaa_factor| {
@@ -391,14 +398,15 @@ impl Application for MandelViewer {
                         Position::FollowCursor
                     ),
                     Space::new(Length::Units(10), Length::Shrink),
-                    Checkbox::new(
-                        self.params.sqrt_samples_per_pixel.get() > 1,
-                        "SSAA",
-                        |status| { Message::SuperSamplingToggled(status) }
-                    )
+                    Checkbox::new(self.do_ssaa, "SSAA", |status| {
+                        Message::SuperSamplingToggled(status)
+                    })
                     .spacing(5),
                 ],
                 Space::new(Length::Shrink, Length::Units(40)),
+                // A button for re-rendering the current view at full resolution,
+                // as well as a checkbox for whether the user wants the image to be re-rendered
+                // whenever they change a setting.
                 if self.render_in_progress {
                     Button::new("rendering...")
                 } else {
@@ -408,6 +416,7 @@ impl Application for MandelViewer {
                     Message::LiveCheckboxToggled(status)
                 }),
                 Space::new(Length::Shrink, Length::Fill),
+                // Finally a button for saving the current view.
                 Button::new("Save current view").on_press(Message::SavePressed),
             ]
             .width(Length::FillPortion(1)),
