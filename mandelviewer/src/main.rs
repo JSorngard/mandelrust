@@ -1,6 +1,6 @@
 mod embedded_resources;
 
-use core::time::Duration;
+use core::{num::NonZeroU8, time::Duration};
 use std::num::{NonZeroU32, TryFromIntError};
 
 use iced::{
@@ -13,7 +13,8 @@ use iced::{
         row,
         text::Text,
         text_input::TextInput,
-        Space,
+        tooltip::{Position, Tooltip},
+        Slider, Space,
     },
     window, Application, Command, Element, Length, Theme,
 };
@@ -59,6 +60,8 @@ struct MandelViewer {
     render_in_progress: bool,
     live_preview: bool,
     notifications: Vec<String>,
+    slider_ssaa_factor: NonZeroU8,
+    do_ssaa: bool,
 }
 
 #[derive(Debug, Clone)]
@@ -73,6 +76,7 @@ enum Message {
     SavePressed,
     VerticalResolutionUpdated(NonZeroU32),
     SuperSamplingToggled(bool),
+    SuperSamplingUpdated(NonZeroU8),
 }
 
 async fn background_timer(duration: Duration) {
@@ -126,6 +130,8 @@ impl Application for MandelViewer {
                 render_in_progress: true,
                 live_preview: false,
                 notifications: Vec::new(),
+                slider_ssaa_factor: INITIAL_SSAA_FACTOR.try_into().expect("3 is not zero"),
+                do_ssaa: true,
             },
             Command::batch([
                 window::maximize(true),
@@ -238,15 +244,39 @@ impl Application for MandelViewer {
                 }
                 Err(e) => self.push_notification(e.to_string()),
             },
-            Message::SuperSamplingToggled(status) => {
-                self.params.sqrt_samples_per_pixel = if status {
-                    3.try_into().expect("3 is not zero")
+            Message::SuperSamplingToggled(do_ssaa) => {
+                self.do_ssaa = do_ssaa;
+                if !self.do_ssaa {
+                    self.params.sqrt_samples_per_pixel = 1.try_into().expect("1 is not zero");
                 } else {
-                    1.try_into().expect("1 is not zero")
+                    self.params.sqrt_samples_per_pixel = self.slider_ssaa_factor;
                 };
+
                 if self.live_preview {
                     Command::perform(
-                        render(self.params, self.view_region, false),
+                        render(
+                            self.change_resolution(480.try_into().expect("480 is not zero"))
+                                .expect("480 is a valid resolution"),
+                            self.view_region,
+                            false,
+                        ),
+                        Message::RenderFinished,
+                    )
+                } else {
+                    Command::none()
+                }
+            }
+            Message::SuperSamplingUpdated(ssaa_factor) => {
+                self.slider_ssaa_factor = ssaa_factor;
+                if self.live_preview && self.do_ssaa {
+                    self.params.sqrt_samples_per_pixel = self.slider_ssaa_factor;
+                    Command::perform(
+                        render(
+                            self.change_resolution(480.try_into().expect("480 is not zero"))
+                                .expect("480 is a valid resolution"),
+                            self.view_region,
+                            false,
+                        ),
                         Message::RenderFinished,
                     )
                 } else {
@@ -257,11 +287,6 @@ impl Application for MandelViewer {
     }
 
     fn view(&self) -> Element<Self::Message> {
-        let image_handle = match &self.image {
-            Some(img) => Handle::from_pixels(img.width(), img.height(), img.to_rgba8().into_raw()),
-            None => Handle::from_memory(RENDERING_IN_PROGRESS),
-        };
-
         row![
             column![
                 Text::new(
@@ -272,14 +297,29 @@ impl Application for MandelViewer {
                         .map(|s| format!("{s}\n"))
                         .collect::<String>()
                 ),
-                Viewer::new(image_handle).height(Length::Fill),
+                Viewer::new(match &self.image {
+                    Some(img) =>
+                        Handle::from_pixels(img.width(), img.height(), img.to_rgba8().into_raw()),
+                    None =>
+                        if self.render_in_progress {
+                            Handle::from_memory(RENDERING_IN_PROGRESS)
+                        } else {
+                            Handle::from_memory(ICON)
+                        },
+                })
+                .height(Length::Fill),
             ]
-            .width(Length::FillPortion(9)),
+            .width(Length::FillPortion(8)),
+            Space::new(Length::Units(20), Length::Shrink),
             column![
                 Text::new("Vertical resolution"),
                 row![
                     Button::new("÷2").on_press(Message::VerticalResolutionUpdated(
-                        (self.params.y_resolution.u32.get() / 2)
+                        self.params
+                            .y_resolution
+                            .u32
+                            .get()
+                            .saturating_div(2)
                             .max(1)
                             .try_into()
                             .expect("never zero")
@@ -296,7 +336,7 @@ impl Application for MandelViewer {
                     )
                     .on_submit(Message::ReRenderPressed),
                     Button::new("·2").on_press(Message::VerticalResolutionUpdated(
-                        (self.params.y_resolution.u32.get() * 2)
+                        (self.params.y_resolution.u32.get().saturating_mul(2))
                             .try_into()
                             .expect("doubling a number never gives zero")
                     ))
@@ -304,7 +344,10 @@ impl Application for MandelViewer {
                 Text::new("Iterations"),
                 row![
                     Button::new("÷2").on_press(Message::MaxItersUpdated(
-                        (self.params.max_iterations.get() / 2)
+                        self.params
+                            .max_iterations
+                            .get()
+                            .saturating_div(2)
                             .max(1)
                             .try_into()
                             .expect("never zero")
@@ -323,7 +366,10 @@ impl Application for MandelViewer {
                     )
                     .on_submit(Message::ReRenderPressed),
                     Button::new("·2").on_press(Message::MaxItersUpdated(
-                        (self.params.max_iterations.get() * 2)
+                        self.params
+                            .max_iterations
+                            .get()
+                            .saturating_mul(2)
                             .try_into()
                             .expect("doubling a number never gives zero")
                     )),
@@ -331,11 +377,27 @@ impl Application for MandelViewer {
                 Checkbox::new(self.params.grayscale, "Grayscale", |status| {
                     Message::GrayscaleToggled(status)
                 }),
-                Checkbox::new(
-                    self.params.sqrt_samples_per_pixel.get() > 1,
-                    "SSAA",
-                    |status| { Message::SuperSamplingToggled(status) }
-                ),
+                row![
+                    Tooltip::new(
+                        Slider::new(2..=10, self.slider_ssaa_factor.get(), |ssaa_factor| {
+                            Message::SuperSamplingUpdated(
+                                ssaa_factor.try_into().expect("2..=10 is never zero"),
+                            )
+                        }),
+                        format!(
+                            "{} samples",
+                            self.slider_ssaa_factor.get().pow(2).to_string()
+                        ),
+                        Position::FollowCursor
+                    ),
+                    Space::new(Length::Units(10), Length::Shrink),
+                    Checkbox::new(
+                        self.params.sqrt_samples_per_pixel.get() > 1,
+                        "SSAA",
+                        |status| { Message::SuperSamplingToggled(status) }
+                    )
+                    .spacing(5),
+                ],
                 Space::new(Length::Shrink, Length::Units(40)),
                 if self.render_in_progress {
                     Button::new("rendering...")
