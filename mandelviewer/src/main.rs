@@ -6,7 +6,6 @@ use std::num::{NonZeroU32, TryFromIntError};
 use iced::{
     self, executor,
     widget::{
-        button,
         button::Button,
         checkbox::Checkbox,
         column,
@@ -280,7 +279,7 @@ impl Application for MandelViewer {
             column![
                 Text::new("Vertical resolution"),
                 row![
-                    button("÷2").on_press(Message::VerticalResolutionUpdated(
+                    Button::new("÷2").on_press(Message::VerticalResolutionUpdated(
                         (self.params.y_resolution.u32.get() / 2)
                             .max(1)
                             .try_into()
@@ -297,7 +296,7 @@ impl Application for MandelViewer {
                         }
                     )
                     .on_submit(Message::ReRenderPressed),
-                    button("·2").on_press(Message::VerticalResolutionUpdated(
+                    Button::new("·2").on_press(Message::VerticalResolutionUpdated(
                         (self.params.y_resolution.u32.get() * 2)
                             .try_into()
                             .expect("doubling a number never gives zero")
@@ -305,7 +304,7 @@ impl Application for MandelViewer {
                 ],
                 Text::new("Iterations"),
                 row![
-                    button("÷2").on_press(Message::MaxItersUpdated(
+                    Button::new("÷2").on_press(Message::MaxItersUpdated(
                         (self.params.max_iterations.get() / 2)
                             .max(1)
                             .try_into()
@@ -324,7 +323,7 @@ impl Application for MandelViewer {
                         }
                     )
                     .on_submit(Message::ReRenderPressed),
-                    button("·2").on_press(Message::MaxItersUpdated(
+                    Button::new("·2").on_press(Message::MaxItersUpdated(
                         (self.params.max_iterations.get() * 2)
                             .try_into()
                             .expect("doubling a number never gives zero")
@@ -339,18 +338,16 @@ impl Application for MandelViewer {
                     |status| { Message::SuperSamplingToggled(status) }
                 ),
                 Space::new(Length::Shrink, Length::Units(40)),
-                {
-                    let mut render_button = Button::new("re-render view");
-                    if !self.render_in_progress {
-                        render_button = render_button.on_press(Message::ReRenderPressed)
-                    }
-                    render_button
+                if self.render_in_progress {
+                    Button::new("rendering...")
+                } else {
+                    Button::new("re-render view").on_press(Message::ReRenderPressed)
                 },
                 Checkbox::new(self.live_preview, "Live preview", |status| {
                     Message::LiveCheckboxToggled(status)
                 }),
                 Space::new(Length::Shrink, Length::Fill),
-                button("Save current view").on_press(Message::SavePressed),
+                Button::new("Save current view").on_press(Message::SavePressed),
             ]
             .width(Length::FillPortion(1)),
         ]
