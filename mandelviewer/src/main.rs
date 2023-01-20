@@ -19,7 +19,7 @@ use iced::{
     window, Application, Command, Element, Length, Theme,
 };
 
-use image::{DynamicImage, ImageBuffer, Rgba};
+use image::DynamicImage;
 
 use rfd::FileDialog;
 
@@ -50,10 +50,11 @@ const INITIAL_SSAA_FACTOR: u8 = 3;
 const INITIAL_MAX_ITERATIONS: u32 = 256;
 const INITIAL_REAL_CENTER: f64 = -0.75;
 const INITIAL_IMAG_CENTER: f64 = 0.0;
-const PROGRAM_NAME: &str = "Mandelviewer";
 
+const PROGRAM_NAME: &str = "Mandelviewer";
+const NOTIFICATION_DURATION: u64 = 5;
 struct MandelViewer {
-    image: Option<ImageBuffer<Rgba<u8>, Vec<u8>>>,
+    image: Option<DynamicImage>,
     params: RenderParameters,
     view_region: Frame,
     render_in_progress: bool,
@@ -64,7 +65,7 @@ struct MandelViewer {
 #[derive(Debug, Clone)]
 enum Message {
     ReRenderPressed,
-    RenderFinished(ImageBuffer<Rgba<u8>, Vec<u8>>),
+    RenderFinished(DynamicImage),
     MaxItersUpdated(NonZeroU32),
     PushNotification(String),
     PopNotification,
@@ -75,8 +76,8 @@ enum Message {
     SuperSamplingToggled(bool),
 }
 
-async fn render(params: RenderParameters, frame: Frame) -> ImageBuffer<Rgba<u8>, Vec<u8>> {
-    sync_render(params, frame, false).to_rgba8()
+async fn render(params: RenderParameters, frame: Frame) -> DynamicImage {
+    sync_render(params, frame, false)
 }
 
 async fn background_timer(duration: Duration) {
@@ -89,6 +90,14 @@ impl MandelViewer {
         new_params.y_resolution = y_res.try_into()?;
         new_params.x_resolution = ((f64::from(y_res.get()) * ASPECT_RATIO) as u32).try_into()?;
         Ok(new_params)
+    }
+
+    fn push_notification(&mut self, text: String) -> Command<<Self as Application>::Message> {
+        self.notifications.push(text);
+        Command::perform(
+            background_timer(Duration::from_secs(NOTIFICATION_DURATION)),
+            |_| Message::PopNotification,
+        )
     }
 }
 
@@ -163,12 +172,7 @@ impl Application for MandelViewer {
                     Message::RenderFinished,
                 )
             }
-            Message::PushNotification(e) => {
-                self.notifications.push(e);
-                Command::perform(background_timer(Duration::from_secs(5)), |_| {
-                    Message::PopNotification
-                })
-            }
+            Message::PushNotification(e) => self.push_notification(e),
             Message::RenderFinished(buf) => {
                 self.render_in_progress = false;
                 self.image = Some(buf);
@@ -201,11 +205,8 @@ impl Application for MandelViewer {
                         .save_file()
                     {
                         Some(out_path) => {
-                            if let Err(e) = DynamicImage::ImageRgba8(img.clone()).save(out_path) {
-                                self.notifications.push(e.to_string());
-                                Command::perform(background_timer(Duration::from_secs(5)), |_| {
-                                    Message::PopNotification
-                                })
+                            if let Err(e) = img.save(out_path) {
+                                self.push_notification(e.to_string())
                             } else {
                                 Command::none() // We succeeded in saving the image, do nothing.
                             }
@@ -213,10 +214,7 @@ impl Application for MandelViewer {
                         None => Command::none(), // The user cancelled the save operation, do nothing.
                     }
                 } else {
-                    self.notifications.push("no image to save".to_string());
-                    Command::perform(background_timer(Duration::from_secs(5)), |_| {
-                        Message::PopNotification
-                    })
+                    self.push_notification("no image to save".into())
                 }
             }
             Message::PopNotification => {
@@ -225,22 +223,23 @@ impl Application for MandelViewer {
             }
             Message::VerticalResolutionUpdated(y_res) => match self.change_resolution(y_res) {
                 Ok(params) => {
-                    self.params = params;
-                    if self.live_preview {
-                        Command::perform(
-                            render(self.params, self.view_region),
-                            Message::RenderFinished,
-                        )
+                    if params.x_resolution.u32.get() * params.y_resolution.u32.get() * 4
+                        <= 1000000000
+                    {
+                        self.params = params;
+                        if self.live_preview {
+                            Command::perform(
+                                render(self.params, self.view_region),
+                                Message::RenderFinished,
+                            )
+                        } else {
+                            Command::none()
+                        }
                     } else {
-                        Command::none()
+                        self.push_notification("the resolution is too large".into())
                     }
                 }
-                Err(e) => {
-                    self.notifications.push(e.to_string());
-                    Command::perform(background_timer(Duration::from_secs(5)), |_| {
-                        Message::PopNotification
-                    })
-                }
+                Err(e) => self.push_notification(e.to_string()),
             },
             Message::SuperSamplingToggled(status) => {
                 self.params.sqrt_samples_per_pixel = if status {
@@ -262,7 +261,7 @@ impl Application for MandelViewer {
 
     fn view(&self) -> Element<Self::Message> {
         let image_handle = match &self.image {
-            Some(img) => Handle::from_pixels(img.width(), img.height(), img.clone().into_raw()),
+            Some(img) => Handle::from_pixels(img.width(), img.height(), img.to_rgba8().into_raw()),
             None => Handle::from_memory(RENDERING_IN_PROGRESS),
         };
 
