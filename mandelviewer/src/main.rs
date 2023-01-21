@@ -23,9 +23,21 @@ use image::DynamicImage;
 
 use rfd::FileDialog;
 
-use mandellib::{asynchronous_render as render, Frame, RenderParameters};
+use mandellib::{render as sync_render, Frame, RenderParameters};
 
 use embedded_resources::{ICON, RENDERING_IN_PROGRESS};
+
+const INITIAL_X_RES: u32 = 1920;
+const INITIAL_Y_RES: u32 = 1080;
+const ASPECT_RATIO: f64 = 16.0 / 9.0;
+const INITIAL_IMAG_DISTANCE: f64 = 8.0 / 3.0;
+const INITIAL_SSAA_FACTOR: u8 = 3;
+const INITIAL_MAX_ITERATIONS: u32 = 256;
+const INITIAL_REAL_CENTER: f64 = -0.75;
+const INITIAL_IMAG_CENTER: f64 = 0.0;
+
+const PROGRAM_NAME: &str = "Mandelviewer";
+const NOTIFICATION_DURATION: u64 = 5;
 
 fn main() {
     let program_settings = iced::Settings {
@@ -42,17 +54,10 @@ fn main() {
     MandelViewer::run(program_settings).unwrap();
 }
 
-const INITIAL_X_RES: u32 = 1920;
-const INITIAL_Y_RES: u32 = 1080;
-const ASPECT_RATIO: f64 = 16.0 / 9.0;
-const INITIAL_IMAG_DISTANCE: f64 = 8.0 / 3.0;
-const INITIAL_SSAA_FACTOR: u8 = 3;
-const INITIAL_MAX_ITERATIONS: u32 = 256;
-const INITIAL_REAL_CENTER: f64 = -0.75;
-const INITIAL_IMAG_CENTER: f64 = 0.0;
+pub async fn render(params: RenderParameters, frame: Frame, verbose: bool) -> DynamicImage {
+    sync_render(params, frame, verbose)
+}
 
-const PROGRAM_NAME: &str = "Mandelviewer";
-const NOTIFICATION_DURATION: u64 = 5;
 struct MandelViewer {
     image: Option<DynamicImage>,
     params: RenderParameters,
