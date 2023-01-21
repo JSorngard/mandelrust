@@ -23,6 +23,8 @@ use image::DynamicImage;
 
 use rfd::FileDialog;
 
+use lazy_static::lazy_static;
+
 use mandellib::{render as sync_render, Frame, RenderParameters};
 
 use embedded_resources::{ICON, RENDERING_IN_PROGRESS};
@@ -39,6 +41,10 @@ const INITIAL_IMAG_CENTER: f64 = 0.0;
 const PROGRAM_NAME: &str = "Mandelviewer";
 const NOTIFICATION_DURATION: u64 = 5;
 
+lazy_static! {
+    static ref PREVIEW_RES: NonZeroU32 = 480.try_into().expect("480 is not zero");
+}
+
 fn main() {
     let program_settings = iced::Settings {
         window: window::Settings {
@@ -54,8 +60,13 @@ fn main() {
     MandelViewer::run(program_settings).unwrap();
 }
 
-pub async fn render(params: RenderParameters, frame: Frame, verbose: bool) -> DynamicImage {
+async fn render(params: RenderParameters, frame: Frame, verbose: bool) -> DynamicImage {
     sync_render(params, frame, verbose)
+}
+
+struct UIValues {
+    slider_ssaa_factor: NonZeroU8,
+    do_ssaa: bool,
 }
 
 struct MandelViewer {
@@ -65,8 +76,7 @@ struct MandelViewer {
     render_in_progress: bool,
     live_preview: bool,
     notifications: Vec<String>,
-    slider_ssaa_factor: NonZeroU8,
-    do_ssaa: bool,
+    ui_values: UIValues,
 }
 
 #[derive(Debug, Clone)]
@@ -135,8 +145,10 @@ impl Application for MandelViewer {
                 render_in_progress: true,
                 live_preview: false,
                 notifications: Vec::new(),
-                slider_ssaa_factor: INITIAL_SSAA_FACTOR.try_into().expect("3 is not zero"),
-                do_ssaa: true,
+                ui_values: UIValues {
+                    slider_ssaa_factor: INITIAL_SSAA_FACTOR.try_into().expect("3 is not zero"),
+                    do_ssaa: true,
+                },
             },
             Command::batch([
                 window::maximize(true),
@@ -147,11 +159,11 @@ impl Application for MandelViewer {
 
     fn title(&self) -> String {
         PROGRAM_NAME.to_owned()
-            + ": "
-            + &self.view_region.center_real.to_string()
-            + " + "
-            + &self.view_region.center_imag.to_string()
-            + "i"
+        // + ": "
+        // + &self.view_region.center_real.to_string()
+        // + " + "
+        // + &self.view_region.center_imag.to_string()
+        // + "i"
     }
 
     fn update(&mut self, message: Self::Message) -> Command<Self::Message> {
@@ -161,8 +173,8 @@ impl Application for MandelViewer {
                 if self.live_preview {
                     Command::perform(
                         render(
-                            self.change_resolution(480.try_into().expect("480 is not zero"))
-                                .expect("480 is a valid resolution"),
+                            self.change_resolution(*PREVIEW_RES)
+                                .expect("PREVIEW_RES is a valid resolution"),
                             self.view_region,
                             false,
                         ),
@@ -194,8 +206,8 @@ impl Application for MandelViewer {
                 if self.live_preview {
                     Command::perform(
                         render(
-                            self.change_resolution(480.try_into().expect("480 is not zero"))
-                                .expect("480 is a valid resolution"),
+                            self.change_resolution(*PREVIEW_RES)
+                                .expect("PREVIEW_RES is a valid resolution"),
                             self.view_region,
                             false,
                         ),
@@ -250,18 +262,18 @@ impl Application for MandelViewer {
                 Err(e) => self.push_notification(e.to_string()),
             },
             Message::SuperSamplingToggled(do_ssaa) => {
-                self.do_ssaa = do_ssaa;
-                if !self.do_ssaa {
+                self.ui_values.do_ssaa = do_ssaa;
+                if !self.ui_values.do_ssaa {
                     self.params.sqrt_samples_per_pixel = 1.try_into().expect("1 is not zero");
                 } else {
-                    self.params.sqrt_samples_per_pixel = self.slider_ssaa_factor;
+                    self.params.sqrt_samples_per_pixel = self.ui_values.slider_ssaa_factor;
                 };
 
                 if self.live_preview {
                     Command::perform(
                         render(
-                            self.change_resolution(480.try_into().expect("480 is not zero"))
-                                .expect("480 is a valid resolution"),
+                            self.change_resolution(*PREVIEW_RES)
+                                .expect("PREVIEW_RES is a valid resolution"),
                             self.view_region,
                             false,
                         ),
@@ -272,13 +284,13 @@ impl Application for MandelViewer {
                 }
             }
             Message::SuperSamplingUpdated(ssaa_factor) => {
-                self.slider_ssaa_factor = ssaa_factor;
-                if self.live_preview && self.do_ssaa {
-                    self.params.sqrt_samples_per_pixel = self.slider_ssaa_factor;
+                self.ui_values.slider_ssaa_factor = ssaa_factor;
+                if self.live_preview && self.ui_values.do_ssaa {
+                    self.params.sqrt_samples_per_pixel = self.ui_values.slider_ssaa_factor;
                     Command::perform(
                         render(
-                            self.change_resolution(480.try_into().expect("480 is not zero"))
-                                .expect("480 is a valid resolution"),
+                            self.change_resolution(*PREVIEW_RES)
+                                .expect("PREVIEW_RES is a valid resolution"),
                             self.view_region,
                             false,
                         ),
@@ -391,19 +403,23 @@ impl Application for MandelViewer {
                 // as well as a toggle for enabling or disabling SSAA.
                 row![
                     Tooltip::new(
-                        Slider::new(2..=10, self.slider_ssaa_factor.get(), |ssaa_factor| {
-                            Message::SuperSamplingUpdated(
-                                ssaa_factor.try_into().expect("2..=10 is never zero"),
-                            )
-                        }),
+                        Slider::new(
+                            2..=10,
+                            self.ui_values.slider_ssaa_factor.get(),
+                            |ssaa_factor| {
+                                Message::SuperSamplingUpdated(
+                                    ssaa_factor.try_into().expect("2..=10 is never zero"),
+                                )
+                            }
+                        ),
                         format!(
                             "{} samples",
-                            self.slider_ssaa_factor.get().pow(2).to_string()
+                            self.ui_values.slider_ssaa_factor.get().pow(2).to_string()
                         ),
                         Position::FollowCursor
                     ),
                     Space::new(Length::Units(10), Length::Shrink),
-                    Checkbox::new(self.do_ssaa, "SSAA", |status| {
+                    Checkbox::new(self.ui_values.do_ssaa, "SSAA", |status| {
                         Message::SuperSamplingToggled(status)
                     })
                     .spacing(5),
