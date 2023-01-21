@@ -228,7 +228,7 @@ impl Application for MandelViewer {
                             if let Err(e) = img.save(out_path) {
                                 self.push_notification(e.to_string())
                             } else {
-                                self.push_notification("save operation successfull".into())
+                                self.push_notification("save operation successful".into())
                             }
                         }
                         None => self.push_notification("save operation cancelled".into()),
