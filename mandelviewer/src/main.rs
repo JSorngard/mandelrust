@@ -1,10 +1,12 @@
-mod embedded_resources;
-
 use core::{
     num::{NonZeroU32, NonZeroU8},
     time::Duration,
 };
 use std::num::TryFromIntError;
+
+mod embedded_resources;
+use embedded_resources::{ICON, RENDERING_IN_PROGRESS};
+use mandellib::{render as sync_render, Frame, RenderParameters};
 
 use iced::{
     self, executor,
@@ -21,16 +23,9 @@ use iced::{
     },
     window, Application, Command, Element, Length, Theme,
 };
-
 use image::DynamicImage;
-
-use rfd::FileDialog;
-
 use lazy_static::lazy_static;
-
-use mandellib::{render as sync_render, Frame, RenderParameters};
-
-use embedded_resources::{ICON, RENDERING_IN_PROGRESS};
+use rfd::FileDialog;
 
 const INITIAL_X_RES: u32 = 1920;
 const INITIAL_Y_RES: u32 = 1080;
