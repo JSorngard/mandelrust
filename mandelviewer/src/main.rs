@@ -1,7 +1,10 @@
 mod embedded_resources;
 
-use core::{num::NonZeroU8, time::Duration};
-use std::num::{NonZeroU32, TryFromIntError};
+use core::{
+    num::{NonZeroU32, NonZeroU8},
+    time::Duration,
+};
+use std::num::TryFromIntError;
 
 use iced::{
     self, executor,
