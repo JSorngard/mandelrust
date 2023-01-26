@@ -184,6 +184,8 @@ impl Application for MandelViewer {
             }
             Message::ReRenderPressed => {
                 self.render_in_progress = true;
+                // Clear viewer to save memory
+                self.image = None;
                 Command::perform(
                     render(self.params, self.view_region, false),
                     Message::RenderFinished,
