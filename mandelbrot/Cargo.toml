@@ -11,9 +11,6 @@ mandellib = {path = "../mandellib"}
 color-space = {path = "../color-space"}
 clap = { version = "4.0", features = ["derive"] }
 
-[target.'cfg(not(target_env="msvc"))'.dependencies]
-tikv-jemallocator = "0.5"
-
 [dev-dependencies]
 criterion = {version = "0.4", features = ["html_reports"]}
 
