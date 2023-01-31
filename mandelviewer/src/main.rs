@@ -65,6 +65,7 @@ async fn render(params: RenderParameters, frame: Frame, verbose: bool) -> Dynami
 struct UIValues {
     slider_ssaa_factor: NonZeroU8,
     do_ssaa: bool,
+    live_preview: bool,
 }
 
 struct MandelViewer {
@@ -72,7 +73,6 @@ struct MandelViewer {
     params: RenderParameters,
     view_region: Frame,
     render_in_progress: bool,
-    live_preview: bool,
     notifications: Vec<String>,
     ui_values: UIValues,
 }
@@ -141,11 +141,11 @@ impl Application for MandelViewer {
                 params,
                 view_region,
                 render_in_progress: true,
-                live_preview: false,
                 notifications: Vec::new(),
                 ui_values: UIValues {
                     slider_ssaa_factor: INITIAL_SSAA_FACTOR.try_into().expect("3 is not zero"),
                     do_ssaa: true,
+                    live_preview: false,
                 },
             },
             Command::batch([
@@ -168,7 +168,7 @@ impl Application for MandelViewer {
         match message {
             Message::MaxItersUpdated(max_iters) => {
                 self.params.max_iterations = max_iters;
-                if self.live_preview {
+                if self.ui_values.live_preview {
                     Command::perform(
                         render(
                             self.change_resolution(*PREVIEW_RES)
@@ -198,12 +198,12 @@ impl Application for MandelViewer {
                 Command::none()
             }
             Message::LiveCheckboxToggled(state) => {
-                self.live_preview = state;
+                self.ui_values.live_preview = state;
                 Command::none()
             }
             Message::GrayscaleToggled(state) => {
                 self.params.grayscale = state;
-                if self.live_preview {
+                if self.ui_values.live_preview {
                     Command::perform(
                         render(
                             self.change_resolution(*PREVIEW_RES)
@@ -247,7 +247,7 @@ impl Application for MandelViewer {
                         <= 1000000000
                     {
                         self.params = params;
-                        if self.live_preview {
+                        if self.ui_values.live_preview {
                             Command::perform(
                                 render(self.params, self.view_region, false),
                                 Message::RenderFinished,
@@ -269,7 +269,7 @@ impl Application for MandelViewer {
                     self.params.sqrt_samples_per_pixel = self.ui_values.slider_ssaa_factor;
                 };
 
-                if self.live_preview {
+                if self.ui_values.live_preview {
                     Command::perform(
                         render(
                             self.change_resolution(*PREVIEW_RES)
@@ -285,7 +285,7 @@ impl Application for MandelViewer {
             }
             Message::SuperSamplingUpdated(ssaa_factor) => {
                 self.ui_values.slider_ssaa_factor = ssaa_factor;
-                if self.live_preview && self.ui_values.do_ssaa {
+                if self.ui_values.live_preview && self.ui_values.do_ssaa {
                     self.params.sqrt_samples_per_pixel = self.ui_values.slider_ssaa_factor;
                     Command::perform(
                         render(
@@ -433,7 +433,7 @@ impl Application for MandelViewer {
                 } else {
                     Button::new("re-render view").on_press(Message::ReRenderPressed)
                 },
-                Checkbox::new(self.live_preview, "Live preview", |status| {
+                Checkbox::new(self.ui_values.live_preview, "Live preview", |status| {
                     Message::LiveCheckboxToggled(status)
                 }),
                 Space::new(Length::Shrink, Length::Fill),
