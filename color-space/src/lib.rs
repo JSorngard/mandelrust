@@ -2,7 +2,6 @@ use core::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Sub, SubAssign};
 
 use image::Rgb;
 use lazy_static::lazy_static;
-use multiversion::multiversion;
 
 /// Determines the color of a pixel in linear RGB color space.
 /// The color map that this function uses was taken from the python code in
@@ -14,7 +13,6 @@ use multiversion::multiversion;
 ///
 /// N.B.: The function has not been tested for inputs outside the range \[0, 1\]
 /// and makes no guarantees about the output in that case.
-#[multiversion(targets = "simd")]
 pub fn palette(escape_speed: f64) -> LinearRGB {
     let third_power = escape_speed * escape_speed * escape_speed;
     let ninth_power = third_power * third_power * third_power;
