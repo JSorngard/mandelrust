@@ -4,7 +4,6 @@ use std::io::{stdout, Write};
 use image::{imageops, DynamicImage, ImageBuffer, Rgb};
 use indicatif::{ParallelProgressIterator, ProgressBar};
 use itertools::Itertools;
-use multiversion::multiversion;
 use rayon::{
     iter::{IndexedParallelIterator, ParallelIterator},
     prelude::ParallelSliceMut,
@@ -222,7 +221,6 @@ fn color_band(
 /// N.B.: if `sqrt_samples_per_pixel` is even the center of
 /// the pixel is never sampled, and if it is 1 no super
 /// sampling is done (only the center is sampled).
-#[multiversion(targets = "simd")]
 pub fn pixel_color(pixel_region: Frame, render_parameters: RenderParameters) -> Rgb<u8> {
     let ssaa = render_parameters.sqrt_samples_per_pixel.get();
     let ssaa_f64: f64 = ssaa.into();
@@ -296,7 +294,6 @@ pub fn pixel_color(pixel_region: Frame, render_parameters: RenderParameters) -> 
 /// // but 1 + i is not
 /// assert_ne!(iterate(1.0, 1.0, maxiters), 0.0);
 /// ```
-#[multiversion(targets = "simd")]
 pub fn iterate(c_re: f64, c_im: f64, max_iterations: NonZeroU32) -> f64 {
     let c_imag_sqr = c_im * c_im;
     let mag_sqr = c_re * c_re + c_imag_sqr;

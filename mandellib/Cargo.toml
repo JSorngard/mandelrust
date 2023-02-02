@@ -9,4 +9,3 @@ image = {version = "0.24", default-features = false, features = ["png"]}
 rayon = "1.6"
 indicatif = { version = "0.17", features = ["rayon"] }
 itertools = "0.10"
-multiversion = "0.7"
