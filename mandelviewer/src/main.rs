@@ -120,7 +120,7 @@ impl Application for MandelViewer {
     type Theme = Theme;
 
     fn new(_flags: ()) -> (MandelViewer, Command<Self::Message>) {
-        let params = RenderParameters::new(
+        let params = RenderParameters::try_new(
             INITIAL_X_RES.try_into().unwrap(),
             INITIAL_Y_RES.try_into().unwrap(),
             INITIAL_MAX_ITERATIONS.try_into().unwrap(),
