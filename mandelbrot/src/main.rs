@@ -90,7 +90,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 
 /// Output some basic information about what the program will be rendering.
 fn give_user_feedback(args: &Cli, rparams: &RenderParameters) -> Result<(), Box<dyn Error>> {
-    let mut header = Vec::with_capacity(61);
+    let mut header = Vec::with_capacity(80);
     write!(&mut header, "---- Generating a")?;
     if args.ssaa.get() == 1 {
         write!(&mut header, "n")?;
