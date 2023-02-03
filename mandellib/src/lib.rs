@@ -1,3 +1,5 @@
+#![forbid(unsafe_code)]
+
 use core::num::{NonZeroU32, NonZeroU8, NonZeroUsize, TryFromIntError};
 use std::io::{stdout, Write};
 
