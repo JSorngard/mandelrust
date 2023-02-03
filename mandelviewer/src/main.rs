@@ -24,7 +24,6 @@ use iced::{
     window, Application, Command, Element, Length, Theme,
 };
 use image::{DynamicImage, ImageFormat};
-use lazy_static::lazy_static;
 use rfd::FileDialog;
 
 const INITIAL_X_RES: u32 = 1920;
@@ -39,9 +38,8 @@ const INITIAL_IMAG_CENTER: f64 = 0.0;
 const PROGRAM_NAME: &str = "Mandelviewer";
 const NOTIFICATION_DURATION: u64 = 5;
 
-lazy_static! {
-    static ref PREVIEW_RES: NonZeroU32 = 480.try_into().expect("480 is not zero");
-}
+/// Safety: This results in undefined behavior if the value is zero, but 480 is not zero.
+const PREVIEW_RES: NonZeroU32 = unsafe { NonZeroU32::new_unchecked(480) };
 
 fn main() {
     let program_settings = iced::Settings {
@@ -171,7 +169,7 @@ impl Application for MandelViewer {
                 if self.ui_values.live_preview {
                     Command::perform(
                         render(
-                            self.change_resolution(*PREVIEW_RES)
+                            self.change_resolution(PREVIEW_RES)
                                 .expect("PREVIEW_RES is a valid resolution"),
                             self.view_region,
                             false,
@@ -206,7 +204,7 @@ impl Application for MandelViewer {
                 if self.ui_values.live_preview {
                     Command::perform(
                         render(
-                            self.change_resolution(*PREVIEW_RES)
+                            self.change_resolution(PREVIEW_RES)
                                 .expect("PREVIEW_RES is a valid resolution"),
                             self.view_region,
                             false,
@@ -272,7 +270,7 @@ impl Application for MandelViewer {
                 if self.ui_values.live_preview {
                     Command::perform(
                         render(
-                            self.change_resolution(*PREVIEW_RES)
+                            self.change_resolution(PREVIEW_RES)
                                 .expect("PREVIEW_RES is a valid resolution"),
                             self.view_region,
                             false,
@@ -289,7 +287,7 @@ impl Application for MandelViewer {
                     self.params.sqrt_samples_per_pixel = self.ui_values.slider_ssaa_factor;
                     Command::perform(
                         render(
-                            self.change_resolution(*PREVIEW_RES)
+                            self.change_resolution(PREVIEW_RES)
                                 .expect("PREVIEW_RES is a valid resolution"),
                             self.view_region,
                             false,
