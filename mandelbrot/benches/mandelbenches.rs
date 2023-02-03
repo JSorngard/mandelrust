@@ -15,7 +15,7 @@ fn get_inputs(
     let grayscale = false;
     let max_iters = miters.unwrap_or(255);
 
-    let params = RenderParameters::new(
+    let params = RenderParameters::try_new(
         x_res.try_into().unwrap(),
         y_res.try_into().unwrap(),
         max_iters.try_into().unwrap(),

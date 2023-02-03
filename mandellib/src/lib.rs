@@ -374,7 +374,7 @@ pub struct RenderParameters {
 }
 
 impl RenderParameters {
-    pub fn new(
+    pub fn try_new(
         x_resolution: NonZeroU32,
         y_resolution: NonZeroU32,
         max_iterations: NonZeroU32,

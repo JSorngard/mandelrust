@@ -36,7 +36,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         imag_distance,
     );
 
-    let render_parameters = RenderParameters::new(
+    let render_parameters = RenderParameters::try_new(
         x_resolution,
         args.pixels,
         args.max_iterations,
