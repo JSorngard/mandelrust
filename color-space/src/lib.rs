@@ -13,6 +13,7 @@ use lazy_static::lazy_static;
 ///
 /// N.B.: The function has not been tested for inputs outside the range \[0, 1\]
 /// and makes no guarantees about the output in that case.
+#[inline(always)]
 pub fn palette(escape_speed: f64) -> LinearRGB {
     let third_power = escape_speed * escape_speed * escape_speed;
     let ninth_power = third_power * third_power * third_power;
