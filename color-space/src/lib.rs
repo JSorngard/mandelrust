@@ -66,7 +66,7 @@ pub struct LinearRGB {
 }
 
 impl LinearRGB {
-    pub fn new(r: f64, g: f64, b: f64) -> Self {
+    pub const fn new(r: f64, g: f64, b: f64) -> Self {
         Self { r, g, b }
     }
 }
