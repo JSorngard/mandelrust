@@ -354,7 +354,12 @@ pub struct Frame {
 }
 
 impl Frame {
-    pub const fn new(center_real: f64, center_imag: f64, real_distance: f64, imag_distance: f64) -> Self {
+    pub const fn new(
+        center_real: f64,
+        center_imag: f64,
+        real_distance: f64,
+        imag_distance: f64,
+    ) -> Self {
         Self {
             center_real,
             center_imag,
