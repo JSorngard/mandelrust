@@ -26,20 +26,19 @@ use iced::{
 use image::{DynamicImage, ImageFormat};
 use rfd::FileDialog;
 
-const INITIAL_X_RES: u32 = 1920;
-const INITIAL_Y_RES: u32 = 1080;
+// Safety: This results in undefined behavior if any of the values are zero, but these are not zero.
+const PREVIEW_RES: NonZeroU32 = unsafe { NonZeroU32::new_unchecked(480) };
+const INITIAL_X_RES: NonZeroU32 = unsafe { NonZeroU32::new_unchecked(1920) };
+const INITIAL_Y_RES: NonZeroU32 = unsafe { NonZeroU32::new_unchecked(1080) };
+const INITIAL_SSAA_FACTOR: NonZeroU8 = unsafe { NonZeroU8::new_unchecked(3) };
+const INITIAL_MAX_ITERATIONS: NonZeroU32 = unsafe { NonZeroU32::new_unchecked(256) };
+
 const ASPECT_RATIO: f64 = 16.0 / 9.0;
 const INITIAL_IMAG_DISTANCE: f64 = 8.0 / 3.0;
-const INITIAL_SSAA_FACTOR: u8 = 3;
-const INITIAL_MAX_ITERATIONS: u32 = 256;
 const INITIAL_REAL_CENTER: f64 = -0.75;
 const INITIAL_IMAG_CENTER: f64 = 0.0;
-
 const PROGRAM_NAME: &str = "Mandelviewer";
 const NOTIFICATION_DURATION: u64 = 5;
-
-/// Safety: This results in undefined behavior if the value is zero, but 480 is not zero.
-const PREVIEW_RES: NonZeroU32 = unsafe { NonZeroU32::new_unchecked(480) };
 
 fn main() {
     let program_settings = iced::Settings {
@@ -119,17 +118,17 @@ impl Application for MandelViewer {
 
     fn new(_flags: ()) -> (MandelViewer, Command<Self::Message>) {
         let params = RenderParameters::try_new(
-            INITIAL_X_RES.try_into().unwrap(),
-            INITIAL_Y_RES.try_into().unwrap(),
-            INITIAL_MAX_ITERATIONS.try_into().unwrap(),
-            INITIAL_SSAA_FACTOR.try_into().unwrap(),
+            INITIAL_X_RES,
+            INITIAL_Y_RES,
+            INITIAL_MAX_ITERATIONS,
+            INITIAL_SSAA_FACTOR,
             false,
         )
         .unwrap();
         let view_region = Frame::new(
             INITIAL_REAL_CENTER,
             INITIAL_IMAG_CENTER,
-            f64::from(INITIAL_X_RES) / f64::from(INITIAL_Y_RES) * INITIAL_IMAG_DISTANCE,
+            f64::from(INITIAL_X_RES.get()) / f64::from(INITIAL_Y_RES.get()) * INITIAL_IMAG_DISTANCE,
             INITIAL_IMAG_DISTANCE,
         );
 
@@ -141,7 +140,7 @@ impl Application for MandelViewer {
                 render_in_progress: true,
                 notifications: Vec::new(),
                 ui_values: UIValues {
-                    slider_ssaa_factor: INITIAL_SSAA_FACTOR.try_into().expect("3 is not zero"),
+                    slider_ssaa_factor: INITIAL_SSAA_FACTOR,
                     do_ssaa: true,
                     live_preview: false,
                 },
@@ -410,10 +409,7 @@ impl Application for MandelViewer {
                                 )
                             }
                         ),
-                        format!(
-                            "{} samples",
-                            self.ui_values.slider_ssaa_factor.get().pow(2).to_string()
-                        ),
+                        format!("{} samples", self.ui_values.slider_ssaa_factor.get().pow(2)),
                         Position::FollowCursor
                     ),
                     Space::new(Length::Units(10), Length::Shrink),
