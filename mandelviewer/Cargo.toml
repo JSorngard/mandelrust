@@ -7,9 +7,9 @@ edition = "2021"
 
 [dependencies]
 mandellib = {path = "../mandellib"}
-iced = {version="0.6", features = ["image", "debug"]}
-iced_native = "0.8"
-iced_graphics = "0.6"
+iced = {version="0.8", features = ["image", "debug"]}
+iced_native = "0.9"
+iced_graphics = "0.7"
 image = "0.24"
 rayon = "1.6"
 rfd = "0.10.0"

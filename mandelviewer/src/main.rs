@@ -325,7 +325,7 @@ impl Application for MandelViewer {
                 .height(Length::Fill),
             ]
             .width(Length::FillPortion(8)),
-            Space::new(Length::Units(20), Length::Shrink),
+            Space::new(Length::Fixed(20.0), Length::Shrink),
             // A column with rendering settings
             column![
                 // A text input field for the y-resolution with buttons on either side to halve or double it.
@@ -393,7 +393,7 @@ impl Application for MandelViewer {
                     )),
                 ],
                 // A checkbox for rendering the image in grayscale.
-                Checkbox::new(self.params.grayscale, "Grayscale", |status| {
+                Checkbox::new("Grayscale", self.params.grayscale , |status| {
                     Message::GrayscaleToggled(status)
                 }),
                 // A slider for determining the number of samples per pixels when doing SSAA,
@@ -412,13 +412,13 @@ impl Application for MandelViewer {
                         format!("{} samples", self.ui_values.slider_ssaa_factor.get().pow(2)),
                         Position::FollowCursor
                     ),
-                    Space::new(Length::Units(10), Length::Shrink),
-                    Checkbox::new(self.ui_values.do_ssaa, "SSAA", |status| {
+                    Space::new(Length::Fixed(10.0), Length::Shrink),
+                    Checkbox::new("SSAA", self.ui_values.do_ssaa, |status| {
                         Message::SuperSamplingToggled(status)
                     })
                     .spacing(5),
                 ],
-                Space::new(Length::Shrink, Length::Units(40)),
+                Space::new(Length::Shrink, Length::Fixed(40.0)),
                 // A button for re-rendering the current view at full resolution,
                 // as well as a checkbox for whether the user wants the image to be re-rendered
                 // whenever they change a setting.
@@ -427,7 +427,7 @@ impl Application for MandelViewer {
                 } else {
                     Button::new("re-render view").on_press(Message::ReRenderPressed)
                 },
-                Checkbox::new(self.ui_values.live_preview, "Live preview", |status| {
+                Checkbox::new("Live preview", self.ui_values.live_preview, |status| {
                     Message::LiveCheckboxToggled(status)
                 }),
                 Space::new(Length::Shrink, Length::Fill),
