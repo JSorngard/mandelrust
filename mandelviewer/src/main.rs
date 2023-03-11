@@ -25,13 +25,13 @@ use iced::{
 };
 use image::{DynamicImage, ImageFormat};
 use rfd::FileDialog;
+use nonzero_ext::nonzero;
 
-// Safety: This results in undefined behavior if any of the values are zero, but these are not zero.
-const PREVIEW_RES: NonZeroU32 = unsafe { NonZeroU32::new_unchecked(480) };
-const INITIAL_X_RES: NonZeroU32 = unsafe { NonZeroU32::new_unchecked(1920) };
-const INITIAL_Y_RES: NonZeroU32 = unsafe { NonZeroU32::new_unchecked(1080) };
-const INITIAL_SSAA_FACTOR: NonZeroU8 = unsafe { NonZeroU8::new_unchecked(3) };
-const INITIAL_MAX_ITERATIONS: NonZeroU32 = unsafe { NonZeroU32::new_unchecked(256) };
+const PREVIEW_RES: NonZeroU32 = nonzero!(480_u32);
+const INITIAL_X_RES: NonZeroU32 = nonzero!(1920_u32);
+const INITIAL_Y_RES: NonZeroU32 = nonzero!(1080_u32);
+const INITIAL_SSAA_FACTOR: NonZeroU8 = nonzero!(3_u8);
+const INITIAL_MAX_ITERATIONS: NonZeroU32 = nonzero!(256_u32);
 
 const ASPECT_RATIO: f64 = 16.0 / 9.0;
 const INITIAL_IMAG_DISTANCE: f64 = 8.0 / 3.0;
