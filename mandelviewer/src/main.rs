@@ -24,8 +24,8 @@ use iced::{
     window, Application, Command, Element, Length, Theme,
 };
 use image::{DynamicImage, ImageFormat};
-use rfd::FileDialog;
 use nonzero_ext::nonzero;
+use rfd::FileDialog;
 
 const PREVIEW_RES: NonZeroU32 = nonzero!(480_u32);
 const INITIAL_X_RES: NonZeroU32 = nonzero!(1920_u32);
@@ -393,7 +393,7 @@ impl Application for MandelViewer {
                     )),
                 ],
                 // A checkbox for rendering the image in grayscale.
-                Checkbox::new("Grayscale", self.params.grayscale , |status| {
+                Checkbox::new("Grayscale", self.params.grayscale, |status| {
                     Message::GrayscaleToggled(status)
                 }),
                 // A slider for determining the number of samples per pixels when doing SSAA,

@@ -13,23 +13,27 @@ use lazy_static::lazy_static;
 ///
 /// N.B.: The function has not been tested for inputs outside the range \[0, 1\]
 /// and makes no guarantees about the output in that case.
-#[inline(always)]
+#[inline]
 pub fn palette(escape_speed: f64) -> LinearRGB {
     let third_power = escape_speed * escape_speed * escape_speed;
     let ninth_power = third_power * third_power * third_power;
     let eighteenth_power = ninth_power * ninth_power;
     let thirty_sixth_power = eighteenth_power * eighteenth_power;
 
-    LinearRGB::from(Rgb::from([
-        255.0_f64.powf(-2.0 * ninth_power * thirty_sixth_power) * escape_speed,
-        14.0 / 51.0 * escape_speed - 176.0 / 51.0 * eighteenth_power + 701.0 / 255.0 * ninth_power,
-        16.0 / 51.0 * escape_speed + ninth_power
-            - 190.0 / 51.0
-                * thirty_sixth_power
-                * thirty_sixth_power
-                * eighteenth_power
-                * ninth_power,
-    ]))
+    LinearRGB::from(
+        [
+            255.0_f64.powf(-2.0 * ninth_power * thirty_sixth_power) * escape_speed,
+            14.0 / 51.0 * escape_speed - 176.0 / 51.0 * eighteenth_power
+                + 701.0 / 255.0 * ninth_power,
+            16.0 / 51.0 * escape_speed + ninth_power
+                - 190.0 / 51.0
+                    * thirty_sixth_power
+                    * thirty_sixth_power
+                    * eighteenth_power
+                    * ninth_power,
+        ]
+        .map(srgb_to_linear_rgb),
+    )
 }
 
 lazy_static! {
