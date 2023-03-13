@@ -1,9 +1,9 @@
 # mandelrust
 
-Contains two programs, *mandelbrot* and *mandelviewer*.  
-*mandelbrot* renders a supersampled image of the Mandelbrot set to a png file. It is possible to change which part of the set is rendered, how zoomed in the image is, the number of iterations to use, as well as a few other things.  
+Contains two programs, `mandelbrot` and `mandelviewer`.  
+`mandelbrot` renders a supersampled image of the Mandelbrot set to a png file. It is possible to change which part of the set is rendered, how zoomed in the image is, the number of iterations to use, as well as a few other things.  
 This was one of my first projects to learn rust.  
-*mandelviewer* shows a view of the fractal and lets you pan and zoom around in it, change settings, and save images. This part is currently under development as I am using it to learn the [iced](https://docs.rs/iced/latest/iced/) UI crate.
+`mandelviewer` shows a view of the fractal and lets you pan and zoom around in it, change settings, and save images. This part is currently under development as I am using it to learn the [iced](https://docs.rs/iced/latest/iced/) UI crate.
 
 # How to use these programs
  1. Install [Rust](https://www.rust-lang.org/tools/install) and [git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git)
