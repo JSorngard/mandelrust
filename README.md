@@ -13,7 +13,7 @@ This was one of my first projects to learn rust.
  5. Compile `mandelbrot` with `cargo build --release -p mandelbrot`
  6. Run the CLI renderer with `./target/release/mandelbrot.exe`. The resulting image can be found in the `mandelbrot_renders` folder.
  7. You can specify where the image is focused, how zoomed it is and how many iterations to do (among other things) with command line arguments. For an exhaustive list run the program with the `--help` argument
- 8. `mandelviewer` can be compiled with `cargo build --release -p mandelviewer` and run with `./target/release/mandelviewer.exe`. It is currently only verified to build on windows.
+ 8. `mandelviewer` can be compiled with `cargo build --release -p mandelviewer` and run with `./target/release/mandelviewer.exe`. If you are on Linux you will need to have the [dependencies](https://docs.rs/rfd/0.11.2/rfd/#linux--bsd-backends) of the file save dialog installed.
 
 # Prettier mandelbrot rendering
 The main goal of this program is to generate pretty looking pictures, "pretty" is of course subjective, but here is a list of what I've done to make the resulting images look better in my eyes:  
