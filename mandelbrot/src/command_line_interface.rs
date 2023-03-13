@@ -15,7 +15,7 @@ pub struct Cli {
         long,
         value_name = "RE(CENTER)",
         default_value_t = -0.75,
-        allow_hyphen_values = true,
+        allow_negative_numbers = true,
     )]
     /// The real part of the center point of the image
     pub real_center: f64,
@@ -25,12 +25,12 @@ pub struct Cli {
         long,
         value_name = "IM(CENTER)",
         default_value_t = 0.0,
-        allow_hyphen_values = true
+        allow_negative_numbers = true
     )]
     /// The imaginary part of the center point of the image
     pub imag_center: f64,
 
-    #[arg(short, long, default_value_t = 0.0, allow_hyphen_values = true)]
+    #[arg(short, long, default_value_t = 0.0, allow_negative_numbers = true)]
     /// A real number describing how far in to zoom on the given center point.
     /// This number works on an exponential scale where 0 means no zoom
     /// and every time it is increased by 1 the vertical and horizontal

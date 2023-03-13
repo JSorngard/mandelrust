@@ -1,19 +1,22 @@
 # mandelrust
-Renders a supersampled image of the Mandelbrot set to a png file. It is possible to change which part of the set is rendered, how zoomed in the image is, the number of iterations to use, as well as a few other things.
 
-This was one of my first projects to learn rust.
+Contains two programs, *mandelbrot* and *mandelviewer*.  
+*mandelbrot* renders a supersampled image of the Mandelbrot set to a png file. It is possible to change which part of the set is rendered, how zoomed in the image is, the number of iterations to use, as well as a few other things.  
+This was one of my first projects to learn rust.  
+*mandelviewer* shows a view of the fractal and lets you pan and zoom around in it, change settings, and save images. This part is currently under development as I am using it to learn the [iced](https://docs.rs/iced/latest/iced/) UI crate.
 
-# How to use this program
+# How to use these programs
  1. Install [Rust](https://www.rust-lang.org/tools/install) and [git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git)
  2. Open a terminal in the folder you want to install the program in
  3. Clone this git repo with `git clone https://www.github.com/JSorngard/mandelrust.git`
  4. Go into the repository with `cd mandelrust`
- 5. Compile the program with `cargo build --release`
- 6. Run the program with `./target/release/mandelbrot.exe`. The resulting image can be found in the `mandelbrot_renders` folder.
+ 5. Compile the programs with `cargo build --release`
+ 6. Run the CLI renderer with `./target/release/mandelbrot.exe`. The resulting image can be found in the `mandelbrot_renders` folder.
  7. You can specify where the image is focused, how zoomed it is and how many iterations to do (among other things) with command line arguments. For an exhaustive list run the program with the `--help` argument
+ 8. The live viewer program can be run with `./target/release/mandelviewer.exe`.
 
 # Prettier mandelbrot rendering
-This is of course subjective, but here is a list of what I've done to make the resulting images look better in my eyes:  
+The main goal of this program is to generate pretty looking pictures, "pretty" is of course subjective, but here is a list of what I've done to make the resulting images look better in my eyes:  
 
  1. Use a color palette that is smooth i.e. small differences in escape speed should map to small differences in color. In this program this is achieved by the color palette being a continuous function that maps escape speeds to colors.  
  2. Do not abort the iteration [when |z| > 2](/examples/smoothing/no_smoothing_abs_geq_2.avif), but at a larger absolute value (in this program I have [chosen 6](/examples/smoothing/no_smoothing_abs_geq_6.avif)). Together with using a function that smoothly maps iteration count and absolute value to a number between 0 and 1 this [completely removes color banding](/examples/smoothing/smoothing_abs_geq_6.avif).  

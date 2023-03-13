@@ -3,7 +3,9 @@ members = [
     "color-space",
     "mandellib",
     "mandelbrot",
+    "mandelviewer",
 ]
+resolver = "2"
 
 [profile.release]
 lto = "thin"

@@ -1,3 +1,5 @@
+#![forbid(unsafe_code)]
+
 use core::num::{NonZeroU32, NonZeroU8, NonZeroUsize, TryFromIntError};
 use std::io::{stdout, Write};
 
@@ -343,7 +345,7 @@ pub fn iterate(c_re: f64, c_im: f64, max_iterations: NonZeroU32) -> f64 {
 }
 
 /// Contains information about a rectangle-shaped region in the complex plane.
-#[derive(Clone, Copy)]
+#[derive(Debug, Clone, Copy)]
 pub struct Frame {
     pub center_real: f64,
     pub center_imag: f64,
@@ -352,7 +354,12 @@ pub struct Frame {
 }
 
 impl Frame {
-    pub const fn new(center_real: f64, center_imag: f64, real_distance: f64, imag_distance: f64) -> Self {
+    pub const fn new(
+        center_real: f64,
+        center_imag: f64,
+        real_distance: f64,
+        imag_distance: f64,
+    ) -> Self {
         Self {
             center_real,
             center_imag,
@@ -364,7 +371,7 @@ impl Frame {
 
 /// Contains information about the mandelbrot image
 /// that is relevant to the rendering process.
-#[derive(Clone, Copy)]
+#[derive(Debug, Clone, Copy)]
 pub struct RenderParameters {
     pub x_resolution: Resolution,
     pub y_resolution: Resolution,
@@ -393,7 +400,7 @@ impl RenderParameters {
 
 /// A struct containing a resolution that is known
 /// to fit in both a u32 and usize type.
-#[derive(Clone, Copy)]
+#[derive(Debug, Clone, Copy)]
 pub struct Resolution {
     pub u32: NonZeroU32,
     pub usize: NonZeroUsize,
@@ -405,6 +412,17 @@ impl TryFrom<NonZeroU32> for Resolution {
         Ok(Self {
             u32: value,
             usize: value.try_into()?,
+        })
+    }
+}
+
+impl TryFrom<u32> for Resolution {
+    type Error = TryFromIntError;
+    fn try_from(value: u32) -> Result<Self, Self::Error> {
+        let nzvalue: NonZeroU32 = value.try_into()?;
+        Ok(Self {
+            u32: nzvalue,
+            usize: nzvalue.try_into()?,
         })
     }
 }
