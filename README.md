@@ -1,7 +1,7 @@
 # mandelrust
 
 Contains two programs, `mandelbrot` and `mandelviewer`.  
-`mandelbrot` renders a supersampled image of the Mandelbrot set to a png file. It is possible to change which part of the set is rendered, how zoomed in the image is, the number of iterations to use, as well as a few other things.  
+`mandelbrot` is run from the command line and renders a supersampled image of the Mandelbrot set to a png file. It is possible to change which part of the set is rendered, how zoomed in the image is, the number of iterations to use, as well as a few other things.  
 This was one of my first projects to learn rust.  
 `mandelviewer` shows a view of the fractal and lets you pan and zoom around in it, change settings, and save images. This part is currently under development as I am using it to learn the [iced](https://docs.rs/iced/latest/iced/) UI crate.
 
@@ -10,10 +10,10 @@ This was one of my first projects to learn rust.
  2. Open a terminal in the folder you want to install the program in
  3. Clone this git repo with `git clone https://www.github.com/JSorngard/mandelrust.git`
  4. Go into the repository with `cd mandelrust`
- 5. Compile the programs with `cargo build --release`
+ 5. Compile `mandelbrot` with `cargo build --release -p mandelbrot`
  6. Run the CLI renderer with `./target/release/mandelbrot.exe`. The resulting image can be found in the `mandelbrot_renders` folder.
  7. You can specify where the image is focused, how zoomed it is and how many iterations to do (among other things) with command line arguments. For an exhaustive list run the program with the `--help` argument
- 8. The live viewer program can be run with `./target/release/mandelviewer.exe`.
+ 8. `mandelviewer` can be compiled with `cargo build --release -p mandelviewer` and run with `./target/release/mandelviewer.exe`. It is currently only verified to build on windows.
 
 # Prettier mandelbrot rendering
 The main goal of this program is to generate pretty looking pictures, "pretty" is of course subjective, but here is a list of what I've done to make the resulting images look better in my eyes:  
