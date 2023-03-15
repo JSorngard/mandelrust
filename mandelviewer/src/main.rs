@@ -110,7 +110,7 @@ async fn background_timer(duration: Duration) {
 }
 
 impl MandelViewer {
-    fn change_resolution(&self, y_res: NonZeroU32) -> Result<RenderParameters, TryFromIntError> {
+    fn with_new_resolution(&self, y_res: NonZeroU32) -> Result<RenderParameters, TryFromIntError> {
         let aspect_ratio = f64::from(self.params.x_resolution.u32.get())
             / f64::from(self.params.y_resolution.u32.get());
         let mut new_params = self.params;
@@ -187,7 +187,7 @@ impl Application for MandelViewer {
                 if self.ui_values.live_preview {
                     Command::perform(
                         render(
-                            self.change_resolution(PREVIEW_RES)
+                            self.with_new_resolution(PREVIEW_RES)
                                 .expect("PREVIEW_RES is a valid resolution"),
                             self.view_region,
                             false,
@@ -229,7 +229,7 @@ impl Application for MandelViewer {
                 if self.ui_values.live_preview {
                     Command::perform(
                         render(
-                            self.change_resolution(PREVIEW_RES)
+                            self.with_new_resolution(PREVIEW_RES)
                                 .expect("PREVIEW_RES is a valid resolution"),
                             self.view_region,
                             false,
@@ -260,7 +260,7 @@ impl Application for MandelViewer {
                     self.push_notification("no image to save".into())
                 }
             }
-            Message::VerticalResolutionUpdated(y_res) => match self.change_resolution(y_res) {
+            Message::VerticalResolutionUpdated(y_res) => match self.with_new_resolution(y_res) {
                 Ok(params) => {
                     if params.x_resolution.u32.get() * params.y_resolution.u32.get() * 4
                         <= 1000000000
@@ -286,7 +286,7 @@ impl Application for MandelViewer {
                         self.params.sqrt_samples_per_pixel = self.ui_values.slider_ssaa_factor;
                         Command::perform(
                             render(
-                                self.change_resolution(PREVIEW_RES)
+                                self.with_new_resolution(PREVIEW_RES)
                                     .expect("PREVIEW_RES is a valid resolution"),
                                 self.view_region,
                                 false,
@@ -308,7 +308,7 @@ impl Application for MandelViewer {
                     if self.ui_values.live_preview {
                         Command::perform(
                             render(
-                                self.change_resolution(PREVIEW_RES)
+                                self.with_new_resolution(PREVIEW_RES)
                                     .expect("PREVIEW_RES is a valid resolution"),
                                 self.view_region,
                                 false,
