@@ -27,17 +27,19 @@ use image::{DynamicImage, ImageFormat};
 use nonzero_ext::nonzero;
 use rfd::FileDialog;
 
-const PREVIEW_RES: NonZeroU32 = nonzero!(480_u32);
-const INITIAL_X_RES: NonZeroU32 = nonzero!(1920_u32);
-const INITIAL_Y_RES: NonZeroU32 = nonzero!(1080_u32);
+// Initial view settings
 const INITIAL_SSAA_FACTOR: NonZeroU8 = nonzero!(3_u8);
 const INITIAL_MAX_ITERATIONS: NonZeroU32 = nonzero!(256_u32);
-
+const INITIAL_X_RES: NonZeroU32 = nonzero!(1920_u32);
+const INITIAL_Y_RES: NonZeroU32 = nonzero!(1080_u32);
 const ASPECT_RATIO: f64 = 16.0 / 9.0;
 const INITIAL_IMAG_DISTANCE: f64 = 8.0 / 3.0;
 const INITIAL_REAL_CENTER: f64 = -0.75;
 const INITIAL_IMAG_CENTER: f64 = 0.0;
+
+// Program settings
 const PROGRAM_NAME: &str = "Mandelviewer";
+const PREVIEW_RES: NonZeroU32 = nonzero!(480_u32);
 const NOTIFICATION_DURATION: Duration = Duration::from_secs(5);
 
 fn main() {
