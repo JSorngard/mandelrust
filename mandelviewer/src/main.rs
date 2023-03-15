@@ -32,7 +32,6 @@ const INITIAL_SSAA_FACTOR: NonZeroU8 = nonzero!(3_u8);
 const INITIAL_MAX_ITERATIONS: NonZeroU32 = nonzero!(256_u32);
 const INITIAL_X_RES: NonZeroU32 = nonzero!(1920_u32);
 const INITIAL_Y_RES: NonZeroU32 = nonzero!(1080_u32);
-const ASPECT_RATIO: f64 = 16.0 / 9.0;
 const INITIAL_IMAG_DISTANCE: f64 = 8.0 / 3.0;
 const INITIAL_REAL_CENTER: f64 = -0.75;
 const INITIAL_IMAG_CENTER: f64 = 0.0;
@@ -107,9 +106,10 @@ async fn background_timer(duration: Duration) {
 
 impl MandelViewer {
     fn change_resolution(&self, y_res: NonZeroU32) -> Result<RenderParameters, TryFromIntError> {
+        let aspect_ratio = f64::from(self.params.x_resolution.u32.get()) / f64::from(self.params.y_resolution.u32.get());
         let mut new_params = self.params;
         new_params.y_resolution = y_res.try_into()?;
-        new_params.x_resolution = ((f64::from(y_res.get()) * ASPECT_RATIO) as u32).try_into()?;
+        new_params.x_resolution = ((f64::from(y_res.get()) * aspect_ratio) as u32).try_into()?;
         Ok(new_params)
     }
 
