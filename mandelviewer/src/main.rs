@@ -38,7 +38,7 @@ const INITIAL_IMAG_DISTANCE: f64 = 8.0 / 3.0;
 const INITIAL_REAL_CENTER: f64 = -0.75;
 const INITIAL_IMAG_CENTER: f64 = 0.0;
 const PROGRAM_NAME: &str = "Mandelviewer";
-const NOTIFICATION_DURATION: u64 = 5;
+const NOTIFICATION_DURATION: Duration = Duration::from_secs(5);
 
 fn main() {
     let program_settings = iced::Settings {
@@ -75,12 +75,17 @@ struct MandelViewer {
 }
 
 #[derive(Debug, Clone)]
+enum NotificationAction {
+    Push(String),
+    Pop,
+}
+
+#[derive(Debug, Clone)]
 enum Message {
     ReRenderPressed,
     RenderFinished(DynamicImage),
     MaxItersUpdated(NonZeroU32),
-    PushNotification(String),
-    PopNotification,
+    Notification(NotificationAction),
     LiveCheckboxToggled(bool),
     GrayscaleToggled(bool),
     SavePressed,
@@ -103,10 +108,9 @@ impl MandelViewer {
 
     fn push_notification(&mut self, text: String) -> Command<<Self as Application>::Message> {
         self.notifications.push(text);
-        Command::perform(
-            background_timer(Duration::from_secs(NOTIFICATION_DURATION)),
-            |_| Message::PopNotification,
-        )
+        Command::perform(background_timer(NOTIFICATION_DURATION), |_| {
+            Message::Notification(NotificationAction::Pop)
+        })
     }
 }
 
@@ -188,7 +192,13 @@ impl Application for MandelViewer {
                     Message::RenderFinished,
                 )
             }
-            Message::PushNotification(e) => self.push_notification(e),
+            Message::Notification(action) => match action {
+                NotificationAction::Push(e) => self.push_notification(e),
+                NotificationAction::Pop => {
+                    self.notifications.drain(..=0);
+                    Command::none()
+                }
+            },
             Message::RenderFinished(buf) => {
                 self.render_in_progress = false;
                 self.image = Some(buf);
@@ -233,10 +243,6 @@ impl Application for MandelViewer {
                 } else {
                     self.push_notification("no image to save".into())
                 }
-            }
-            Message::PopNotification => {
-                self.notifications.drain(..=0);
-                Command::none()
             }
             Message::VerticalResolutionUpdated(y_res) => match self.change_resolution(y_res) {
                 Ok(params) => {
@@ -348,7 +354,8 @@ impl Application for MandelViewer {
                             Ok(mi) => {
                                 Message::VerticalResolutionUpdated(mi)
                             }
-                            Err(e) => Message::PushNotification(e.to_string()),
+                            Err(e) =>
+                                Message::Notification(NotificationAction::Push(e.to_string())),
                         }
                     )
                     .on_submit(Message::ReRenderPressed),
@@ -378,7 +385,7 @@ impl Application for MandelViewer {
                                 Message::MaxItersUpdated(mi)
                             }
                             Err(e) => {
-                                Message::PushNotification(e.to_string())
+                                Message::Notification(NotificationAction::Push(e.to_string()))
                             }
                         }
                     )
