@@ -83,6 +83,12 @@ enum NotificationAction {
 }
 
 #[derive(Debug, Clone)]
+enum SSAAAction {
+    Toggled(bool),
+    NumSamplesUpdated(NonZeroU8),
+}
+
+#[derive(Debug, Clone)]
 enum Message {
     ReRenderPressed,
     RenderFinished(DynamicImage),
@@ -92,8 +98,7 @@ enum Message {
     GrayscaleToggled(bool),
     SavePressed,
     VerticalResolutionUpdated(NonZeroU32),
-    SuperSamplingToggled(bool),
-    SuperSamplingUpdated(NonZeroU8),
+    SuperSampling(SSAAAction),
 }
 
 async fn background_timer(duration: Duration) {
@@ -266,45 +271,47 @@ impl Application for MandelViewer {
                 }
                 Err(e) => self.push_notification(e.to_string()),
             },
-            Message::SuperSamplingToggled(do_ssaa) => {
-                self.ui_values.do_ssaa = do_ssaa;
-                if !self.ui_values.do_ssaa {
-                    self.params.sqrt_samples_per_pixel = 1.try_into().expect("1 is not zero");
-                } else {
-                    self.params.sqrt_samples_per_pixel = self.ui_values.slider_ssaa_factor;
-                };
+            Message::SuperSampling(action) => match action {
+                SSAAAction::NumSamplesUpdated(ssaa_factor) => {
+                    self.ui_values.slider_ssaa_factor = ssaa_factor;
+                    if self.ui_values.live_preview && self.ui_values.do_ssaa {
+                        self.params.sqrt_samples_per_pixel = self.ui_values.slider_ssaa_factor;
+                        Command::perform(
+                            render(
+                                self.change_resolution(PREVIEW_RES)
+                                    .expect("PREVIEW_RES is a valid resolution"),
+                                self.view_region,
+                                false,
+                            ),
+                            Message::RenderFinished,
+                        )
+                    } else {
+                        Command::none()
+                    }
+                }
+                SSAAAction::Toggled(do_ssaa) => {
+                    self.ui_values.do_ssaa = do_ssaa;
+                    if !self.ui_values.do_ssaa {
+                        self.params.sqrt_samples_per_pixel = 1.try_into().expect("1 is not zero");
+                    } else {
+                        self.params.sqrt_samples_per_pixel = self.ui_values.slider_ssaa_factor;
+                    };
 
-                if self.ui_values.live_preview {
-                    Command::perform(
-                        render(
-                            self.change_resolution(PREVIEW_RES)
-                                .expect("PREVIEW_RES is a valid resolution"),
-                            self.view_region,
-                            false,
-                        ),
-                        Message::RenderFinished,
-                    )
-                } else {
-                    Command::none()
+                    if self.ui_values.live_preview {
+                        Command::perform(
+                            render(
+                                self.change_resolution(PREVIEW_RES)
+                                    .expect("PREVIEW_RES is a valid resolution"),
+                                self.view_region,
+                                false,
+                            ),
+                            Message::RenderFinished,
+                        )
+                    } else {
+                        Command::none()
+                    }
                 }
-            }
-            Message::SuperSamplingUpdated(ssaa_factor) => {
-                self.ui_values.slider_ssaa_factor = ssaa_factor;
-                if self.ui_values.live_preview && self.ui_values.do_ssaa {
-                    self.params.sqrt_samples_per_pixel = self.ui_values.slider_ssaa_factor;
-                    Command::perform(
-                        render(
-                            self.change_resolution(PREVIEW_RES)
-                                .expect("PREVIEW_RES is a valid resolution"),
-                            self.view_region,
-                            false,
-                        ),
-                        Message::RenderFinished,
-                    )
-                } else {
-                    Command::none()
-                }
-            }
+            },
         }
     }
 
@@ -413,9 +420,9 @@ impl Application for MandelViewer {
                             2..=10,
                             self.ui_values.slider_ssaa_factor.get(),
                             |ssaa_factor| {
-                                Message::SuperSamplingUpdated(
+                                Message::SuperSampling(SSAAAction::NumSamplesUpdated(
                                     ssaa_factor.try_into().expect("2..=10 is never zero"),
-                                )
+                                ))
                             }
                         ),
                         format!("{} samples", self.ui_values.slider_ssaa_factor.get().pow(2)),
@@ -423,7 +430,7 @@ impl Application for MandelViewer {
                     ),
                     Space::new(Length::Fixed(10.0), Length::Shrink),
                     Checkbox::new("SSAA", self.ui_values.do_ssaa, |status| {
-                        Message::SuperSamplingToggled(status)
+                        Message::SuperSampling(SSAAAction::Toggled(status))
                     })
                     .spacing(5),
                 ],
