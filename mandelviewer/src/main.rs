@@ -88,9 +88,14 @@ enum SSAAAction {
 }
 
 #[derive(Debug, Clone)]
+enum RenderAction {
+    Started,
+    Finished(DynamicImage),
+}
+
+#[derive(Debug, Clone)]
 enum Message {
-    ReRenderPressed,
-    RenderFinished(DynamicImage),
+    Render(RenderAction),
     MaxItersUpdated(NonZeroU32),
     Notification(NotificationAction),
     LiveCheckboxToggled(bool),
@@ -106,7 +111,8 @@ async fn background_timer(duration: Duration) {
 
 impl MandelViewer {
     fn change_resolution(&self, y_res: NonZeroU32) -> Result<RenderParameters, TryFromIntError> {
-        let aspect_ratio = f64::from(self.params.x_resolution.u32.get()) / f64::from(self.params.y_resolution.u32.get());
+        let aspect_ratio = f64::from(self.params.x_resolution.u32.get())
+            / f64::from(self.params.y_resolution.u32.get());
         let mut new_params = self.params;
         new_params.y_resolution = y_res.try_into()?;
         new_params.x_resolution = ((f64::from(y_res.get()) * aspect_ratio) as u32).try_into()?;
@@ -158,7 +164,9 @@ impl Application for MandelViewer {
             },
             Command::batch([
                 window::maximize(true),
-                Command::perform(render(params, view_region, false), Message::RenderFinished),
+                Command::perform(render(params, view_region, false), |img| {
+                    Message::Render(RenderAction::Finished(img))
+                }),
             ]),
         )
     }
@@ -184,21 +192,27 @@ impl Application for MandelViewer {
                             self.view_region,
                             false,
                         ),
-                        Message::RenderFinished,
+                        |img| Message::Render(RenderAction::Finished(img)),
                     )
                 } else {
                     Command::none()
                 }
             }
-            Message::ReRenderPressed => {
-                self.render_in_progress = true;
-                // Clear viewer to save memory
-                self.image = None;
-                Command::perform(
-                    render(self.params, self.view_region, false),
-                    Message::RenderFinished,
-                )
-            }
+            Message::Render(action) => match action {
+                RenderAction::Started => {
+                    self.render_in_progress = true;
+                    // Clear viewer to save memory
+                    self.image = None;
+                    Command::perform(render(self.params, self.view_region, false), |img| {
+                        Message::Render(RenderAction::Finished(img))
+                    })
+                }
+                RenderAction::Finished(img) => {
+                    self.render_in_progress = false;
+                    self.image = Some(img);
+                    Command::none()
+                }
+            },
             Message::Notification(action) => match action {
                 NotificationAction::Push(e) => self.push_notification(e),
                 NotificationAction::Pop => {
@@ -206,11 +220,6 @@ impl Application for MandelViewer {
                     Command::none()
                 }
             },
-            Message::RenderFinished(buf) => {
-                self.render_in_progress = false;
-                self.image = Some(buf);
-                Command::none()
-            }
             Message::LiveCheckboxToggled(state) => {
                 self.ui_values.live_preview = state;
                 Command::none()
@@ -225,7 +234,7 @@ impl Application for MandelViewer {
                             self.view_region,
                             false,
                         ),
-                        Message::RenderFinished,
+                        |img| Message::Render(RenderAction::Finished(img)),
                     )
                 } else {
                     Command::none()
@@ -258,10 +267,9 @@ impl Application for MandelViewer {
                     {
                         self.params = params;
                         if self.ui_values.live_preview {
-                            Command::perform(
-                                render(self.params, self.view_region, false),
-                                Message::RenderFinished,
-                            )
+                            Command::perform(render(self.params, self.view_region, false), |img| {
+                                Message::Render(RenderAction::Finished(img))
+                            })
                         } else {
                             Command::none()
                         }
@@ -283,7 +291,7 @@ impl Application for MandelViewer {
                                 self.view_region,
                                 false,
                             ),
-                            Message::RenderFinished,
+                            |img| Message::Render(RenderAction::Finished(img)),
                         )
                     } else {
                         Command::none()
@@ -305,7 +313,7 @@ impl Application for MandelViewer {
                                 self.view_region,
                                 false,
                             ),
-                            Message::RenderFinished,
+                            |img| Message::Render(RenderAction::Finished(img)),
                         )
                     } else {
                         Command::none()
@@ -367,7 +375,7 @@ impl Application for MandelViewer {
                                 Message::Notification(NotificationAction::Push(e.to_string())),
                         }
                     )
-                    .on_submit(Message::ReRenderPressed),
+                    .on_submit(Message::Render(RenderAction::Started)),
                     Button::new("·2").on_press(Message::VerticalResolutionUpdated(
                         (self.params.y_resolution.u32.get().saturating_mul(2))
                             .try_into()
@@ -398,7 +406,7 @@ impl Application for MandelViewer {
                             }
                         }
                     )
-                    .on_submit(Message::ReRenderPressed),
+                    .on_submit(Message::Render(RenderAction::Started)),
                     Button::new("·2").on_press(Message::MaxItersUpdated(
                         self.params
                             .max_iterations
@@ -441,7 +449,7 @@ impl Application for MandelViewer {
                 if self.render_in_progress {
                     Button::new("rendering...")
                 } else {
-                    Button::new("re-render view").on_press(Message::ReRenderPressed)
+                    Button::new("re-render view").on_press(Message::Render(RenderAction::Started))
                 },
                 Checkbox::new("Live preview", self.ui_values.live_preview, |status| {
                     Message::LiveCheckboxToggled(status)
