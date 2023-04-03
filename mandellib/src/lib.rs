@@ -17,17 +17,26 @@ use color_space::{palette, LinearRGB};
 // Set to true to only super sample close to the border of the set.
 const RESTRICT_SSAA_REGION: bool = true;
 
-// If the escape speed of a point is larger than this,
-// supersampling will be aborted.
+// Supersampling will be aborted if the escape speed of a point is larger than this.
+// For low enough resolutions this region will begin clipping into the
+// fractal, but for typical image resolutions this is not an issue.
 const SSAA_REGION_CUTOFF: f64 = 0.963;
 
-// Set to true to display the region where supersampling is done
-// as brown. The border region where supersampling is only partially done
+// Set to true to display the region where supersampling is not done
+// as orange/brown. The border region where supersampling is only partially done
 // will appear as black.
 const SHOW_SSAA_REGION: bool = false;
 
 // Set to false to not mirror the image.
+// Only relevant when the image contains the real axis.
 const ENABLE_MIRRORING: bool = true;
+
+// If false the program iterates all pixels in the cardioid and period 2 bulb.
+// If true a check is performed for every pixel to determine whether they
+// are in those regions without iterating.
+// Could be faster to disable this if you will be looking only at regions where
+// these features are not visible.
+const CARDIOID_AND_BULB_CHECK: bool = true;
 // --------------------------------------
 
 const NUM_COLOR_CHANNELS: usize = 3;
@@ -296,7 +305,7 @@ pub fn iterate(c_re: f64, c_im: f64, max_iterations: NonZeroU32) -> f64 {
     let max_iterations = max_iterations.get();
 
     // Check whether the point is within the main cardioid or period 2 bulb.
-    if (c_re + 1.0) * (c_re + 1.0) + c_imag_sqr <= 0.0625
+    if CARDIOID_AND_BULB_CHECK && (c_re + 1.0) * (c_re + 1.0) + c_imag_sqr <= 0.0625
         || mag_sqr * (8.0 * mag_sqr - 3.0) <= 0.09375 - c_re
     {
         return 0.0;
