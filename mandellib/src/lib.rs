@@ -1,7 +1,7 @@
 #![forbid(unsafe_code)]
 
 use core::num::{NonZeroU32, NonZeroU8, NonZeroUsize, TryFromIntError};
-use std::io::{stdout, Write};
+use std::io::Write;
 
 use image::{imageops, DynamicImage, ImageBuffer, Rgb};
 use indicatif::{ParallelProgressIterator, ProgressBar};
@@ -96,12 +96,15 @@ pub fn render(
             color_band(render_parameters, render_region, band_index, band)
         });
 
-    if verbose && write!(stdout(), "\rProcessing image").is_ok() {
-        if let Err(e) = stdout().flush() {
-            let _ = writeln!(
-                std::io::stderr(),
-                "unable to flush stdout (due to: {e}), continuing with rendering anyway"
-            );
+    if verbose {
+        let mut handle = std::io::stdout();
+        if write!(handle, "\rProcessing image").is_ok() {
+            if let Err(e) = handle.flush() {
+                let _ = writeln!(
+                    std::io::stderr(),
+                    "unable to flush stdout (due to: {e}), continuing with rendering anyway"
+                );
+            }
         }
     }
 
