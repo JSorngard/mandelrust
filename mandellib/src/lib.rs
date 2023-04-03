@@ -96,10 +96,12 @@ pub fn render(
             color_band(render_parameters, render_region, band_index, band)
         });
 
-    if verbose {
-        print!("\rProcessing image");
+    if verbose && write!(stdout(), "\rProcessing image").is_ok() {
         if let Err(e) = stdout().flush() {
-            eprintln!("unable to flush stdout (due to: {e}), continuing with rendering anyway");
+            let _ = writeln!(
+                std::io::stderr(),
+                "unable to flush stdout (due to: {e}), continuing with rendering anyway"
+            );
         }
     }
 
