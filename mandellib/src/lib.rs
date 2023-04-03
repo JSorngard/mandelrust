@@ -197,9 +197,9 @@ fn color_band(
     if need_to_flip {
         // FLip all data in the band. Turns RGB into BGR.
         band.reverse();
-        for pixel_index in (0..band.len()).step_by(NUM_COLOR_CHANNELS) {
+        for pixel in band.chunks_exact_mut(NUM_COLOR_CHANNELS) {
             // Flip each pixel from BGR to RGB.
-            band.swap(pixel_index, pixel_index + NUM_COLOR_CHANNELS - 1)
+            pixel.swap(0, NUM_COLOR_CHANNELS - 1);
         }
     }
 }
