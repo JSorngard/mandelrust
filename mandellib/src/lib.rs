@@ -199,7 +199,7 @@ fn color_band(
         band.reverse();
         for pixel in band.chunks_exact_mut(NUM_COLOR_CHANNELS) {
             // Flip each pixel from BGR to RGB.
-            pixel.swap(0, NUM_COLOR_CHANNELS - 1);
+            pixel.swap(0, pixel.len() - 1);
         }
     }
 }
