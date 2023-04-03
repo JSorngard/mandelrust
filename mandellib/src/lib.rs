@@ -97,15 +97,7 @@ pub fn render(
         });
 
     if verbose {
-        let mut handle = std::io::stdout();
-        if write!(handle, "\rProcessing image").is_ok() {
-            if let Err(e) = handle.flush() {
-                let _ = writeln!(
-                    std::io::stderr(),
-                    "unable to flush stdout (due to: {e}), continuing with rendering anyway"
-                );
-            }
-        }
+        let _ = write!(std::io::stdout(), "\rProcessing image");
     }
 
     // The image is stored in a rotated fashion during rendering so that

@@ -54,15 +54,8 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     let img = render(render_parameters, draw_region, args.verbose);
 
-    let mut stdout_handle = io::stdout();
-
-    if args.verbose && write!(stdout_handle, "\rEncoding and saving image").is_ok() {
-        if let Err(e) = stdout_handle.flush() {
-            let _ = writeln!(
-                io::stderr(),
-                "unable to flush stdout (due to: {e}), attempting to save the image anyway"
-            );
-        }
+    if args.verbose {
+        let _ = write!(io::stdout(), "\rEncoding and saving image");
     }
 
     let image_name = if args.record_params {
@@ -86,7 +79,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     img.save(&out_path)?;
 
     if args.verbose {
-        let _ = writeln!(stdout_handle, "\rSaved image as {}", out_path.display());
+        let _ = writeln!(io::stdout(), "\rSaved image as {}", out_path.display());
     }
 
     Ok(())
