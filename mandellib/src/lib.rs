@@ -195,7 +195,7 @@ fn color_band(
     // negative imaginary component is false we must flip the vertical band
     // to get the correct image.
     if need_to_flip {
-        // FLip all data in the band. Turns RGB into BGR.
+        // Flip all data in the band. Turns RGB into BGR.
         band.reverse();
         for pixel in band.chunks_exact_mut(NUM_COLOR_CHANNELS) {
             // Flip each pixel from BGR to RGB.
