@@ -69,6 +69,7 @@ struct UIValues {
 struct MandelViewer {
     image: Option<DynamicImage>,
     params: RenderParameters,
+    aspect_ratio: f64,
     view_region: Frame,
     render_in_progress: bool,
     notifications: Vec<String>,
@@ -111,11 +112,10 @@ async fn background_timer(duration: Duration) {
 
 impl MandelViewer {
     fn with_new_resolution(&self, y_res: NonZeroU32) -> Result<RenderParameters, TryFromIntError> {
-        let aspect_ratio = f64::from(self.params.x_resolution.u32.get())
-            / f64::from(self.params.y_resolution.u32.get());
         let mut new_params = self.params;
         new_params.y_resolution = y_res.try_into()?;
-        new_params.x_resolution = ((f64::from(y_res.get()) * aspect_ratio) as u32).try_into()?;
+        new_params.x_resolution =
+            ((f64::from(y_res.get()) * self.aspect_ratio) as u32).try_into()?;
         Ok(new_params)
     }
 
@@ -154,6 +154,7 @@ impl Application for MandelViewer {
                 image: None,
                 params,
                 view_region,
+                aspect_ratio: f64::from(INITIAL_X_RES.get()) / f64::from(INITIAL_Y_RES.get()),
                 render_in_progress: true,
                 notifications: Vec::new(),
                 ui_values: UIValues {
