@@ -45,11 +45,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     )?;
 
     if args.verbose {
-        if let Err(e) = give_user_feedback(&args, &render_parameters) {
-            let _ = writeln!(io::stderr(),
-                "printing of user feedback failed (due to: {e}), attempting to render the image anyway"
-            );
-        }
+        let _ = give_user_feedback(&args, &render_parameters);
     }
 
     let img = render(render_parameters, draw_region, args.verbose);
