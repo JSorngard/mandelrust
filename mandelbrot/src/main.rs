@@ -1,7 +1,7 @@
 use std::{
     error::Error,
     fs,
-    io::{stdout, Write},
+    io::{self, Write},
     num::NonZeroU32,
     path::PathBuf,
     str,
@@ -45,20 +45,13 @@ fn main() -> Result<(), Box<dyn Error>> {
     )?;
 
     if args.verbose {
-        if let Err(e) = give_user_feedback(&args, &render_parameters) {
-            eprintln!(
-                "printing of user feedback failed (due to: {e}), attempting to render the image anyway"
-            );
-        }
+        let _ = give_user_feedback(&args, &render_parameters);
     }
 
     let img = render(render_parameters, draw_region, args.verbose);
 
     if args.verbose {
-        print!("\rEncoding and saving image");
-        if let Err(e) = stdout().flush() {
-            eprintln!("unable to flush stdout (due to: {e}), attempting to save the image anyway");
-        }
+        let _ = write!(io::stdout(), "\rEncoding and saving image");
     }
 
     let image_name = if args.record_params {
@@ -82,7 +75,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     img.save(&out_path)?;
 
     if args.verbose {
-        println!("\rSaved image as {}", out_path.display());
+        let _ = writeln!(io::stdout(), "\rSaved image as {}", out_path.display());
     }
 
     Ok(())
@@ -116,7 +109,7 @@ fn give_user_feedback(args: &Cli, rparams: &RenderParameters) -> Result<(), Box<
     }
     write!(&mut header, " ----")?;
 
-    println!("{}", str::from_utf8(&header)?);
+    writeln!(io::stdout(), "{}", str::from_utf8(&header)?)?;
 
     Ok(())
 }

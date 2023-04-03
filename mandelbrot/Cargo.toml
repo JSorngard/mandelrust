@@ -9,7 +9,7 @@ edition = "2021"
 [dependencies]
 mandellib = {path = "../mandellib"}
 color-space = {path = "../color-space"}
-clap = { version = "4.0", features = ["derive"] }
+clap = { version = "4.2", features = ["derive"] }
 
 [dev-dependencies]
 criterion = {version = "0.4", features = ["html_reports"]}
