@@ -46,7 +46,7 @@ const NUM_COLOR_CHANNELS: usize = 3;
 ///
 /// `render_parameters` contains `x_resolution`, `y_resolution`, `max_iterations`, `sqrt_samples_per_pixel` and `grayscale`.
 ///
-/// `render_region` contains `center_real`, `centar_imag`, `real_distance` and `imag_distance`.
+/// `render_region` contains `center_real`, `center_imag`, `real_distance` and `imag_distance`.
 ///
 /// `x_resolution` and `y_resolution` is the resolution in pixels in the real
 /// and imaginary direction respectively.
