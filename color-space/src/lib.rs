@@ -217,6 +217,28 @@ mod supported_color {
         L8,
     }
 
+    impl SupportedColorType {
+        pub fn bytes_per_pixel(&self) -> u8 {
+            ColorType::from(*self).bytes_per_pixel()
+        }
+
+        pub fn has_alpha(&self) -> bool {
+            ColorType::from(*self).has_alpha()
+        }
+
+        pub fn has_color(&self) -> bool {
+            ColorType::from(*self).has_color()
+        }
+
+        pub fn bits_per_pixel(&self) -> u16 {
+            ColorType::from(*self).bits_per_pixel()
+        }
+
+        pub fn channel_count(&self) -> u8 {
+            ColorType::from(*self).channel_count()
+        }
+    }
+
     impl From<SupportedColorType> for ColorType {
         fn from(sct: SupportedColorType) -> Self {
             match sct {
