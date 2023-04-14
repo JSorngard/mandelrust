@@ -3,7 +3,7 @@ use core::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Sub, SubAssign};
 use image::Rgb;
 use lazy_static::lazy_static;
 
-pub use supported_color::SupportedColorType;
+pub use supported_color::{SupportedColor, SupportedColorType};
 
 /// Determines the color of a pixel in linear RGB color space.
 /// The color map that this function uses was taken from the python code in
@@ -172,15 +172,34 @@ impl From<LinearRGB> for Rgb<f64> {
     }
 }
 
-impl From<Rgb<u8>> for LinearRGB {
-    fn from(srgb: Rgb<u8>) -> Self {
-        Self::from(srgb.0.map(|c| SRGB_TO_LINEAR[usize::from(c)]))
-    }
-}
-
 impl From<[f64; 3]> for LinearRGB {
     fn from(data: [f64; 3]) -> Self {
         Self::new(data[0], data[1], data[2])
+    }
+}
+
+impl From<SupportedColor> for LinearRGB {
+    fn from(sc: SupportedColor) -> Self {
+        match sc {
+            SupportedColor::Rgba8(rgba) => {
+                let [r, g, b, _] = rgba;
+                let rgb = [r, g, b];
+                rgb.map(|c| SRGB_TO_LINEAR[usize::from(c)])
+            }
+            SupportedColor::Rgb8(rgb) => rgb.map(|c| SRGB_TO_LINEAR[usize::from(c)]),
+            SupportedColor::L8(luma) => [SRGB_TO_LINEAR[usize::from(luma)]; 3],
+        }
+        .into()
+    }
+}
+
+impl Into<SupportedColor> for LinearRGB {
+    fn into(self) -> SupportedColor {
+        SupportedColor::Rgb8([
+            (f64::from(u8::MAX) * linear_rgb_to_srgb(self.r).clamp(0.0, 1.0)).round() as u8,
+            (f64::from(u8::MAX) * linear_rgb_to_srgb(self.g).clamp(0.0, 1.0)).round() as u8,
+            (f64::from(u8::MAX) * linear_rgb_to_srgb(self.b).clamp(0.0, 1.0)).round() as u8,
+        ])
     }
 }
 
@@ -209,6 +228,13 @@ fn linear_rgb_to_srgb(c: f64) -> f64 {
 mod supported_color {
     use image::ColorType;
     use std::fmt;
+
+    #[derive(Debug, Clone, Copy, PartialEq)]
+    pub enum SupportedColor {
+        Rgba8([u8; 4]),
+        Rgb8([u8; 3]),
+        L8(u8),
+    }
 
     #[derive(Debug, Clone, Copy, PartialEq)]
     pub enum SupportedColorType {
