@@ -3,6 +3,8 @@ use core::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Sub, SubAssign};
 use image::Rgb;
 use lazy_static::lazy_static;
 
+pub use supported_color::SupportedColorType;
+
 /// Determines the color of a pixel in linear RGB color space.
 /// The color map that this function uses was taken from the python code in
 /// [this](https://preshing.com/20110926/high-resolution-mandelbrot-in-obfuscated-python/) blog post.
@@ -202,6 +204,80 @@ fn linear_rgb_to_srgb(c: f64) -> f64 {
     // } else {
     //     1.055 * c.powf(1.0 / 2.4) - 0.055
     // }
+}
+
+mod supported_color {
+    use image::ColorType;
+    use std::fmt;
+
+    #[derive(Debug, Clone, Copy, PartialEq)]
+    pub enum SupportedColorType {
+        Rgba8,
+        Rgb8,
+        L8,
+    }
+
+    impl From<SupportedColorType> for ColorType {
+        fn from(sct: SupportedColorType) -> Self {
+            match sct {
+                SupportedColorType::L8 => Self::L8,
+                SupportedColorType::Rgb8 => Self::Rgb8,
+                SupportedColorType::Rgba8 => Self::Rgba8,
+            }
+        }
+    }
+
+    #[derive(Debug, Clone, Copy, PartialEq)]
+    pub enum UnsupportedColorTypeError {
+        La8,
+        L16,
+        La16,
+        Rgb16,
+        Rgba16,
+        Rgb32F,
+        Rgba32F,
+        UnknownColorType,
+    }
+
+    impl fmt::Display for UnsupportedColorTypeError {
+        fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+            write!(f, "unsupported color type: {}", match self {
+                Self::La8 => "LA(u8)",
+                Self::L16 => "L(u16)",
+                Self::La16 => "LA(u16)",
+                Self::Rgb16 => "RGB(u16)",
+                Self::Rgba16 => "RGBA(u16)",
+                Self::Rgb32F => "RGB(f32)",
+                Self::Rgba32F => "RGBA(f32)",
+                Self::UnknownColorType => "<unknown color type>",
+            })
+        }
+    }
+
+    impl std::error::Error for UnsupportedColorTypeError {
+        fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+            None
+        }
+    }
+
+    impl TryFrom<ColorType> for SupportedColorType {
+        type Error = UnsupportedColorTypeError;
+        fn try_from(val: ColorType) -> Result<Self, Self::Error> {
+            match val {
+                ColorType::L8 => Ok(Self::L8),
+                ColorType::Rgb8 => Ok(Self::Rgb8),
+                ColorType::Rgba8 => Ok(Self::Rgba8),
+                ColorType::La8 => Err(Self::Error::La8),
+                ColorType::L16 => Err(Self::Error::L16),
+                ColorType::La16 => Err(Self::Error::La16),
+                ColorType::Rgb16 => Err(Self::Error::Rgb16),
+                ColorType::Rgba16 => Err(Self::Error::Rgba16),
+                ColorType::Rgb32F => Err(Self::Error::Rgb32F),
+                ColorType::Rgba32F => Err(Self::Error::Rgba32F),
+                _ => Err(Self::Error::UnknownColorType),
+            }
+        }
+    }
 }
 
 #[cfg(test)]
