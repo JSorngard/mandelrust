@@ -7,6 +7,7 @@ edition = "2021"
 
 [dependencies]
 mandellib = {path = "../mandellib"}
+color-space = {path = "../color-space"}
 iced = {version="0.8", features = ["image", "debug"]}
 iced_native = "0.9"
 iced_graphics = "0.7"

@@ -11,7 +11,7 @@ use rayon::{
     prelude::ParallelSliceMut,
 };
 
-use color_space::{palette, LinearRGB};
+use color_space::{palette, LinearRGB, SupportedColorType};
 
 // ----------- DEBUG FLAGS --------------
 // Set to true to only super sample close to the border of the set.
@@ -122,10 +122,10 @@ pub fn render(
         .expect("`pixel_bytes` is allocated to the correct size of 3*xres*yres"),
     );
 
-    if render_parameters.grayscale {
-        DynamicImage::ImageLuma8(image::imageops::grayscale(&img))
-    } else {
-        DynamicImage::ImageRgb8(img)
+    match render_parameters.color_type {
+        SupportedColorType::L8 => DynamicImage::ImageLuma8(image::imageops::grayscale(&img)),
+        SupportedColorType::Rgb8 => DynamicImage::ImageRgb8(img),
+        SupportedColorType::Rgba8 => panic!("not yet supported, work in progress"),
     }
 }
 
@@ -256,11 +256,12 @@ pub fn pixel_color(pixel_region: Frame, render_parameters: RenderParameters) -> 
             render_parameters.max_iterations,
         );
 
-        color += if !render_parameters.grayscale {
-            palette(escape_speed)
-        } else {
-            [escape_speed; 3].into()
+        color += match render_parameters.color_type {
+            SupportedColorType::Rgb8 => palette(escape_speed),
+            SupportedColorType::L8 => [escape_speed; 3].into(),
+            SupportedColorType::Rgba8 => panic!("not yet supported, work in progress"),
         };
+
         samples += 1;
 
         // If we are far from the fractal we do not need to supersample.
@@ -379,7 +380,7 @@ pub struct RenderParameters {
     pub y_resolution: Resolution,
     pub max_iterations: NonZeroU32,
     pub sqrt_samples_per_pixel: NonZeroU8,
-    pub grayscale: bool,
+    pub color_type: SupportedColorType,
 }
 
 impl RenderParameters {
@@ -388,14 +389,14 @@ impl RenderParameters {
         y_resolution: NonZeroU32,
         max_iterations: NonZeroU32,
         sqrt_samples_per_pixel: NonZeroU8,
-        grayscale: bool,
+        color_type: SupportedColorType,
     ) -> Result<Self, TryFromIntError> {
         Ok(Self {
             x_resolution: x_resolution.try_into()?,
             y_resolution: y_resolution.try_into()?,
             max_iterations,
             sqrt_samples_per_pixel,
-            grayscale,
+            color_type,
         })
     }
 }

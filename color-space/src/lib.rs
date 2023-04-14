@@ -241,16 +241,20 @@ mod supported_color {
 
     impl fmt::Display for UnsupportedColorTypeError {
         fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-            write!(f, "unsupported color type: {}", match self {
-                Self::La8 => "LA(u8)",
-                Self::L16 => "L(u16)",
-                Self::La16 => "LA(u16)",
-                Self::Rgb16 => "RGB(u16)",
-                Self::Rgba16 => "RGBA(u16)",
-                Self::Rgb32F => "RGB(f32)",
-                Self::Rgba32F => "RGBA(f32)",
-                Self::UnknownColorType => "<unknown color type>",
-            })
+            write!(
+                f,
+                "unsupported color type: {}",
+                match self {
+                    Self::La8 => "LA(u8)",
+                    Self::L16 => "L(u16)",
+                    Self::La16 => "LA(u16)",
+                    Self::Rgb16 => "RGB(u16)",
+                    Self::Rgba16 => "RGBA(u16)",
+                    Self::Rgb32F => "RGB(f32)",
+                    Self::Rgba32F => "RGBA(f32)",
+                    Self::UnknownColorType => "<unknown color type>",
+                }
+            )
         }
     }
 

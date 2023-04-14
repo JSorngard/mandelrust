@@ -8,6 +8,7 @@ use std::{
 };
 
 use clap::Parser;
+use color_space::SupportedColorType;
 
 use crate::command_line_interface::Cli;
 
@@ -41,7 +42,11 @@ fn main() -> Result<(), Box<dyn Error>> {
         args.pixels,
         args.max_iterations,
         args.ssaa,
-        args.grayscale,
+        if args.grayscale {
+            SupportedColorType::L8
+        } else {
+            SupportedColorType::Rgb8
+        },
     )?;
 
     if args.verbose {
