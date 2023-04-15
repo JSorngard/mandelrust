@@ -1,9 +1,7 @@
 use core::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Sub, SubAssign};
 
-use image::Rgb;
+use image::{Luma, Rgb, Rgba};
 use lazy_static::lazy_static;
-
-pub use supported_color::{SupportedColor, SupportedColorType};
 
 /// Determines the color of a pixel in linear RGB color space.
 /// The color map that this function uses was taken from the python code in
@@ -142,11 +140,9 @@ impl From<LinearRGB> for Rgb<u8> {
     /// underlying data into the nonlinear sRGB color space.
     /// Clamps the color channels to the range \[0, 1\] before conversion.
     fn from(linear_rgb: LinearRGB) -> Self {
-        Rgb::from([
-            (f64::from(u8::MAX) * linear_rgb_to_srgb(linear_rgb.r).clamp(0.0, 1.0)).round() as u8,
-            (f64::from(u8::MAX) * linear_rgb_to_srgb(linear_rgb.g).clamp(0.0, 1.0)).round() as u8,
-            (f64::from(u8::MAX) * linear_rgb_to_srgb(linear_rgb.b).clamp(0.0, 1.0)).round() as u8,
-        ])
+        [linear_rgb.r, linear_rgb.g, linear_rgb.b]
+            .map(|c| (f64::from(u8::MAX) * linear_rgb_to_srgb(c).clamp(0.0, 1.0)).round() as u8)
+            .into()
     }
 }
 
@@ -154,21 +150,14 @@ impl From<Rgb<f64>> for LinearRGB {
     /// Converts an sRGB triplet into a linear color space where various
     /// transformations are possible.
     fn from(srgb: Rgb<f64>) -> Self {
-        Self::new(
-            srgb_to_linear_rgb(srgb[0]),
-            srgb_to_linear_rgb(srgb[1]),
-            srgb_to_linear_rgb(srgb[2]),
-        )
+        let lrgb = srgb.0.map(srgb_to_linear_rgb);
+        Self::new(lrgb[0], lrgb[1], lrgb[2])
     }
 }
 
 impl From<LinearRGB> for Rgb<f64> {
     fn from(linear_rgb: LinearRGB) -> Self {
-        Rgb::from([
-            linear_rgb_to_srgb(linear_rgb.r),
-            linear_rgb_to_srgb(linear_rgb.g),
-            linear_rgb_to_srgb(linear_rgb.b),
-        ])
+        Rgb::from([linear_rgb.r, linear_rgb.g, linear_rgb.b].map(linear_rgb_to_srgb))
     }
 }
 
@@ -178,28 +167,27 @@ impl From<[f64; 3]> for LinearRGB {
     }
 }
 
-impl From<SupportedColor> for LinearRGB {
-    fn from(sc: SupportedColor) -> Self {
-        match sc {
-            SupportedColor::Rgba8(rgba) => {
-                let [r, g, b, _] = rgba;
-                let rgb = [r, g, b];
-                rgb.map(|c| SRGB_TO_LINEAR[usize::from(c)])
-            }
-            SupportedColor::Rgb8(rgb) => rgb.map(|c| SRGB_TO_LINEAR[usize::from(c)]),
-            SupportedColor::L8(luma) => [SRGB_TO_LINEAR[usize::from(luma)]; 3],
-        }
-        .into()
+impl From<LinearRGB> for Luma<f64> {
+    fn from(linear_rgb: LinearRGB) -> Self {
+        Luma::from([linear_rgb_to_srgb(linear_rgb.r)])
     }
 }
 
-impl Into<SupportedColor> for LinearRGB {
-    fn into(self) -> SupportedColor {
-        SupportedColor::Rgb8([
-            (f64::from(u8::MAX) * linear_rgb_to_srgb(self.r).clamp(0.0, 1.0)).round() as u8,
-            (f64::from(u8::MAX) * linear_rgb_to_srgb(self.g).clamp(0.0, 1.0)).round() as u8,
-            (f64::from(u8::MAX) * linear_rgb_to_srgb(self.b).clamp(0.0, 1.0)).round() as u8,
-        ])
+impl From<LinearRGB> for Luma<u8> {
+    fn from(linear_rgb: LinearRGB) -> Self {
+        Luma::from([(f64::from(u8::MAX)
+            * (linear_rgb.r * 0.2126 + linear_rgb.g * 0.7152 + linear_rgb.b * 0.0722)
+                .clamp(0.0, 1.0))
+        .round() as u8])
+    }
+}
+
+impl From<LinearRGB> for Rgba<u8> {
+    fn from(linear_rgb: LinearRGB) -> Self {
+        let [r, g, b] = [linear_rgb.r, linear_rgb.g, linear_rgb.b]
+            .map(|c| (f64::from(u8::MAX) * linear_rgb_to_srgb(c).clamp(0.0, 1.0)).round() as u8);
+
+        [r, g, b, 255].into()
     }
 }
 
@@ -223,113 +211,6 @@ fn linear_rgb_to_srgb(c: f64) -> f64 {
     // } else {
     //     1.055 * c.powf(1.0 / 2.4) - 0.055
     // }
-}
-
-mod supported_color {
-    use image::ColorType;
-    use std::fmt;
-
-    #[derive(Debug, Clone, Copy, PartialEq)]
-    pub enum SupportedColor {
-        Rgba8([u8; 4]),
-        Rgb8([u8; 3]),
-        L8(u8),
-    }
-
-    #[derive(Debug, Clone, Copy, PartialEq)]
-    pub enum SupportedColorType {
-        Rgba8,
-        Rgb8,
-        L8,
-    }
-
-    impl SupportedColorType {
-        pub fn bytes_per_pixel(&self) -> u8 {
-            ColorType::from(*self).bytes_per_pixel()
-        }
-
-        pub fn has_alpha(&self) -> bool {
-            ColorType::from(*self).has_alpha()
-        }
-
-        pub fn has_color(&self) -> bool {
-            ColorType::from(*self).has_color()
-        }
-
-        pub fn bits_per_pixel(&self) -> u16 {
-            ColorType::from(*self).bits_per_pixel()
-        }
-
-        pub fn channel_count(&self) -> u8 {
-            ColorType::from(*self).channel_count()
-        }
-    }
-
-    impl From<SupportedColorType> for ColorType {
-        fn from(sct: SupportedColorType) -> Self {
-            match sct {
-                SupportedColorType::L8 => Self::L8,
-                SupportedColorType::Rgb8 => Self::Rgb8,
-                SupportedColorType::Rgba8 => Self::Rgba8,
-            }
-        }
-    }
-
-    #[derive(Debug, Clone, Copy, PartialEq)]
-    pub enum UnsupportedColorTypeError {
-        La8,
-        L16,
-        La16,
-        Rgb16,
-        Rgba16,
-        Rgb32F,
-        Rgba32F,
-        UnknownColorType,
-    }
-
-    impl fmt::Display for UnsupportedColorTypeError {
-        fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-            write!(
-                f,
-                "unsupported color type: {}",
-                match self {
-                    Self::La8 => "LA(u8)",
-                    Self::L16 => "L(u16)",
-                    Self::La16 => "LA(u16)",
-                    Self::Rgb16 => "RGB(u16)",
-                    Self::Rgba16 => "RGBA(u16)",
-                    Self::Rgb32F => "RGB(f32)",
-                    Self::Rgba32F => "RGBA(f32)",
-                    Self::UnknownColorType => "<unknown color type>",
-                }
-            )
-        }
-    }
-
-    impl std::error::Error for UnsupportedColorTypeError {
-        fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
-            None
-        }
-    }
-
-    impl TryFrom<ColorType> for SupportedColorType {
-        type Error = UnsupportedColorTypeError;
-        fn try_from(val: ColorType) -> Result<Self, Self::Error> {
-            match val {
-                ColorType::L8 => Ok(Self::L8),
-                ColorType::Rgb8 => Ok(Self::Rgb8),
-                ColorType::Rgba8 => Ok(Self::Rgba8),
-                ColorType::La8 => Err(Self::Error::La8),
-                ColorType::L16 => Err(Self::Error::L16),
-                ColorType::La16 => Err(Self::Error::La16),
-                ColorType::Rgb16 => Err(Self::Error::Rgb16),
-                ColorType::Rgba16 => Err(Self::Error::Rgba16),
-                ColorType::Rgb32F => Err(Self::Error::Rgb32F),
-                ColorType::Rgba32F => Err(Self::Error::Rgba32F),
-                _ => Err(Self::Error::UnknownColorType),
-            }
-        }
-    }
 }
 
 #[cfg(test)]

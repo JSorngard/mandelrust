@@ -1789,6 +1789,7 @@ dependencies = [
  "clap 4.2.1",
  "color-space",
  "criterion",
+ "image",
  "mandellib",
 ]
 

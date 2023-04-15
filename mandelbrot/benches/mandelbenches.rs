@@ -1,5 +1,5 @@
-use color_space::SupportedColorType;
 use criterion::{criterion_group, criterion_main, Criterion};
+use image::ColorType;
 use mandellib::{render, Frame, RenderParameters};
 
 fn get_inputs(
@@ -22,9 +22,9 @@ fn get_inputs(
         max_iters.try_into().unwrap(),
         ssaa.try_into().unwrap(),
         if grayscale {
-            SupportedColorType::L8
+            ColorType::L8
         } else {
-            SupportedColorType::Rgb8
+            ColorType::Rgb8
         },
     )
     .unwrap();
