@@ -139,7 +139,7 @@ impl Application for MandelViewer {
             INITIAL_Y_RES,
             INITIAL_MAX_ITERATIONS,
             INITIAL_SSAA_FACTOR,
-            ColorType::Rgb8,
+            ColorType::Rgba8,
         )
         .unwrap();
         let view_region = Frame::new(
@@ -229,7 +229,7 @@ impl Application for MandelViewer {
                 self.params.color_type = if state {
                     ColorType::L8
                 } else {
-                    ColorType::Rgb8
+                    ColorType::Rgba8
                 };
                 if self.ui_values.live_preview {
                     Command::perform(

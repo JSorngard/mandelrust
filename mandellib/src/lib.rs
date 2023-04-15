@@ -83,6 +83,7 @@ pub fn render(
 ) -> DynamicImage {
     if render_parameters.color_type != ColorType::L8
         && render_parameters.color_type != ColorType::Rgb8
+        && render_parameters.color_type != ColorType::Rgba8
     {
         panic!("unsupported color type")
     }
@@ -122,21 +123,19 @@ pub fn render(
 fn vec_to_image(pixel_bytes: Vec<u8>, render_parameters: RenderParameters) -> Option<DynamicImage> {
     let x_resolution = render_parameters.x_resolution.u32.get();
     let y_resolution = render_parameters.y_resolution.u32.get();
+    // The image is stored in a rotated fashion during rendering so that
+    // the pixels of a column of the image lie contiguous in the backing vector.
+    // Here we undo this rotation.
     match render_parameters.color_type {
-        ColorType::Rgb8 => Some(DynamicImage::ImageRgb8(
-            // The image is stored in a rotated fashion during rendering so that
-            // the pixels of a column of the image lie contiguous in the backing vector.
-            // Here we undo this rotation.
-            imageops::rotate270(
-                &ImageBuffer::<Rgb<u8>, Vec<u8>>::from_vec(
-                    // This rotated state is the reason for the flipped image dimensions here.
-                    y_resolution,
-                    x_resolution,
-                    pixel_bytes,
-                )
+        ColorType::Rgb8 => Some(DynamicImage::ImageRgb8(imageops::rotate270(
+            // This rotated state is the reason for the flipped image dimensions here.
+            &ImageBuffer::<Rgb<u8>, Vec<u8>>::from_vec(y_resolution, x_resolution, pixel_bytes)
                 .expect("`pixel_bytes` is allocated to the correct size of 3*xres*yres"),
-            ),
-        )),
+        ))),
+        ColorType::Rgba8 => Some(DynamicImage::ImageRgba8(imageops::rotate270(
+            &ImageBuffer::<Rgba<u8>, Vec<u8>>::from_vec(y_resolution, x_resolution, pixel_bytes)
+                .expect("`pixel_bytes` is allocated to the correct size of 4*xres*yres"),
+        ))),
         ColorType::L8 => Some(DynamicImage::ImageLuma8(imageops::rotate270(
             &ImageBuffer::<Luma<u8>, Vec<u8>>::from_vec(y_resolution, x_resolution, pixel_bytes)
                 .expect("`pixel_bytes` is allocated to the correct size of xres*yres"),
