@@ -141,7 +141,7 @@ impl From<LinearRGB> for Rgb<u8> {
     /// Clamps the color channels to the range \[0, 1\] before conversion.
     fn from(linear_rgb: LinearRGB) -> Self {
         [linear_rgb.r, linear_rgb.g, linear_rgb.b]
-            .map(|c| (f64::from(u8::MAX) * linear_rgb_to_srgb(c).clamp(0.0, 1.0)).round() as u8)
+            .map(|c| quantize_srgb(linear_rgb_to_srgb(c)))
             .into()
     }
 }
@@ -169,23 +169,26 @@ impl From<[f64; 3]> for LinearRGB {
 
 impl From<LinearRGB> for Luma<f64> {
     fn from(linear_rgb: LinearRGB) -> Self {
-        Luma::from([linear_rgb_to_srgb(linear_rgb.r)])
+        Luma::from([linear_rgb.r * 0.2126 + linear_rgb.g * 0.7152 + linear_rgb.b * 0.0722])
     }
+}
+
+fn quantize_srgb(srgb: f64) -> u8 {
+    (f64::from(u8::MAX) * srgb.clamp(0.0, 1.0)).round() as u8
 }
 
 impl From<LinearRGB> for Luma<u8> {
     fn from(linear_rgb: LinearRGB) -> Self {
-        Luma::from([(f64::from(u8::MAX)
-            * (linear_rgb.r * 0.2126 + linear_rgb.g * 0.7152 + linear_rgb.b * 0.0722)
-                .clamp(0.0, 1.0))
-        .round() as u8])
+        Luma::from([quantize_srgb(linear_rgb_to_srgb(
+            Luma::<f64>::from(linear_rgb).0[0],
+        ))])
     }
 }
 
 impl From<LinearRGB> for Rgba<u8> {
     fn from(linear_rgb: LinearRGB) -> Self {
         let [r, g, b] = [linear_rgb.r, linear_rgb.g, linear_rgb.b]
-            .map(|c| (f64::from(u8::MAX) * linear_rgb_to_srgb(c).clamp(0.0, 1.0)).round() as u8);
+            .map(|c| quantize_srgb(linear_rgb_to_srgb(c)));
 
         [r, g, b, 255].into()
     }
