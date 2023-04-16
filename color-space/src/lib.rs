@@ -252,7 +252,7 @@ impl SupportedColorType {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub struct UnsupportedError {
     color_type: ColorType,
 }
