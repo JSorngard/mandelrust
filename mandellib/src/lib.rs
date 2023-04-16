@@ -300,7 +300,7 @@ fn pixel_color(pixel_region: Frame, render_parameters: RenderParameters) -> Pixe
         }
     }
 
-    // Divide by the number of samples and convert to sRGB
+    // Divide by the number of samples and convert to sRGB color space.
     color /= f64::from(samples);
     match render_parameters.color_type {
         SupportedColorType::L8 => Pixel::Luma(color.into()),
