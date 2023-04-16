@@ -175,13 +175,13 @@ fn color_band(
     // This is the real value of c for this entire band.
     let c_real = start_real + render_region.real_distance * (band_index as f64) / x_resolution_f64;
 
-    let num_color_channels = usize::from(render_parameters.color_type.channel_count());
+    let bytes_per_pixel = usize::from(render_parameters.color_type.bytes_per_pixel());
 
-    for y_index in (0..band.len()).step_by(num_color_channels) {
+    for y_index in (0..band.len()).step_by(bytes_per_pixel) {
         // Compute the imaginary part at this pixel
         let c_imag = start_imag
             + render_region.imag_distance * (y_index as f64)
-                / (num_color_channels as f64 * y_resolution_f64);
+                / (bytes_per_pixel as f64 * y_resolution_f64);
 
         if mirror && c_imag > 0.0 {
             // We have rendered every pixel with negative imaginary part.
@@ -191,29 +191,31 @@ fn color_band(
             // we enter this branch the pixel indicated by `mirror_from` is
             // the one that contains the real line, and we do not want to
             // mirror that one since the real line is infinitely thin.
-            mirror_from -= num_color_channels;
+            mirror_from -= bytes_per_pixel;
 
             // `memmove` the data from the already computed pixel into this one.
-            band.copy_within((mirror_from - num_color_channels)..mirror_from, y_index)
+            band.copy_within((mirror_from - bytes_per_pixel)..mirror_from, y_index)
         } else {
             let pixel_region = Frame::new(c_real, c_imag, real_delta, imag_delta);
 
             // Otherwise we compute the pixel color as normal by iteration.
+            // This match might look inefficient, but it will be the same branch every loop iteration,
+            // so the branch predictor should not have an issue learning it.
             match pixel_color(pixel_region, render_parameters) {
                 Pixel::Rgba(rgba) => {
-                    band[y_index..(num_color_channels + y_index)].copy_from_slice(&rgba.0)
+                    band[y_index..(bytes_per_pixel + y_index)].copy_from_slice(&rgba.0)
                 }
                 Pixel::Rgb(rgb) => {
-                    band[y_index..(num_color_channels + y_index)].copy_from_slice(&rgb.0)
+                    band[y_index..(bytes_per_pixel + y_index)].copy_from_slice(&rgb.0)
                 }
                 Pixel::Luma(luma) => {
-                    band[y_index..(num_color_channels + y_index)].copy_from_slice(&luma.0)
+                    band[y_index..(bytes_per_pixel + y_index)].copy_from_slice(&luma.0)
                 }
             }
 
             // We keep track of how many pixels have been colored
             // in order to potentially mirror them.
-            mirror_from += num_color_channels;
+            mirror_from += bytes_per_pixel;
         }
     }
 
@@ -224,8 +226,8 @@ fn color_band(
         // Flip all data in the band. Turns RGB(A) into (A)BGR.
         band.reverse();
 
-        if render_parameters.color_type.bytes_per_pixel() > 1 {
-            for pixel in band.chunks_exact_mut(num_color_channels) {
+        if bytes_per_pixel > 1 {
+            for pixel in band.chunks_exact_mut(bytes_per_pixel) {
                 // Flip each pixel from (A)BGR to RGB(A).
                 pixel.reverse();
             }
@@ -233,7 +235,7 @@ fn color_band(
     }
 }
 
-pub enum Pixel<T> {
+enum Pixel<T> {
     Rgba(Rgba<T>),
     Rgb(Rgb<T>),
     Luma(Luma<T>),
@@ -259,7 +261,7 @@ pub enum Pixel<T> {
 /// N.B.: if `sqrt_samples_per_pixel` is even the center of
 /// the pixel is never sampled, and if it is 1 no super
 /// sampling is done (only the center is sampled).
-pub fn pixel_color(pixel_region: Frame, render_parameters: RenderParameters) -> Pixel<u8> {
+fn pixel_color(pixel_region: Frame, render_parameters: RenderParameters) -> Pixel<u8> {
     let ssaa = render_parameters.sqrt_samples_per_pixel.get();
     let ssaa_f64: f64 = ssaa.into();
 
