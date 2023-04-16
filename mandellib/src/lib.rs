@@ -3,7 +3,7 @@
 use core::num::{NonZeroU32, NonZeroU8, NonZeroUsize, TryFromIntError};
 use std::io::Write;
 
-use image::{imageops, ColorType, DynamicImage, ImageBuffer, Luma, Rgb, Rgba};
+use image::{imageops, DynamicImage, ImageBuffer, Luma, Rgb, Rgba};
 use indicatif::{ParallelProgressIterator, ProgressBar};
 use itertools::Itertools;
 use rayon::{
@@ -11,7 +11,7 @@ use rayon::{
     prelude::ParallelSliceMut,
 };
 
-use color_space::{palette, LinearRGB};
+use color_space::{palette, LinearRGB, SupportedColorType};
 
 // ----------- DEBUG FLAGS --------------
 // Set to true to only super sample close to the border of the set.
@@ -81,13 +81,6 @@ pub fn render(
     render_region: Frame,
     verbose: bool,
 ) -> DynamicImage {
-    if render_parameters.color_type != ColorType::L8
-        && render_parameters.color_type != ColorType::Rgb8
-        && render_parameters.color_type != ColorType::Rgba8
-    {
-        panic!("unsupported color type")
-    }
-
     let x_resolution = render_parameters.x_resolution;
     let y_resolution = render_parameters.y_resolution;
 
@@ -117,30 +110,28 @@ pub fn render(
     }
 
     vec_to_image(pixel_bytes, render_parameters)
-        .expect("the colortype has already been checked to be supported")
 }
 
-fn vec_to_image(pixel_bytes: Vec<u8>, render_parameters: RenderParameters) -> Option<DynamicImage> {
+fn vec_to_image(pixel_bytes: Vec<u8>, render_parameters: RenderParameters) -> DynamicImage {
     let x_resolution = render_parameters.x_resolution.u32.get();
     let y_resolution = render_parameters.y_resolution.u32.get();
     // The image is stored in a rotated fashion during rendering so that
     // the pixels of a column of the image lie contiguous in the backing vector.
     // Here we undo this rotation.
     match render_parameters.color_type {
-        ColorType::Rgb8 => Some(DynamicImage::ImageRgb8(imageops::rotate270(
+        SupportedColorType::Rgb8 => DynamicImage::ImageRgb8(imageops::rotate270(
             // This rotated state is the reason for the flipped image dimensions here.
             &ImageBuffer::<Rgb<u8>, Vec<u8>>::from_vec(y_resolution, x_resolution, pixel_bytes)
                 .expect("`pixel_bytes` is allocated to the correct size of 3*xres*yres"),
-        ))),
-        ColorType::Rgba8 => Some(DynamicImage::ImageRgba8(imageops::rotate270(
+        )),
+        SupportedColorType::Rgba8 => DynamicImage::ImageRgba8(imageops::rotate270(
             &ImageBuffer::<Rgba<u8>, Vec<u8>>::from_vec(y_resolution, x_resolution, pixel_bytes)
                 .expect("`pixel_bytes` is allocated to the correct size of 4*xres*yres"),
-        ))),
-        ColorType::L8 => Some(DynamicImage::ImageLuma8(imageops::rotate270(
+        )),
+        SupportedColorType::L8 => DynamicImage::ImageLuma8(imageops::rotate270(
             &ImageBuffer::<Luma<u8>, Vec<u8>>::from_vec(y_resolution, x_resolution, pixel_bytes)
                 .expect("`pixel_bytes` is allocated to the correct size of xres*yres"),
-        ))),
-        _ => None,
+        )),
     }
 }
 
@@ -293,9 +284,8 @@ fn pixel_color(pixel_region: Frame, render_parameters: RenderParameters) -> Pixe
         );
 
         color += match render_parameters.color_type {
-            ColorType::Rgb8 | ColorType::Rgba8 => palette(escape_speed),
-            ColorType::L8 => [escape_speed; 3].into(),
-            _ => panic!("unsupported color"),
+            SupportedColorType::Rgb8 | SupportedColorType::Rgba8 => palette(escape_speed),
+            SupportedColorType::L8 => [escape_speed; 3].into(),
         };
 
         samples += 1;
@@ -313,10 +303,9 @@ fn pixel_color(pixel_region: Frame, render_parameters: RenderParameters) -> Pixe
     // Divide by the number of samples and convert to sRGB
     color /= f64::from(samples);
     match render_parameters.color_type {
-        ColorType::L8 => Pixel::Luma(color.into()),
-        ColorType::Rgb8 => Pixel::Rgb(color.into()),
-        ColorType::Rgba8 => Pixel::Rgba(color.into()),
-        _ => panic!("unsupported color"),
+        SupportedColorType::L8 => Pixel::Luma(color.into()),
+        SupportedColorType::Rgb8 => Pixel::Rgb(color.into()),
+        SupportedColorType::Rgba8 => Pixel::Rgba(color.into()),
     }
 }
 
@@ -422,7 +411,7 @@ pub struct RenderParameters {
     pub y_resolution: Resolution,
     pub max_iterations: NonZeroU32,
     pub sqrt_samples_per_pixel: NonZeroU8,
-    pub color_type: ColorType,
+    pub color_type: SupportedColorType,
 }
 
 impl RenderParameters {
@@ -431,7 +420,7 @@ impl RenderParameters {
         y_resolution: NonZeroU32,
         max_iterations: NonZeroU32,
         sqrt_samples_per_pixel: NonZeroU8,
-        color_type: ColorType,
+        color_type: SupportedColorType,
     ) -> Result<Self, TryFromIntError> {
         Ok(Self {
             x_resolution: x_resolution.try_into()?,

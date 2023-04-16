@@ -8,7 +8,7 @@ use std::{
 };
 
 use clap::Parser;
-use image::ColorType;
+use color_space::SupportedColorType;
 
 use crate::command_line_interface::Cli;
 
@@ -43,9 +43,9 @@ fn main() -> Result<(), Box<dyn Error>> {
         args.max_iterations,
         args.ssaa,
         if args.grayscale {
-            ColorType::L8
+            SupportedColorType::L8
         } else {
-            ColorType::Rgb8
+            SupportedColorType::Rgb8
         },
     )?;
 

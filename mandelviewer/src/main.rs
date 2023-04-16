@@ -5,6 +5,7 @@ use core::{
 use std::num::TryFromIntError;
 
 mod embedded_resources;
+use color_space::SupportedColorType;
 use embedded_resources::{ICON, RENDERING_IN_PROGRESS};
 use mandellib::{render as sync_render, Frame, RenderParameters};
 
@@ -23,7 +24,7 @@ use iced::{
     },
     window, Application, Command, Element, Length, Theme,
 };
-use image::{ColorType, DynamicImage, ImageFormat};
+use image::{DynamicImage, ImageFormat};
 use nonzero_ext::nonzero;
 use rfd::FileDialog;
 
@@ -139,7 +140,7 @@ impl Application for MandelViewer {
             INITIAL_Y_RES,
             INITIAL_MAX_ITERATIONS,
             INITIAL_SSAA_FACTOR,
-            ColorType::Rgba8,
+            SupportedColorType::Rgba8,
         )
         .unwrap();
         let view_region = Frame::new(
@@ -227,9 +228,9 @@ impl Application for MandelViewer {
             }
             Message::GrayscaleToggled(state) => {
                 self.params.color_type = if state {
-                    ColorType::L8
+                    SupportedColorType::L8
                 } else {
-                    ColorType::Rgba8
+                    SupportedColorType::Rgba8
                 };
                 if self.ui_values.live_preview {
                     Command::perform(
