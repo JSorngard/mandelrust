@@ -151,7 +151,19 @@ fn color_band(
             + render_region.imag_distance * (y_index as f64)
                 / (bytes_per_pixel as f64 * y_resolution_f64);
 
-        if mirror && c_imag > 0.0 {
+        if !(mirror && c_imag > 0.0) {
+            let pixel_region = Frame::new(c_real, c_imag, real_delta, imag_delta);
+
+            // Compute the pixel color as normal by iteration
+            let color = pixel_color(pixel_region, render_parameters);
+
+            // and `memcpy` it to the correct place.
+            band[y_index..(bytes_per_pixel + y_index)].copy_from_slice(color.as_raw());
+
+            // We keep track of how many pixels have been colored
+            // in order to potentially mirror them.
+            mirror_from += bytes_per_pixel;
+        } else {
             // We have rendered every pixel with negative imaginary part.
 
             // We want to mirror from the next pixel over every iteration.
@@ -163,19 +175,6 @@ fn color_band(
 
             // `memmove` the data from the already computed pixel into this one.
             band.copy_within((mirror_from - bytes_per_pixel)..mirror_from, y_index)
-        } else {
-            let pixel_region = Frame::new(c_real, c_imag, real_delta, imag_delta);
-
-            // Compute the pixel color as normal by iteration
-            let color = pixel_color(pixel_region, render_parameters);
-
-            // and `memcpy` it to the correct place.
-            band[y_index..(bytes_per_pixel + y_index)]
-                .copy_from_slice(color.as_raw());
-
-            // We keep track of how many pixels have been colored
-            // in order to potentially mirror them.
-            mirror_from += bytes_per_pixel;
         }
     }
 
