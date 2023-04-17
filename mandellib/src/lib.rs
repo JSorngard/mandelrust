@@ -11,7 +11,7 @@ use rayon::{
     prelude::ParallelSliceMut,
 };
 
-use color_space::{palette, LinearRGB, SupportedColorType};
+use color_space::{palette, LinearRGB, Pixel, SupportedColorType};
 
 // ----------- DEBUG FLAGS --------------
 // Set to true to only super sample close to the border of the set.
@@ -370,12 +370,6 @@ fn vec_to_image(pixel_bytes: Vec<u8>, render_parameters: RenderParameters) -> Dy
                 .expect("`pixel_bytes` is allocated to the correct size of xres*yres"),
         )),
     }
-}
-
-enum Pixel<T> {
-    Rgba(Rgba<T>),
-    Rgb(Rgb<T>),
-    Luma(Luma<T>),
 }
 
 /// Contains information about a rectangle-shaped region in the complex plane.

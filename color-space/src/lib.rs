@@ -217,6 +217,13 @@ fn linear_rgb_to_srgb(c: f64) -> f64 {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]
+pub enum Pixel<T> {
+    Rgba(Rgba<T>),
+    Rgb(Rgb<T>),
+    Luma(Luma<T>),
+}
+
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum SupportedColorType {
     Rgba8,
     Rgb8,
