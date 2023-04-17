@@ -84,10 +84,10 @@ pub fn render(
     let x_resolution = render_parameters.x_resolution;
     let y_resolution = render_parameters.y_resolution;
 
-    let num_color_channels = usize::from(render_parameters.color_type.channel_count());
+    let bytes_per_pixel = usize::from(render_parameters.color_type.bytes_per_pixel());
 
     let mut pixel_bytes: Vec<u8> =
-        vec![0; num_color_channels * x_resolution.usize.get() * y_resolution.usize.get()];
+        vec![0; bytes_per_pixel * x_resolution.usize.get() * y_resolution.usize.get()];
 
     let progress_bar = if verbose {
         ProgressBar::new(x_resolution.u32.get().into())
@@ -97,7 +97,7 @@ pub fn render(
 
     pixel_bytes
         // Split the image up into vertical bands and iterate over them in parallel.
-        .par_chunks_exact_mut(num_color_channels * y_resolution.usize.get())
+        .par_chunks_exact_mut(bytes_per_pixel * y_resolution.usize.get())
         // We enumerate each band to be able to compute the real value of c for that band.
         .enumerate()
         .progress_with(progress_bar)
