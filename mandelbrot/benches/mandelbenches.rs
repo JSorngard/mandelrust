@@ -1,3 +1,4 @@
+use color_space::SupportedColorType;
 use criterion::{criterion_group, criterion_main, Criterion};
 use mandellib::{render, Frame, RenderParameters};
 
@@ -20,7 +21,11 @@ fn get_inputs(
         y_res.try_into().unwrap(),
         max_iters.try_into().unwrap(),
         ssaa.try_into().unwrap(),
-        grayscale,
+        if grayscale {
+            SupportedColorType::L8
+        } else {
+            SupportedColorType::Rgb8
+        },
     )
     .unwrap();
 

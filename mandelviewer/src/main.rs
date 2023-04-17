@@ -5,6 +5,7 @@ use core::{
 use std::num::TryFromIntError;
 
 mod embedded_resources;
+use color_space::SupportedColorType;
 use embedded_resources::{ICON, RENDERING_IN_PROGRESS};
 use mandellib::{render as sync_render, Frame, RenderParameters};
 
@@ -139,7 +140,7 @@ impl Application for MandelViewer {
             INITIAL_Y_RES,
             INITIAL_MAX_ITERATIONS,
             INITIAL_SSAA_FACTOR,
-            false,
+            SupportedColorType::Rgba8,
         )
         .unwrap();
         let view_region = Frame::new(
@@ -226,7 +227,11 @@ impl Application for MandelViewer {
                 Command::none()
             }
             Message::GrayscaleToggled(state) => {
-                self.params.grayscale = state;
+                self.params.color_type = if state {
+                    SupportedColorType::L8
+                } else {
+                    SupportedColorType::Rgba8
+                };
                 if self.ui_values.live_preview {
                     Command::perform(
                         render(
@@ -418,7 +423,7 @@ impl Application for MandelViewer {
                     )),
                 ],
                 // A checkbox for rendering the image in grayscale.
-                Checkbox::new("Grayscale", self.params.grayscale, |status| {
+                Checkbox::new("Grayscale", !self.params.color_type.has_color(), |status| {
                     Message::GrayscaleToggled(status)
                 }),
                 // A slider for determining the number of samples per pixels when doing SSAA,

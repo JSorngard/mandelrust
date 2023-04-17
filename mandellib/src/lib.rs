@@ -3,7 +3,7 @@
 use core::num::{NonZeroU32, NonZeroU8, NonZeroUsize, TryFromIntError};
 use std::io::Write;
 
-use image::{imageops, DynamicImage, ImageBuffer, Rgb};
+use image::{imageops, DynamicImage, ImageBuffer, Luma, Rgb, Rgba};
 use indicatif::{ParallelProgressIterator, ProgressBar};
 use itertools::Itertools;
 use rayon::{
@@ -11,7 +11,7 @@ use rayon::{
     prelude::ParallelSliceMut,
 };
 
-use color_space::{palette, LinearRGB};
+use color_space::{palette, LinearRGB, Pixel, SupportedColorType};
 
 // ----------- DEBUG FLAGS --------------
 // Set to true to only super sample close to the border of the set.
@@ -38,8 +38,6 @@ const ENABLE_MIRRORING: bool = true;
 // these features are not visible.
 const CARDIOID_AND_BULB_CHECK: bool = true;
 // --------------------------------------
-
-const NUM_COLOR_CHANNELS: usize = 3;
 
 /// Takes in variables describing where to render and at what resolution
 /// and produces an image of the Mandelbrot set.
@@ -86,8 +84,10 @@ pub fn render(
     let x_resolution = render_parameters.x_resolution;
     let y_resolution = render_parameters.y_resolution;
 
+    let bytes_per_pixel = usize::from(render_parameters.color_type.bytes_per_pixel());
+
     let mut pixel_bytes: Vec<u8> =
-        vec![0; NUM_COLOR_CHANNELS * x_resolution.usize.get() * y_resolution.usize.get()];
+        vec![0; bytes_per_pixel * x_resolution.usize.get() * y_resolution.usize.get()];
 
     let progress_bar = if verbose {
         ProgressBar::new(x_resolution.u32.get().into())
@@ -97,7 +97,7 @@ pub fn render(
 
     pixel_bytes
         // Split the image up into vertical bands and iterate over them in parallel.
-        .par_chunks_exact_mut(NUM_COLOR_CHANNELS * y_resolution.usize.get())
+        .par_chunks_exact_mut(bytes_per_pixel * y_resolution.usize.get())
         // We enumerate each band to be able to compute the real value of c for that band.
         .enumerate()
         .progress_with(progress_bar)
@@ -109,24 +109,7 @@ pub fn render(
         let _ = write!(std::io::stdout(), "\rProcessing image");
     }
 
-    // The image is stored in a rotated fashion during rendering so that
-    // the pixels of a column of the image lie contiguous in the backing vector.
-    // Here we undo this rotation.
-    let img = imageops::rotate270(
-        &ImageBuffer::<Rgb<u8>, Vec<u8>>::from_vec(
-            // This rotated state is the reason for the flipped image dimensions here.
-            y_resolution.u32.get(),
-            x_resolution.u32.get(),
-            pixel_bytes,
-        )
-        .expect("`pixel_bytes` is allocated to the correct size of 3*xres*yres"),
-    );
-
-    if render_parameters.grayscale {
-        DynamicImage::ImageLuma8(image::imageops::grayscale(&img))
-    } else {
-        DynamicImage::ImageRgb8(img)
-    }
+    vec_to_image(pixel_bytes, render_parameters)
 }
 
 /// Computes the colors of the pixels in a y-axis band of the image of the mandelbrot set.
@@ -160,13 +143,27 @@ fn color_band(
     // This is the real value of c for this entire band.
     let c_real = start_real + render_region.real_distance * (band_index as f64) / x_resolution_f64;
 
-    for y_index in (0..band.len()).step_by(NUM_COLOR_CHANNELS) {
+    let bytes_per_pixel = usize::from(render_parameters.color_type.bytes_per_pixel());
+
+    for y_index in (0..band.len()).step_by(bytes_per_pixel) {
         // Compute the imaginary part at this pixel
         let c_imag = start_imag
             + render_region.imag_distance * (y_index as f64)
-                / (NUM_COLOR_CHANNELS as f64 * y_resolution_f64);
+                / (bytes_per_pixel as f64 * y_resolution_f64);
 
-        if mirror && c_imag > 0.0 {
+        if !(mirror && c_imag > 0.0) {
+            let pixel_region = Frame::new(c_real, c_imag, real_delta, imag_delta);
+
+            // Compute the pixel color as normal by iteration
+            let color = pixel_color(pixel_region, render_parameters);
+
+            // and `memcpy` it to the correct place.
+            band[y_index..(bytes_per_pixel + y_index)].copy_from_slice(color.as_raw());
+
+            // We keep track of how many pixels have been colored
+            // in order to potentially mirror them.
+            mirror_from += bytes_per_pixel;
+        } else {
             // We have rendered every pixel with negative imaginary part.
 
             // We want to mirror from the next pixel over every iteration.
@@ -174,21 +171,10 @@ fn color_band(
             // we enter this branch the pixel indicated by `mirror_from` is
             // the one that contains the real line, and we do not want to
             // mirror that one since the real line is infinitely thin.
-            mirror_from -= NUM_COLOR_CHANNELS;
+            mirror_from -= bytes_per_pixel;
 
             // `memmove` the data from the already computed pixel into this one.
-            band.copy_within((mirror_from - NUM_COLOR_CHANNELS)..mirror_from, y_index)
-        } else {
-            let pixel_region = Frame::new(c_real, c_imag, real_delta, imag_delta);
-
-            // Otherwise we compute the pixel color as normal by iteration.
-            let color = pixel_color(pixel_region, render_parameters);
-
-            band[y_index..(NUM_COLOR_CHANNELS + y_index)].copy_from_slice(&color.0);
-
-            // We keep track of how many pixels have been colored
-            // in order to potentially mirror them.
-            mirror_from += NUM_COLOR_CHANNELS;
+            band.copy_within((mirror_from - bytes_per_pixel)..mirror_from, y_index)
         }
     }
 
@@ -196,11 +182,14 @@ fn color_band(
     // negative imaginary component is false we must flip the vertical band
     // to get the correct image.
     if need_to_flip {
-        // Flip all data in the band. Turns RGB into BGR.
+        // Flip all data in the band. Turns RGB(A) into (A)BGR.
         band.reverse();
-        for pixel in band.chunks_exact_mut(NUM_COLOR_CHANNELS) {
-            // Flip each pixel from BGR to RGB.
-            pixel.swap(0, pixel.len() - 1);
+
+        if bytes_per_pixel > 1 {
+            for pixel in band.chunks_exact_mut(bytes_per_pixel) {
+                // Flip each pixel from (A)BGR to RGB(A).
+                pixel.reverse();
+            }
         }
     }
 }
@@ -222,10 +211,10 @@ fn color_band(
 /// The gap between the sample points at the edge and the
 /// edge of the pixel is the same as between the points.
 ///
-/// N.B.: if `sqrt_samples_per_pixel` is even the center of
+/// N.B.: if `render_parameters.sqrt_samples_per_pixel` is even the center of
 /// the pixel is never sampled, and if it is 1 no super
 /// sampling is done (only the center is sampled).
-pub fn pixel_color(pixel_region: Frame, render_parameters: RenderParameters) -> Rgb<u8> {
+fn pixel_color(pixel_region: Frame, render_parameters: RenderParameters) -> Pixel<u8> {
     let ssaa = render_parameters.sqrt_samples_per_pixel.get();
     let ssaa_f64: f64 = ssaa.into();
 
@@ -256,11 +245,11 @@ pub fn pixel_color(pixel_region: Frame, render_parameters: RenderParameters) -> 
             render_parameters.max_iterations,
         );
 
-        color += if !render_parameters.grayscale {
-            palette(escape_speed)
-        } else {
-            [escape_speed; 3].into()
+        color += match render_parameters.color_type {
+            SupportedColorType::Rgb8 | SupportedColorType::Rgba8 => palette(escape_speed),
+            SupportedColorType::L8 => LinearRGB::new(escape_speed, escape_speed, escape_speed),
         };
+
         samples += 1;
 
         // If we are far from the fractal we do not need to supersample.
@@ -273,8 +262,13 @@ pub fn pixel_color(pixel_region: Frame, render_parameters: RenderParameters) -> 
         }
     }
 
-    // Divide by the number of samples and convert to sRGB
-    (color / f64::from(samples)).into()
+    // Divide by the number of samples and convert to sRGB color space.
+    color /= f64::from(samples);
+    match render_parameters.color_type {
+        SupportedColorType::L8 => Pixel::Luma(color.into()),
+        SupportedColorType::Rgb8 => Pixel::Rgb(color.into()),
+        SupportedColorType::Rgba8 => Pixel::Rgba(color.into()),
+    }
 }
 
 /// Iterates the Mandelbrot function
@@ -346,6 +340,29 @@ pub fn iterate(c_re: f64, c_im: f64, max_iterations: NonZeroU32) -> f64 {
     }
 }
 
+fn vec_to_image(pixel_bytes: Vec<u8>, render_parameters: RenderParameters) -> DynamicImage {
+    let x_resolution = render_parameters.x_resolution.u32.get();
+    let y_resolution = render_parameters.y_resolution.u32.get();
+    // The image is stored in a rotated fashion during rendering so that
+    // the pixels of a column of the image lie contiguous in the backing vector.
+    // Here we undo this rotation.
+    match render_parameters.color_type {
+        SupportedColorType::Rgb8 => DynamicImage::ImageRgb8(imageops::rotate270(
+            // This rotated state is the reason for the flipped image dimensions here.
+            &ImageBuffer::<Rgb<u8>, Vec<u8>>::from_vec(y_resolution, x_resolution, pixel_bytes)
+                .expect("`pixel_bytes` is allocated to the correct size of 3*xres*yres"),
+        )),
+        SupportedColorType::Rgba8 => DynamicImage::ImageRgba8(imageops::rotate270(
+            &ImageBuffer::<Rgba<u8>, Vec<u8>>::from_vec(y_resolution, x_resolution, pixel_bytes)
+                .expect("`pixel_bytes` is allocated to the correct size of 4*xres*yres"),
+        )),
+        SupportedColorType::L8 => DynamicImage::ImageLuma8(imageops::rotate270(
+            &ImageBuffer::<Luma<u8>, Vec<u8>>::from_vec(y_resolution, x_resolution, pixel_bytes)
+                .expect("`pixel_bytes` is allocated to the correct size of xres*yres"),
+        )),
+    }
+}
+
 /// Contains information about a rectangle-shaped region in the complex plane.
 #[derive(Debug, Clone, Copy)]
 pub struct Frame {
@@ -379,7 +396,7 @@ pub struct RenderParameters {
     pub y_resolution: Resolution,
     pub max_iterations: NonZeroU32,
     pub sqrt_samples_per_pixel: NonZeroU8,
-    pub grayscale: bool,
+    pub color_type: SupportedColorType,
 }
 
 impl RenderParameters {
@@ -388,14 +405,14 @@ impl RenderParameters {
         y_resolution: NonZeroU32,
         max_iterations: NonZeroU32,
         sqrt_samples_per_pixel: NonZeroU8,
-        grayscale: bool,
+        color_type: SupportedColorType,
     ) -> Result<Self, TryFromIntError> {
         Ok(Self {
             x_resolution: x_resolution.try_into()?,
             y_resolution: y_resolution.try_into()?,
             max_iterations,
             sqrt_samples_per_pixel,
-            grayscale,
+            color_type,
         })
     }
 }

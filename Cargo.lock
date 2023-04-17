@@ -502,7 +502,6 @@ dependencies = [
  "approx",
  "image",
  "itertools",
- "lazy_static",
 ]
 
 [[package]]
@@ -1798,6 +1797,7 @@ dependencies = [
  "clap 4.2.2",
  "color-space",
  "criterion",
+ "image",
  "mandellib",
 ]
 
@@ -1816,6 +1816,7 @@ dependencies = [
 name = "mandelviewer"
 version = "0.1.0"
 dependencies = [
+ "color-space",
  "iced",
  "iced_graphics",
  "iced_native",
