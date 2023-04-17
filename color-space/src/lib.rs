@@ -168,24 +168,24 @@ impl From<LinearRGB> for Rgba<u8> {
 
 /// Converts a point in the sRGB color space to a linear RGB triplet.
 fn srgb_to_linear_rgb(c: f64) -> f64 {
-    //c * c // <-- approximation of the below
+    c * c // <-- approximation of the below
 
-    if c <= 0.04045 {
-        c / 12.92
-    } else {
-        ((c + 0.055) / 1.055).powf(2.4)
-    }
+    // if c <= 0.04045 {
+    //     c / 12.92
+    // } else {
+    //     ((c + 0.055) / 1.055).powf(2.4)
+    // }
 }
 
 /// Converts an RGB triplet into a point in the sRGB color space.
 fn linear_rgb_to_srgb(c: f64) -> f64 {
-    //c.sqrt() // <-- approximation of the below
+    c.sqrt() // <-- approximation of the below
 
-    if c <= 0.0031308 {
-        12.92 * c
-    } else {
-        1.055 * c.powf(1.0 / 2.4) - 0.055
-    }
+    // if c <= 0.0031308 {
+    //     12.92 * c
+    // } else {
+    //     1.055 * c.powf(1.0 / 2.4) - 0.055
+    // }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]
