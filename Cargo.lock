@@ -493,7 +493,6 @@ dependencies = [
  "approx",
  "image",
  "itertools",
- "lazy_static",
 ]
 
 [[package]]
