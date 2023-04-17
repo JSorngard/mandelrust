@@ -195,6 +195,17 @@ pub enum Pixel<T> {
     Luma(Luma<T>),
 }
 
+impl<T> Pixel<T> {
+    #[inline]
+    pub const fn as_raw(&self) -> &[T] {
+        match self {
+            Self::Luma(luma) => &luma.0,
+            Self::Rgb(rgb) => &rgb.0,
+            Self::Rgba(rgba) => &rgba.0,
+        }
+    }
+}
+
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum SupportedColorType {
     Rgba8,

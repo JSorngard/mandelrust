@@ -166,20 +166,12 @@ fn color_band(
         } else {
             let pixel_region = Frame::new(c_real, c_imag, real_delta, imag_delta);
 
-            // Otherwise we compute the pixel color as normal by iteration.
-            // This match might look inefficient, but it will be the same branch every loop iteration,
-            // so the branch predictor should not have an issue learning it.
-            match pixel_color(pixel_region, render_parameters) {
-                Pixel::Rgba(rgba) => {
-                    band[y_index..(bytes_per_pixel + y_index)].copy_from_slice(&rgba.0)
-                }
-                Pixel::Rgb(rgb) => {
-                    band[y_index..(bytes_per_pixel + y_index)].copy_from_slice(&rgb.0)
-                }
-                Pixel::Luma(luma) => {
-                    band[y_index..(bytes_per_pixel + y_index)].copy_from_slice(&luma.0)
-                }
-            }
+            // Compute the pixel color as normal by iteration
+            let color = pixel_color(pixel_region, render_parameters);
+
+            // and `memcpy` it to the correct place.
+            band[y_index..(bytes_per_pixel + y_index)]
+                .copy_from_slice(color.as_raw());
 
             // We keep track of how many pixels have been colored
             // in order to potentially mirror them.
