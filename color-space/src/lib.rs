@@ -167,12 +167,6 @@ impl From<[f64; 3]> for LinearRGB {
     }
 }
 
-impl From<LinearRGB> for Luma<f64> {
-    fn from(linear_rgb: LinearRGB) -> Self {
-        Luma::from([linear_rgb.r * 0.2126 + linear_rgb.g * 0.7152 + linear_rgb.b * 0.0722])
-    }
-}
-
 /// Maps the range \[0.0, 1.0\] to the range \[0, 255\].
 /// Clamps the input to the range before the conversion.
 fn quantize_srgb(srgb: f64) -> u8 {
@@ -182,7 +176,7 @@ fn quantize_srgb(srgb: f64) -> u8 {
 impl From<LinearRGB> for Luma<u8> {
     fn from(linear_rgb: LinearRGB) -> Self {
         Luma::from([quantize_srgb(linear_rgb_to_srgb(
-            Luma::<f64>::from(linear_rgb).0[0],
+            linear_rgb.r * 0.2126 + linear_rgb.g * 0.7152 + linear_rgb.b * 0.0722,
         ))])
     }
 }
