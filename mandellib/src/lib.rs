@@ -211,7 +211,7 @@ fn color_band(
 /// The gap between the sample points at the edge and the
 /// edge of the pixel is the same as between the points.
 ///
-/// N.B.: if `sqrt_samples_per_pixel` is even the center of
+/// N.B.: if `render_parameters.sqrt_samples_per_pixel` is even the center of
 /// the pixel is never sampled, and if it is 1 no super
 /// sampling is done (only the center is sampled).
 fn pixel_color(pixel_region: Frame, render_parameters: RenderParameters) -> Pixel<u8> {
