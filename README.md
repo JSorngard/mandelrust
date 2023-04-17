@@ -33,7 +33,7 @@ I have tried to make the program faster over time. Some of the techniques used a
  6. [Link time optimization](https://doc.rust-lang.org/rustc/codegen-options/index.html#lto) has been enabled and the number of [codegen units](https://doc.rust-lang.org/rustc/codegen-options/index.html#codegen-units) set to 1  
  7. Cargo is set to enable optimization with every instruction set available [on the compiling CPU](https://rust-lang.github.io/packed_simd/perf-guide/target-feature/rustflags.html#target-cpu).
 
-The program can render a nine times supersampled 4k image of the set in just over 800 ms on my laptop with a quad core i7-7500U CPU, while a non-supersampled 1080p image finishes in around 150 ms.
+The program can render a nine times supersampled 4k image of the set in around 580 ms on my laptop with a quad core i7-7500U CPU, while a non-supersampled 1080p image finishes in around 80 ms.
 
 You can easily test the performance of various renders on your own machine with `cargo bench`. The results will be printed to the terminal, but more detailed data can be found in `target/criterion/report/index.html` in the form of a web page.
 
