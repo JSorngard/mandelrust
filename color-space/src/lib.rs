@@ -173,7 +173,7 @@ impl From<LinearRGB> for Luma<f64> {
     }
 }
 
-/// Maps the range [0.0, 1.0] to the range [0, 255].
+/// Maps the range \[0.0, 1.0\] to the range \[0, 255\].
 /// Clamps the input to the range before the conversion.
 fn quantize_srgb(srgb: f64) -> u8 {
     (f64::from(u8::MAX) * srgb.clamp(0.0, 1.0)).round() as u8
