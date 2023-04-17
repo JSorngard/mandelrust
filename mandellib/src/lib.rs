@@ -340,6 +340,8 @@ pub fn iterate(c_re: f64, c_im: f64, max_iterations: NonZeroU32) -> f64 {
     }
 }
 
+/// Ugly helper function that takes a `Vec` and converts it to a `DynamicImage` depending
+/// on the color type.
 fn vec_to_image(pixel_bytes: Vec<u8>, render_parameters: RenderParameters) -> DynamicImage {
     let x_resolution = u32::from(render_parameters.x_resolution);
     let y_resolution = u32::from(render_parameters.y_resolution);
