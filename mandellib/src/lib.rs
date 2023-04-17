@@ -1,6 +1,6 @@
 #![forbid(unsafe_code)]
 
-use core::num::{NonZeroU32, NonZeroU8, NonZeroUsize, TryFromIntError};
+use core::num::{NonZeroU32, NonZeroU8, TryFromIntError};
 use std::io::Write;
 
 use image::{imageops, DynamicImage, ImageBuffer, Luma, Rgb, Rgba};
@@ -90,14 +90,14 @@ pub fn render(
         vec![0; bytes_per_pixel * usize::from(x_resolution) * usize::from(y_resolution)];
 
     let progress_bar = if verbose {
-        ProgressBar::new(x_resolution.u32.get().into())
+        ProgressBar::new(x_resolution.into())
     } else {
         ProgressBar::hidden()
     };
 
     pixel_bytes
         // Split the image up into vertical bands and iterate over them in parallel.
-        .par_chunks_exact_mut(bytes_per_pixel * y_resolution.usize.get())
+        .par_chunks_exact_mut(bytes_per_pixel * usize::from(y_resolution))
         // We enumerate each band to be able to compute the real value of c for that band.
         .enumerate()
         .progress_with(progress_bar)
@@ -341,8 +341,8 @@ pub fn iterate(c_re: f64, c_im: f64, max_iterations: NonZeroU32) -> f64 {
 }
 
 fn vec_to_image(pixel_bytes: Vec<u8>, render_parameters: RenderParameters) -> DynamicImage {
-    let x_resolution = render_parameters.x_resolution.u32.get();
-    let y_resolution = render_parameters.y_resolution.u32.get();
+    let x_resolution = u32::from(render_parameters.x_resolution);
+    let y_resolution = u32::from(render_parameters.y_resolution);
     // The image is stored in a rotated fashion during rendering so that
     // the pixels of a column of the image lie contiguous in the backing vector.
     // Here we undo this rotation.
@@ -417,68 +417,78 @@ impl RenderParameters {
     }
 }
 
-/// A struct containing a resolution that is known
-/// to fit in both a u32 and usize type.
-#[derive(Debug, Clone, Copy)]
-pub struct Resolution {
-    u32: NonZeroU32,
-    usize: NonZeroUsize,
-}
-
-impl std::fmt::Display for Resolution {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.u32)
+pub use resolution::Resolution;
+mod resolution {
+    use core::num::{NonZeroU32, NonZeroUsize, TryFromIntError};
+    /// A struct containing a resolution that is known
+    /// to fit in both a u32 and usize type.
+    #[derive(Debug, Clone, Copy)]
+    pub struct Resolution {
+        u32: NonZeroU32,
+        usize: NonZeroUsize,
     }
-}
 
-impl TryFrom<NonZeroU32> for Resolution {
-    type Error = TryFromIntError;
-    fn try_from(value: NonZeroU32) -> Result<Self, Self::Error> {
-        Ok(Self {
-            u32: value,
-            usize: value.try_into()?,
-        })
+    impl std::fmt::Display for Resolution {
+        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            write!(f, "{}", self.u32)
+        }
     }
-}
 
-impl TryFrom<u32> for Resolution {
-    type Error = TryFromIntError;
-    fn try_from(value: u32) -> Result<Self, Self::Error> {
-        let nzvalue: NonZeroU32 = value.try_into()?;
-        Ok(Self {
-            u32: nzvalue,
-            usize: nzvalue.try_into()?,
-        })
+    impl TryFrom<NonZeroU32> for Resolution {
+        type Error = TryFromIntError;
+        fn try_from(value: NonZeroU32) -> Result<Self, Self::Error> {
+            Ok(Self {
+                u32: value,
+                usize: value.try_into()?,
+            })
+        }
     }
-}
 
-impl From<Resolution> for usize {
-    fn from(value: Resolution) -> Self {
-        value.usize.get()
+    impl TryFrom<u32> for Resolution {
+        type Error = TryFromIntError;
+        fn try_from(value: u32) -> Result<Self, Self::Error> {
+            let nzvalue: NonZeroU32 = value.try_into()?;
+            Ok(Self {
+                u32: nzvalue,
+                usize: nzvalue.try_into()?,
+            })
+        }
     }
-}
 
-impl From<Resolution> for NonZeroUsize {
-    fn from(value: Resolution) -> Self {
-        value.usize
+    impl From<Resolution> for usize {
+        fn from(value: Resolution) -> Self {
+            value.usize.get()
+        }
     }
-}
 
-impl From<Resolution> for u32 {
-    fn from(value: Resolution) -> Self {
-        value.u32.get()
+    impl From<Resolution> for NonZeroUsize {
+        fn from(value: Resolution) -> Self {
+            value.usize
+        }
     }
-}
 
-impl From<Resolution> for NonZeroU32 {
-    fn from(value: Resolution) -> Self {
-        value.u32
+    impl From<Resolution> for u32 {
+        fn from(value: Resolution) -> Self {
+            value.u32.get()
+        }
     }
-}
 
-impl From<Resolution> for f64 {
-    fn from(value: Resolution) -> Self {
-        value.u32.get().into()
+    impl From<Resolution> for NonZeroU32 {
+        fn from(value: Resolution) -> Self {
+            value.u32
+        }
+    }
+
+    impl From<Resolution> for u64 {
+        fn from(value: Resolution) -> Self {
+            value.u32.get().into()
+        }
+    }
+
+    impl From<Resolution> for f64 {
+        fn from(value: Resolution) -> Self {
+            value.u32.get().into()
+        }
     }
 }
 
