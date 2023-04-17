@@ -256,7 +256,7 @@ fn pixel_color(pixel_region: Frame, render_parameters: RenderParameters) -> Pixe
 
         color += match render_parameters.color_type {
             SupportedColorType::Rgb8 | SupportedColorType::Rgba8 => palette(escape_speed),
-            SupportedColorType::L8 => [escape_speed; 3].into(),
+            SupportedColorType::L8 => LinearRGB::new(escape_speed, escape_speed, escape_speed),
         };
 
         samples += 1;
