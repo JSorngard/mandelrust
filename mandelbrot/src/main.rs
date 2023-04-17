@@ -102,7 +102,7 @@ fn give_user_feedback(args: &Cli, rparams: &RenderParameters) -> Result<(), Box<
     write!(
         &mut header,
         " image with a resolution of {} by {} pixels",
-        rparams.x_resolution.u32,
+        u32::from(rparams.x_resolution),
         args.pixels.get(),
     )?;
     if args.zoom_level > 0.0 {

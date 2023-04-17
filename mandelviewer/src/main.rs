@@ -268,7 +268,7 @@ impl Application for MandelViewer {
             }
             Message::VerticalResolutionUpdated(y_res) => match self.with_new_resolution(y_res) {
                 Ok(params) => {
-                    if params.x_resolution.u32.get() * params.y_resolution.u32.get() * 4
+                    if u32::from(params.x_resolution) * u32::from(params.y_resolution) * 4
                         <= 1000000000
                     {
                         self.params = params;
@@ -361,10 +361,7 @@ impl Application for MandelViewer {
                 Text::new("Vertical resolution"),
                 row![
                     Button::new("÷2").on_press(Message::VerticalResolutionUpdated(
-                        self.params
-                            .y_resolution
-                            .u32
-                            .get()
+                        u32::from(self.params.y_resolution)
                             .saturating_div(2)
                             .max(1)
                             .try_into()
@@ -372,7 +369,7 @@ impl Application for MandelViewer {
                     )),
                     TextInput::new(
                         "Vertical resolution",
-                        &self.params.y_resolution.u32.get().to_string(),
+                        &u32::from(self.params.y_resolution).to_string(),
                         |yres| match yres.parse() {
                             Ok(mi) => {
                                 Message::VerticalResolutionUpdated(mi)
@@ -383,7 +380,7 @@ impl Application for MandelViewer {
                     )
                     .on_submit(Message::Render(RenderAction::Started)),
                     Button::new("·2").on_press(Message::VerticalResolutionUpdated(
-                        (self.params.y_resolution.u32.get().saturating_mul(2))
+                        (u32::from(self.params.y_resolution).saturating_mul(2))
                             .try_into()
                             .expect("doubling a number never gives zero")
                     ))
