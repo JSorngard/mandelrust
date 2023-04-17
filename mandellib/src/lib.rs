@@ -112,29 +112,6 @@ pub fn render(
     vec_to_image(pixel_bytes, render_parameters)
 }
 
-fn vec_to_image(pixel_bytes: Vec<u8>, render_parameters: RenderParameters) -> DynamicImage {
-    let x_resolution = render_parameters.x_resolution.u32.get();
-    let y_resolution = render_parameters.y_resolution.u32.get();
-    // The image is stored in a rotated fashion during rendering so that
-    // the pixels of a column of the image lie contiguous in the backing vector.
-    // Here we undo this rotation.
-    match render_parameters.color_type {
-        SupportedColorType::Rgb8 => DynamicImage::ImageRgb8(imageops::rotate270(
-            // This rotated state is the reason for the flipped image dimensions here.
-            &ImageBuffer::<Rgb<u8>, Vec<u8>>::from_vec(y_resolution, x_resolution, pixel_bytes)
-                .expect("`pixel_bytes` is allocated to the correct size of 3*xres*yres"),
-        )),
-        SupportedColorType::Rgba8 => DynamicImage::ImageRgba8(imageops::rotate270(
-            &ImageBuffer::<Rgba<u8>, Vec<u8>>::from_vec(y_resolution, x_resolution, pixel_bytes)
-                .expect("`pixel_bytes` is allocated to the correct size of 4*xres*yres"),
-        )),
-        SupportedColorType::L8 => DynamicImage::ImageLuma8(imageops::rotate270(
-            &ImageBuffer::<Luma<u8>, Vec<u8>>::from_vec(y_resolution, x_resolution, pixel_bytes)
-                .expect("`pixel_bytes` is allocated to the correct size of xres*yres"),
-        )),
-    }
-}
-
 /// Computes the colors of the pixels in a y-axis band of the image of the mandelbrot set.
 fn color_band(
     render_parameters: RenderParameters,
@@ -224,12 +201,6 @@ fn color_band(
             }
         }
     }
-}
-
-enum Pixel<T> {
-    Rgba(Rgba<T>),
-    Rgb(Rgb<T>),
-    Luma(Luma<T>),
 }
 
 /// Computes the escape speed for samples in a grid inside
@@ -376,6 +347,35 @@ pub fn iterate(c_re: f64, c_im: f64, max_iterations: NonZeroU32) -> f64 {
         (f64::from(max_iterations - iterations) - 2.8 + (z_re_sqr + z_im_sqr).ln().log2() - 1.0)
             / f64::from(max_iterations)
     }
+}
+
+fn vec_to_image(pixel_bytes: Vec<u8>, render_parameters: RenderParameters) -> DynamicImage {
+    let x_resolution = render_parameters.x_resolution.u32.get();
+    let y_resolution = render_parameters.y_resolution.u32.get();
+    // The image is stored in a rotated fashion during rendering so that
+    // the pixels of a column of the image lie contiguous in the backing vector.
+    // Here we undo this rotation.
+    match render_parameters.color_type {
+        SupportedColorType::Rgb8 => DynamicImage::ImageRgb8(imageops::rotate270(
+            // This rotated state is the reason for the flipped image dimensions here.
+            &ImageBuffer::<Rgb<u8>, Vec<u8>>::from_vec(y_resolution, x_resolution, pixel_bytes)
+                .expect("`pixel_bytes` is allocated to the correct size of 3*xres*yres"),
+        )),
+        SupportedColorType::Rgba8 => DynamicImage::ImageRgba8(imageops::rotate270(
+            &ImageBuffer::<Rgba<u8>, Vec<u8>>::from_vec(y_resolution, x_resolution, pixel_bytes)
+                .expect("`pixel_bytes` is allocated to the correct size of 4*xres*yres"),
+        )),
+        SupportedColorType::L8 => DynamicImage::ImageLuma8(imageops::rotate270(
+            &ImageBuffer::<Luma<u8>, Vec<u8>>::from_vec(y_resolution, x_resolution, pixel_bytes)
+                .expect("`pixel_bytes` is allocated to the correct size of xres*yres"),
+        )),
+    }
+}
+
+enum Pixel<T> {
+    Rgba(Rgba<T>),
+    Rgb(Rgb<T>),
+    Luma(Luma<T>),
 }
 
 /// Contains information about a rectangle-shaped region in the complex plane.
