@@ -3,7 +3,7 @@
 use core::num::{NonZeroU32, NonZeroU8, TryFromIntError};
 use std::io::Write;
 
-use image::{imageops, DynamicImage, ImageBuffer, Luma, Rgb, Rgba};
+use image::{DynamicImage, ImageBuffer, Luma, Rgb, Rgba};
 use indicatif::{ParallelProgressIterator, ProgressBar};
 use itertools::Itertools;
 use rayon::{
@@ -86,8 +86,21 @@ pub fn render(
 
     let bytes_per_pixel = usize::from(render_parameters.color_type.bytes_per_pixel());
 
-    let mut pixel_bytes: Vec<u8> =
-        vec![0; bytes_per_pixel * usize::from(x_resolution) * usize::from(y_resolution)];
+    // We store the pixel data in a rotated fashion so that
+    // the data for pixels along the y-axis lie contiguous in memory.
+    let mut image = match render_parameters.color_type {
+        SupportedColorType::L8 => DynamicImage::ImageLuma8(
+            // That is the reason for the switched dimensions in these calls to `new`.
+            ImageBuffer::<Luma<u8>, Vec<u8>>::new(y_resolution.into(), x_resolution.into()),
+        ),
+        SupportedColorType::Rgb8 => DynamicImage::ImageRgb8(ImageBuffer::<Rgb<u8>, Vec<u8>>::new(
+            y_resolution.into(),
+            x_resolution.into(),
+        )),
+        SupportedColorType::Rgba8 => DynamicImage::ImageRgba8(
+            ImageBuffer::<Rgba<u8>, Vec<u8>>::new(y_resolution.into(), x_resolution.into()),
+        ),
+    };
 
     let progress_bar = if verbose {
         ProgressBar::new(x_resolution.into())
@@ -95,21 +108,25 @@ pub fn render(
         ProgressBar::hidden()
     };
 
-    pixel_bytes
-        // Split the image up into vertical bands and iterate over them in parallel.
-        .par_chunks_exact_mut(bytes_per_pixel * usize::from(y_resolution))
-        // We enumerate each band to be able to compute the real value of c for that band.
-        .enumerate()
-        .progress_with(progress_bar)
-        .for_each(|(band_index, band)| {
-            color_band(render_parameters, render_region, band_index, band)
-        });
+    match image {
+        DynamicImage::ImageLuma8(ref mut buffer) => buffer.as_mut(),
+        DynamicImage::ImageRgb8(ref mut buffer) => buffer.as_mut(),
+        DynamicImage::ImageRgba8(ref mut buffer) => buffer.as_mut(),
+        _ => unreachable!("we define the image so that it can only be one of these"),
+    }
+    // Split the image up into vertical bands and iterate over them in parallel.
+    .par_chunks_exact_mut(bytes_per_pixel * usize::from(y_resolution))
+    // We enumerate each band to be able to compute the real value of c for that band.
+    .enumerate()
+    .progress_with(progress_bar)
+    .for_each(|(band_index, band)| color_band(render_parameters, render_region, band_index, band));
 
     if verbose {
         let _ = write!(std::io::stdout(), "\rProcessing image");
     }
 
-    vec_to_image(pixel_bytes, render_parameters)
+    // Undo the rotated state used during rendering.
+    image.rotate270()
 }
 
 /// Computes the colors of the pixels in a y-axis band of the image of the mandelbrot set.
@@ -332,31 +349,6 @@ pub fn iterate(c_re: f64, c_im: f64, max_iterations: NonZeroU32) -> f64 {
         // The shift of -2.8 is chosen for aesthetic reasons.
         (f64::from(max_iterations - iterations) - 2.8 + (z_re_sqr + z_im_sqr).ln().log2() - 1.0)
             / f64::from(max_iterations)
-    }
-}
-
-/// Ugly helper function that takes a `Vec` and converts it to a `DynamicImage` depending
-/// on the color type.
-fn vec_to_image(pixel_bytes: Vec<u8>, render_parameters: RenderParameters) -> DynamicImage {
-    let x_resolution = u32::from(render_parameters.x_resolution);
-    let y_resolution = u32::from(render_parameters.y_resolution);
-    // The image is stored in a rotated fashion during rendering so that
-    // the pixels of a column of the image lie contiguous in the backing vector.
-    // Here we undo this rotation.
-    match render_parameters.color_type {
-        SupportedColorType::Rgb8 => DynamicImage::ImageRgb8(imageops::rotate270(
-            // This rotated state is the reason for the flipped image dimensions here.
-            &ImageBuffer::<Rgb<u8>, Vec<u8>>::from_vec(y_resolution, x_resolution, pixel_bytes)
-                .expect("`pixel_bytes` is allocated to the correct size of 3*xres*yres"),
-        )),
-        SupportedColorType::Rgba8 => DynamicImage::ImageRgba8(imageops::rotate270(
-            &ImageBuffer::<Rgba<u8>, Vec<u8>>::from_vec(y_resolution, x_resolution, pixel_bytes)
-                .expect("`pixel_bytes` is allocated to the correct size of 4*xres*yres"),
-        )),
-        SupportedColorType::L8 => DynamicImage::ImageLuma8(imageops::rotate270(
-            &ImageBuffer::<Luma<u8>, Vec<u8>>::from_vec(y_resolution, x_resolution, pixel_bytes)
-                .expect("`pixel_bytes` is allocated to the correct size of xres*yres"),
-        )),
     }
 }
 
