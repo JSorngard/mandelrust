@@ -189,19 +189,29 @@ fn linear_rgb_to_srgb(c: f64) -> f64 {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]
-pub enum Pixel<T> {
+pub enum SupportedPixel<T> {
     Rgba(Rgba<T>),
     Rgb(Rgb<T>),
     Luma(Luma<T>),
 }
 
-impl<T> Pixel<T> {
+impl<T> SupportedPixel<T> {
     #[inline]
     pub const fn as_raw(&self) -> &[T] {
         match self {
             Self::Luma(luma) => &luma.0,
             Self::Rgb(rgb) => &rgb.0,
             Self::Rgba(rgba) => &rgba.0,
+        }
+    }
+}
+
+impl From<(SupportedColorType, LinearRGB)> for SupportedPixel<u8> {
+    fn from((color_type, linear_rgb): (SupportedColorType, LinearRGB)) -> Self {
+        match color_type {
+            SupportedColorType::L8 => SupportedPixel::Luma(linear_rgb.into()),
+            SupportedColorType::Rgb8 => SupportedPixel::Rgb(linear_rgb.into()),
+            SupportedColorType::Rgba8 => SupportedPixel::Rgba(linear_rgb.into()),
         }
     }
 }
