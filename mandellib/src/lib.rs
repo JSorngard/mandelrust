@@ -83,12 +83,11 @@ pub fn render(
 ) -> DynamicImage {
     let x_resolution = render_parameters.x_resolution;
     let y_resolution = render_parameters.y_resolution;
-
-    let bytes_per_pixel = usize::from(render_parameters.color_type.bytes_per_pixel());
+    let color_type = render_parameters.color_type;
 
     // We store the pixel data in a rotated fashion so that
     // the data for pixels along the y-axis lie contiguous in memory.
-    let mut image = match render_parameters.color_type {
+    let mut image = match color_type {
         SupportedColorType::L8 => DynamicImage::ImageLuma8(
             // That is the reason for the switched dimensions in these calls to `new`.
             ImageBuffer::<Luma<u8>, Vec<u8>>::new(y_resolution.into(), x_resolution.into()),
@@ -115,13 +114,14 @@ pub fn render(
         _ => unreachable!("we define the image so that it can only be one of these"),
     }
     // Split the image up into vertical bands and iterate over them in parallel.
-    .par_chunks_exact_mut(bytes_per_pixel * usize::from(y_resolution))
+    .par_chunks_exact_mut(usize::from(color_type.bytes_per_pixel()) * usize::from(y_resolution))
     // We enumerate each band to be able to compute the real value of c for that band.
     .enumerate()
     .progress_with(progress_bar)
     .for_each(|(band_index, band)| color_band(render_parameters, render_region, band_index, band));
 
     if verbose {
+        // Attempt to report progress, but if this fails it's not important and we just continue.
         let _ = write!(std::io::stdout(), "\rProcessing image");
     }
 
