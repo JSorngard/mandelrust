@@ -11,7 +11,7 @@ use rayon::{
     prelude::ParallelSliceMut,
 };
 
-use color_space::{palette, LinearRGB, SupportedColorType, SupportedPixel};
+use color_space::{palette, LinearRGB, Pixel, SupportedColorType};
 
 // ----------- DEBUG FLAGS --------------
 // Set to true to only super sample close to the border of the set.
@@ -214,7 +214,7 @@ fn color_band(
 /// N.B.: if `render_parameters.sqrt_samples_per_pixel` is even the center of
 /// the pixel is never sampled, and if it is 1 no super
 /// sampling is done (only the center is sampled).
-fn pixel_color(pixel_region: Frame, render_parameters: RenderParameters) -> SupportedPixel<u8> {
+fn pixel_color(pixel_region: Frame, render_parameters: RenderParameters) -> Pixel<u8> {
     let ssaa = render_parameters.sqrt_samples_per_pixel.get();
     let ssaa_f64: f64 = ssaa.into();
 
