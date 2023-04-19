@@ -409,6 +409,7 @@ impl RenderParameters {
 pub use resolution::Resolution;
 mod resolution {
     use core::num::{NonZeroU32, NonZeroUsize, TryFromIntError};
+    use std::fmt;
     /// A struct containing a resolution that is known
     /// to fit in both a u32 and usize type.
     #[derive(Debug, Clone, Copy)]
@@ -417,8 +418,8 @@ mod resolution {
         usize: NonZeroUsize,
     }
 
-    impl std::fmt::Display for Resolution {
-        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    impl fmt::Display for Resolution {
+        fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
             write!(f, "{}", self.u32)
         }
     }
