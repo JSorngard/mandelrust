@@ -348,6 +348,21 @@ pub fn iterate(c_re: f64, c_im: f64, max_iterations: NonZeroU32) -> (u32, f64, f
     (iterations, z_re_sqr, z_im_sqr)
 }
 
+/// Returns the value of the Mandelbrot potential function,
+///
+/// `P_N(c)=ln(N)/2^(n-log2(ln(|z|)/ln(N)))`,
+///
+/// where N is the bailout radius and n is the number of iterations until c escapes
+pub fn potential(c_re: f64, c_im: f64, max_iterations: NonZeroU32) -> f64 {
+    let (iterations, z_re_sqr, z_im_sqr) = iterate(c_re, c_im, max_iterations);
+
+    const LN6: f64 = 1.791759469228055;
+    const LOG2LN6: f64 = 0.8413769790011036;
+
+    let nu = f64::from(iterations) - (z_re_sqr + z_im_sqr).ln().log2() - LOG2LN6 - 1.0;
+    LN6 / 2.0_f64.powf(nu)
+}
+
 /// Returns a value kind of like the potential function of the Mandelbrot set.
 /// Maps the result of [`iterate`] to the range \[0, 1\].
 fn custom_potential(c_re: f64, c_im: f64, max_iterations: NonZeroU32) -> f64 {
@@ -360,8 +375,10 @@ fn custom_potential(c_re: f64, c_im: f64, max_iterations: NonZeroU32) -> f64 {
     } else {
         // This takes the escape distance and the number of iterations to escape
         // and maps it smoothly to the range [0, 1] using the potential function to reduce color banding.
-        // The shift of -2.8 is chosen for aesthetic reasons.
-        (f64::from(max_iterations - iterations) - 2.8 + (z_re_sqr + z_im_sqr).ln().log2() - 1.0)
+        // The shift of `e` is chosen for aesthetic reasons.
+        (f64::from(max_iterations - iterations) - std::f64::consts::E
+            + (z_re_sqr + z_im_sqr).ln().log2()
+            - 1.0)
             / f64::from(max_iterations)
     }
 }
