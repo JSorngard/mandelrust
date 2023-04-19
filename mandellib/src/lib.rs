@@ -256,14 +256,14 @@ fn pixel_color(pixel_region: Frame, render_parameters: RenderParameters) -> Pixe
         let rowoffset = (2.0 * f64::from(j) - ssaa_f64 - 1.0) / ssaa_f64;
 
         // Compute escape speed of point.
-        let escape_speed = custom_potential(
+        let escape_speed = potential(
             pixel_region.center_real + rowoffset * pixel_region.real_distance,
             pixel_region.center_imag + coloffset * pixel_region.imag_distance,
             render_parameters.max_iterations,
         );
 
         // This branch will be the same for all iterations through the loop,
-        // so the branch predictor should not ahve any issues with it.
+        // so the branch predictor should not have any issues with it.
         // This reasoning has been verified with benchmarks.
         color += match render_parameters.color_type {
             SupportedColorType::Rgb8 | SupportedColorType::Rgba8 => palette(escape_speed),
@@ -348,24 +348,9 @@ pub fn iterate(c_re: f64, c_im: f64, max_iterations: NonZeroU32) -> (u32, f64, f
     (iterations, z_re_sqr, z_im_sqr)
 }
 
-/// Returns the value of the Mandelbrot potential function,
-///
-/// `P_N(c)=ln(N)/2^(n-log2(ln(|z|)/ln(N)))`,
-///
-/// where N is the bailout radius and n is the number of iterations until c escapes
-pub fn potential(c_re: f64, c_im: f64, max_iterations: NonZeroU32) -> f64 {
-    let (iterations, z_re_sqr, z_im_sqr) = iterate(c_re, c_im, max_iterations);
-
-    const LN6: f64 = 1.791759469228055;
-    const LOG2LN6: f64 = 0.8413769790011036;
-
-    let nu = f64::from(iterations) - (z_re_sqr + z_im_sqr).ln().log2() - LOG2LN6 - 1.0;
-    LN6 / 2.0_f64.powf(nu)
-}
-
 /// Returns a value kind of like the potential function of the Mandelbrot set.
 /// Maps the result of [`iterate`] to the range \[0, 1\].
-fn custom_potential(c_re: f64, c_im: f64, max_iterations: NonZeroU32) -> f64 {
+fn potential(c_re: f64, c_im: f64, max_iterations: NonZeroU32) -> f64 {
     let (iterations, z_re_sqr, z_im_sqr) = iterate(c_re, c_im, max_iterations);
 
     let max_iterations = max_iterations.get();
