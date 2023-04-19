@@ -256,12 +256,15 @@ fn pixel_color(pixel_region: Frame, render_parameters: RenderParameters) -> Pixe
         let rowoffset = (2.0 * f64::from(j) - ssaa_f64 - 1.0) / ssaa_f64;
 
         // Compute escape speed of point.
-        let escape_speed = iterate(
+        let escape_speed = custom_potential(
             pixel_region.center_real + rowoffset * pixel_region.real_distance,
             pixel_region.center_imag + coloffset * pixel_region.imag_distance,
             render_parameters.max_iterations,
         );
 
+        // This branch will be the same for all iterations through the loop,
+        // so the branch predictor should not ahve any issues with it.
+        // This reasoning has been verified with benchmarks.
         color += match render_parameters.color_type {
             SupportedColorType::Rgb8 | SupportedColorType::Rgba8 => palette(escape_speed),
             SupportedColorType::L8 => LinearRGB::new(escape_speed, escape_speed, escape_speed),
@@ -289,22 +292,23 @@ fn pixel_color(pixel_region: Frame, render_parameters: RenderParameters) -> Pixe
 ///
 /// on the given c starting with z_0 = c until it either escapes
 /// or the loop exceeds the maximum number of iterations.
-/// Returns the escape speed of the point as a number between 0 and 1.
+/// Returns a tuple of `(iterations, final real part ^ 2, final imaginary part ^ 2)`
 /// # Example
 /// ```
 /// # use mandellib::iterate;
 /// # use core::num::NonZeroU32;
-/// let maxiters = NonZeroU32::new(100).unwrap();
+/// const MAXITERS: u32 = 100;
+/// let maxiters = NonZeroU32::new(MAXITERS).unwrap();
 /// // The origin is in the set
-/// assert_eq!(iterate(0.0, 0.0, maxiters), 0.0);
+/// assert_eq!(iterate(0.0, 0.0, maxiters).0, MAXITERS);
 ///
 /// // and so is -2
-/// assert_eq!(iterate(-2.0, 0.0, maxiters), 0.0);
+/// assert_eq!(iterate(-2.0, 0.0, maxiters).0, MAXITERS);
 ///
 /// // but 1 + i is not
-/// assert_ne!(iterate(1.0, 1.0, maxiters), 0.0);
+/// assert_ne!(iterate(1.0, 1.0, maxiters).0, MAXITERS);
 /// ```
-pub fn iterate(c_re: f64, c_im: f64, max_iterations: NonZeroU32) -> f64 {
+pub fn iterate(c_re: f64, c_im: f64, max_iterations: NonZeroU32) -> (u32, f64, f64) {
     let c_imag_sqr = c_im * c_im;
     let mag_sqr = c_re * c_re + c_imag_sqr;
 
@@ -314,7 +318,7 @@ pub fn iterate(c_re: f64, c_im: f64, max_iterations: NonZeroU32) -> f64 {
     if CARDIOID_AND_BULB_CHECK && (c_re + 1.0) * (c_re + 1.0) + c_imag_sqr <= 0.0625
         || mag_sqr * (8.0 * mag_sqr - 3.0) <= 0.09375 - c_re
     {
-        return 0.0;
+        return (max_iterations, 0.0, 0.0);
     }
 
     let mut z_re = c_re;
@@ -340,6 +344,16 @@ pub fn iterate(c_re: f64, c_im: f64, max_iterations: NonZeroU32) -> f64 {
         z_im_sqr = z_im * z_im;
         iterations += 1;
     }
+
+    (iterations, z_re_sqr, z_im_sqr)
+}
+
+/// Returns a value kind of like the potential function of the Mandelbrot set.
+/// Maps the result of [`iterate`] to the range \[0, 1\].
+fn custom_potential(c_re: f64, c_im: f64, max_iterations: NonZeroU32) -> f64 {
+    let (iterations, z_re_sqr, z_im_sqr) = iterate(c_re, c_im, max_iterations);
+
+    let max_iterations = max_iterations.get();
 
     if iterations == max_iterations {
         0.0
@@ -489,7 +503,7 @@ mod test_iteration {
     #[test]
     fn check_some_iterations() {
         let max_iterations = NonZeroU32::new(255).unwrap();
-        assert_eq!(iterate(0.0, 0.0, max_iterations), 0.0);
-        assert_eq!(iterate(-2.0, 0.0, max_iterations), 0.0);
+        assert_eq!(iterate(0.0, 0.0, max_iterations).0, 255);
+        assert_eq!(iterate(-2.0, 0.0, max_iterations).0, 255);
     }
 }
