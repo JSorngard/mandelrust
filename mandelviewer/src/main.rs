@@ -65,6 +65,8 @@ struct UIValues {
     slider_ssaa_factor: NonZeroU8,
     do_ssaa: bool,
     live_preview: bool,
+    center_real: String,
+    center_imag: String,
 }
 
 struct MandelViewer {
@@ -96,6 +98,18 @@ enum RenderAction {
 }
 
 #[derive(Debug, Clone)]
+enum FrameAction {
+    CenterRealSubmitted,
+    CenterImagSubmitted,
+}
+
+#[derive(Debug, Clone)]
+enum UIAction {
+    CenterRealUpdated(String),
+    CenterImagUpdated(String),
+}
+
+#[derive(Debug, Clone)]
 enum Message {
     Render(RenderAction),
     MaxItersUpdated(NonZeroU32),
@@ -105,6 +119,8 @@ enum Message {
     SavePressed,
     VerticalResolutionUpdated(NonZeroU32),
     SuperSampling(SSAAAction),
+    Frame(FrameAction),
+    UI(UIAction),
 }
 
 async fn background_timer(duration: Duration) {
@@ -162,6 +178,8 @@ impl Application for MandelViewer {
                     slider_ssaa_factor: INITIAL_SSAA_FACTOR,
                     do_ssaa: true,
                     live_preview: false,
+                    center_real: view_region.center_real.to_string(),
+                    center_imag: view_region.center_imag.to_string(),
                 },
             },
             Command::batch([
@@ -326,6 +344,39 @@ impl Application for MandelViewer {
                     }
                 }
             },
+            Message::Frame(action) => match action {
+                FrameAction::CenterRealSubmitted => match self.ui_values.center_real.parse() {
+                    Ok(center_real) => {
+                        self.view_region.center_real = center_real;
+                        Command::none()
+                    }
+                    Err(e) => self.push_notification(e.to_string()),
+                },
+                FrameAction::CenterImagSubmitted => match self.ui_values.center_imag.parse() {
+                    Ok(center_imag) => {
+                        self.view_region.center_imag = center_imag;
+                        Command::none()
+                    }
+                    Err(e) => self.push_notification(e.to_string()),
+                },
+            },
+            Message::UI(action) => {
+                match action {
+                    UIAction::CenterRealUpdated(val) => {
+                        if let Ok(center_real) = val.parse::<f64>() {
+                            self.view_region.center_real = center_real;
+                        }
+                        self.ui_values.center_real = val;
+                    }
+                    UIAction::CenterImagUpdated(val) => {
+                        if let Ok(center_imag) = val.parse::<f64>() {
+                            self.view_region.center_imag = center_imag;
+                        }
+                        self.ui_values.center_imag = val;
+                    }
+                }
+                Command::none()
+            }
         }
     }
 
@@ -419,6 +470,16 @@ impl Application for MandelViewer {
                             .expect("doubling a number never gives zero")
                     )),
                 ],
+                Text::new("Re(c)"),
+                TextInput::new("Re(c)", &self.ui_values.center_real, |val| Message::UI(
+                    UIAction::CenterRealUpdated(val)
+                ))
+                .on_submit(Message::Frame(FrameAction::CenterRealSubmitted)),
+                Text::new("Im(c)"),
+                TextInput::new("Im(c)", &self.ui_values.center_imag, |val| Message::UI(
+                    UIAction::CenterImagUpdated(val)
+                ))
+                .on_submit(Message::Frame(FrameAction::CenterImagSubmitted)),
                 // A checkbox for rendering the image in grayscale.
                 Checkbox::new("Grayscale", !self.params.color_type.has_color(), |status| {
                     Message::GrayscaleToggled(status)
