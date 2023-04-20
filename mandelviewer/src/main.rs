@@ -7,7 +7,7 @@ use std::num::TryFromIntError;
 mod embedded_resources;
 use color_space::SupportedColorType;
 use embedded_resources::{ICON, RENDERING_IN_PROGRESS};
-use mandellib::{render as sync_render, Frame, RenderParameters};
+use mandellib::{render, Frame, RenderParameters};
 
 use iced::{
     self, executor,
@@ -57,8 +57,8 @@ fn main() {
     MandelViewer::run(program_settings).unwrap();
 }
 
-async fn render(params: RenderParameters, frame: Frame, verbose: bool) -> DynamicImage {
-    sync_render(params, frame, verbose)
+async fn background_render(params: RenderParameters, frame: Frame, verbose: bool) -> DynamicImage {
+    render(params, frame, verbose)
 }
 
 struct UIValues {
@@ -184,7 +184,7 @@ impl Application for MandelViewer {
             },
             Command::batch([
                 window::maximize(true),
-                Command::perform(render(params, view_region, false), |img| {
+                Command::perform(background_render(params, view_region, false), |img| {
                     Message::Render(RenderAction::Finished(img))
                 }),
             ]),
@@ -206,7 +206,7 @@ impl Application for MandelViewer {
                 self.params.max_iterations = max_iters;
                 if self.ui_values.live_preview {
                     Command::perform(
-                        render(
+                        background_render(
                             self.with_new_resolution(PREVIEW_RES)
                                 .expect("PREVIEW_RES is a valid resolution"),
                             self.view_region,
@@ -223,9 +223,10 @@ impl Application for MandelViewer {
                     self.render_in_progress = true;
                     // Clear viewer to save memory
                     self.image = None;
-                    Command::perform(render(self.params, self.view_region, false), |img| {
-                        Message::Render(RenderAction::Finished(img))
-                    })
+                    Command::perform(
+                        background_render(self.params, self.view_region, false),
+                        |img| Message::Render(RenderAction::Finished(img)),
+                    )
                 }
                 RenderAction::Finished(img) => {
                     self.render_in_progress = false;
@@ -252,7 +253,7 @@ impl Application for MandelViewer {
                 };
                 if self.ui_values.live_preview {
                     Command::perform(
-                        render(
+                        background_render(
                             self.with_new_resolution(PREVIEW_RES)
                                 .expect("PREVIEW_RES is a valid resolution"),
                             self.view_region,
@@ -291,9 +292,10 @@ impl Application for MandelViewer {
                     {
                         self.params = params;
                         if self.ui_values.live_preview {
-                            Command::perform(render(self.params, self.view_region, false), |img| {
-                                Message::Render(RenderAction::Finished(img))
-                            })
+                            Command::perform(
+                                background_render(self.params, self.view_region, false),
+                                |img| Message::Render(RenderAction::Finished(img)),
+                            )
                         } else {
                             Command::none()
                         }
@@ -309,7 +311,7 @@ impl Application for MandelViewer {
                     if self.ui_values.live_preview && self.ui_values.do_ssaa {
                         self.params.sqrt_samples_per_pixel = self.ui_values.slider_ssaa_factor;
                         Command::perform(
-                            render(
+                            background_render(
                                 self.with_new_resolution(PREVIEW_RES)
                                     .expect("PREVIEW_RES is a valid resolution"),
                                 self.view_region,
@@ -331,7 +333,7 @@ impl Application for MandelViewer {
 
                     if self.ui_values.live_preview {
                         Command::perform(
-                            render(
+                            background_render(
                                 self.with_new_resolution(PREVIEW_RES)
                                     .expect("PREVIEW_RES is a valid resolution"),
                                 self.view_region,
