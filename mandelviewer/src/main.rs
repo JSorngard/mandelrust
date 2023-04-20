@@ -36,6 +36,7 @@ const INITIAL_Y_RES: NonZeroU32 = nonzero!(1080_u32);
 const INITIAL_IMAG_DISTANCE: f64 = 8.0 / 3.0;
 const INITIAL_REAL_CENTER: f64 = -0.75;
 const INITIAL_IMAG_CENTER: f64 = 0.0;
+const INITIAL_ZOOM: f64 = 0.0;
 
 // Program settings
 const PROGRAM_NAME: &str = "Mandelviewer";
@@ -74,12 +75,14 @@ struct UIValues {
     // prevent the user from e.g. ever going through the string state "0." while inputting "0.2",
     center_real: String,
     center_imag: String,
+    zoom: String,
 }
 
 struct MandelViewer {
     image: Option<DynamicImage>,
     params: RenderParameters,
     aspect_ratio: f64,
+    zoom: f64,
     view_region: Frame,
     render_in_progress: bool,
     notifications: Vec<String>,
@@ -114,6 +117,7 @@ enum FrameAction {
 enum UIAction {
     CenterRealUpdated(String),
     CenterImagUpdated(String),
+    ZoomUpdated(String),
 }
 
 #[derive(Debug, Clone)]
@@ -179,6 +183,7 @@ impl Application for MandelViewer {
                 params,
                 view_region,
                 aspect_ratio: f64::from(INITIAL_X_RES.get()) / f64::from(INITIAL_Y_RES.get()),
+                zoom: INITIAL_ZOOM,
                 render_in_progress: true,
                 notifications: Vec::new(),
                 ui_values: UIValues {
@@ -187,6 +192,7 @@ impl Application for MandelViewer {
                     live_preview: false,
                     center_real: view_region.center_real.to_string(),
                     center_imag: view_region.center_imag.to_string(),
+                    zoom: INITIAL_ZOOM.to_string(),
                 },
             },
             Command::batch([
@@ -383,6 +389,14 @@ impl Application for MandelViewer {
                         }
                         self.ui_values.center_imag = val;
                     }
+                    UIAction::ZoomUpdated(val) => {
+                        if let Ok(zoom) = val.parse::<f64>() {
+                            self.zoom = zoom;
+                            self.view_region.imag_distance = INITIAL_IMAG_DISTANCE / 2.0_f64.powf(zoom);
+                            self.view_region.real_distance = self.view_region.imag_distance * self.aspect_ratio;
+                        }
+                        self.ui_values.zoom = val;
+                    }
                 }
                 Command::none()
             }
@@ -489,6 +503,10 @@ impl Application for MandelViewer {
                     UIAction::CenterImagUpdated(val)
                 ))
                 .on_submit(Message::Frame(FrameAction::CenterImagSubmitted)),
+                Text::new("Zoom factor"),
+                TextInput::new("Zoom factor", &self.ui_values.zoom, |val| Message::UI(
+                    UIAction::ZoomUpdated(val)
+                )),
                 // A checkbox for rendering the image in grayscale.
                 Checkbox::new("Grayscale", !self.params.color_type.has_color(), |status| {
                     Message::GrayscaleToggled(status)
