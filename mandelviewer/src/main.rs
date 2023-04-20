@@ -57,14 +57,21 @@ fn main() {
     MandelViewer::run(program_settings).unwrap();
 }
 
+/// Asynchronous version of [`render`](mandellib::render).
 async fn background_render(params: RenderParameters, frame: Frame, verbose: bool) -> DynamicImage {
     render(params, frame, verbose)
 }
 
+/// This struct contains values that are not part of making the viewer itself function,
+/// but which nontheless need to be shown to the user somewhere else in the UI.  
+/// It also contains values that might need to be shown to the user even if they
+/// are not of appropriate format yet to be used as inputs to the renderer.
 struct UIValues {
     slider_ssaa_factor: NonZeroU8,
     do_ssaa: bool,
     live_preview: bool,
+    // Parsing these to  directly to float and storing them in the view_region would
+    // prevent the user from e.g. ever going through the string state "0." while inputting "0.2",
     center_real: String,
     center_imag: String,
 }
