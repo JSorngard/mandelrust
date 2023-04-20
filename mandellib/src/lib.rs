@@ -256,6 +256,8 @@ fn pixel_color(pixel_region: Frame, render_parameters: RenderParameters) -> Pixe
         let rowoffset = (2.0 * f64::from(j) - ssaa_f64 - 1.0) / ssaa_f64;
 
         // Compute escape speed of point.
+        // We use the potential instead of the number of
+        // iterations in order to reduce color banding.
         let escape_speed = potential(
             pixel_region.center_real + rowoffset * pixel_region.real_distance,
             pixel_region.center_imag + coloffset * pixel_region.imag_distance,
@@ -292,7 +294,7 @@ fn pixel_color(pixel_region: Frame, render_parameters: RenderParameters) -> Pixe
 ///
 /// on the given c starting with z_0 = c until it either escapes
 /// or the loop exceeds the maximum number of iterations.
-/// Returns a tuple of `(iterations, final real part ^ 2, final imaginary part ^ 2)`
+/// Returns a tuple of `(iterations, final |z|^2)`.
 /// # Example
 /// ```
 /// # use mandellib::iterate;
@@ -302,13 +304,27 @@ fn pixel_color(pixel_region: Frame, render_parameters: RenderParameters) -> Pixe
 /// // The origin is in the set
 /// assert_eq!(iterate(0.0, 0.0, maxiters).0, MAXITERS);
 ///
-/// // and so is -2
-/// assert_eq!(iterate(-2.0, 0.0, maxiters).0, MAXITERS);
-///
-/// // but 1 + i is not
+/// // but 1 + i is not.
 /// assert_ne!(iterate(1.0, 1.0, maxiters).0, MAXITERS);
+///
+/// // The magnitude of -2 never changes, regardless of iteration number.
+/// assert_eq!(iterate(-2.0, 0.0, maxiters).1, 4.0);
 /// ```
-pub fn iterate(c_re: f64, c_im: f64, max_iterations: NonZeroU32) -> (u32, f64, f64) {
+/// # Note
+/// Points inside the main cardioid or period-2 bulb are not iterated
+/// but instead return immediately while reporting the maximum number of iterations.
+/// For those points the modulus squared is not well defined and
+/// is currently returned as NaN to indicate that the value should not be used.
+/// ```
+/// # use mandellib::iterate;
+/// # use core::num::NonZeroU32;
+/// # const MAXITERS: u32 = 100;
+/// # let maxiters = NonZeroU32::new(MAXITERS).unwrap();
+/// let (iters, broken_mag_sqr) = iterate(-1.0, 0.0, maxiters);
+/// assert_eq!(iters, MAXITERS);
+/// assert!(broken_mag_sqr.is_nan());
+/// ```
+pub fn iterate(c_re: f64, c_im: f64, max_iterations: NonZeroU32) -> (u32, f64) {
     let c_imag_sqr = c_im * c_im;
     let mag_sqr = c_re * c_re + c_imag_sqr;
 
@@ -318,7 +334,9 @@ pub fn iterate(c_re: f64, c_im: f64, max_iterations: NonZeroU32) -> (u32, f64, f
     if CARDIOID_AND_BULB_CHECK && (c_re + 1.0) * (c_re + 1.0) + c_imag_sqr <= 0.0625
         || mag_sqr * (8.0 * mag_sqr - 3.0) <= 0.09375 - c_re
     {
-        return (max_iterations, 0.0, 0.0);
+        // We can unfortunately not know the final magnitude squared of the input in that case,
+        // so we return that as NAN.
+        return (max_iterations, f64::NAN);
     }
 
     let mut z_re = c_re;
@@ -345,25 +363,24 @@ pub fn iterate(c_re: f64, c_im: f64, max_iterations: NonZeroU32) -> (u32, f64, f
         iterations += 1;
     }
 
-    (iterations, z_re_sqr, z_im_sqr)
+    (iterations, z_re_sqr + z_im_sqr)
 }
 
 /// Returns a value kind of like the potential function of the Mandelbrot set.
-/// Maps the result of [`iterate`] to the range \[0, 1\].
+/// Maps the result of [`iterate`] smoothly to a number between 0 (inside the set) and 1 (far outside).
 fn potential(c_re: f64, c_im: f64, max_iterations: NonZeroU32) -> f64 {
-    let (iterations, z_re_sqr, z_im_sqr) = iterate(c_re, c_im, max_iterations);
+    let (iterations, mag_sqr) = iterate(c_re, c_im, max_iterations);
 
     let max_iterations = max_iterations.get();
 
     if iterations == max_iterations {
+        // We label all points that could not be excluded as inside the set
+        // This also avoids using the potentially undefined magnitude squared
+        // for numbers that can be computed without iteration.
         0.0
     } else {
-        // This takes the escape distance and the number of iterations to escape
-        // and maps it smoothly to the range [0, 1] using the potential function to reduce color banding.
-        // The shift of `e` is chosen for aesthetic reasons.
-        (f64::from(max_iterations - iterations) - std::f64::consts::E
-            + (z_re_sqr + z_im_sqr).ln().log2()
-            - 1.0)
+        // The shift of `e` is chosen becase it makes the final image look nicer with the current color curves.
+        (f64::from(max_iterations - iterations) + mag_sqr.ln().log2() - std::f64::consts::E - 1.0)
             / f64::from(max_iterations)
     }
 }
