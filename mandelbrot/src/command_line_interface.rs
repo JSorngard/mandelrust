@@ -101,7 +101,7 @@ pub struct Cli {
     )]
     /// Spend extra time after iterations are completed optimizing the file size
     /// of the resulting image. Supports optimizations levels between
-    /// 0 and 6. [default level if unspecified: 4]
+    /// 0 and 6. [default level if flag is present: 4]
     pub optimize_file_size: Option<u8>,
 }
 
