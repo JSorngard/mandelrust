@@ -83,6 +83,19 @@ fn main() -> Result<(), Box<dyn Error>> {
         let _ = writeln!(io::stdout(), "\rSaved image as {}", out_path.display());
     }
 
+    #[cfg(feature = "oxipng")]
+    if let Some(level) = args.optimize_file_size {
+        use oxipng::{optimize, InFile, Options, OutFile};
+        if args.verbose {
+            let _ = writeln!(io::stdout(), "\rOptimizing output file");
+        }
+        optimize(
+            &InFile::Path(out_path),
+            &OutFile::Path(None),
+            &Options::from_preset(level),
+        )?
+    }
+
     Ok(())
 }
 

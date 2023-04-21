@@ -88,6 +88,21 @@ pub struct Cli {
     #[arg(short, long)]
     /// Print extra information and show the progress of the rendering process
     pub verbose: bool,
+
+    #[cfg(feature = "oxipng")]
+    #[arg(
+        long,
+        required = false,
+        default_missing_value = "4",
+        value_name = "OPTIMIZATION_LEVEL",
+        num_args = 0..=1,
+        require_equals = true,
+        value_parser = clap::value_parser!(u8).range(0..=6),
+    )]
+    /// Spend extra time after iterations are completed optimizing the file size
+    /// of the resulting image. Supports optimizations levels between
+    /// 0 and 6. [default level if unspecified: 4]
+    pub optimize_file_size: Option<u8>,
 }
 
 /// Tries to interpret the input string as if it is an aspect ratio.
