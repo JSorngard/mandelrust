@@ -111,7 +111,7 @@ pub fn render(
         DynamicImage::ImageLuma8(ref mut buffer) => buffer.as_mut(),
         DynamicImage::ImageRgb8(ref mut buffer) => buffer.as_mut(),
         DynamicImage::ImageRgba8(ref mut buffer) => buffer.as_mut(),
-        _ => unreachable!("we define the image so that it can only be one of these"),
+        _ => unreachable!("we define the image so that it can only be one of the above"),
     }
     // Split the image up into vertical bands and iterate over them in parallel.
     .par_chunks_exact_mut(usize::from(color_type.bytes_per_pixel()) * usize::from(y_resolution))
@@ -123,6 +123,7 @@ pub fn render(
     if verbose {
         // Attempt to report progress, but if this fails it's not important and we just continue.
         let _ = write!(std::io::stdout(), "\rProcessing image");
+        let _ = std::io::stdout().flush();
     }
 
     // Undo the rotated state used during rendering.
