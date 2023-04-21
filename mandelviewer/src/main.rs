@@ -115,9 +115,9 @@ enum FrameAction {
 
 #[derive(Debug, Clone)]
 enum UIAction {
-    CenterRealUpdated(String),
-    CenterImagUpdated(String),
-    ZoomUpdated(String),
+    CenterReal(String),
+    CenterImag(String),
+    Zoom(String),
 }
 
 #[derive(Debug, Clone)]
@@ -377,23 +377,25 @@ impl Application for MandelViewer {
             },
             Message::UI(action) => {
                 match action {
-                    UIAction::CenterRealUpdated(val) => {
+                    UIAction::CenterReal(val) => {
                         if let Ok(center_real) = val.parse::<f64>() {
                             self.view_region.center_real = center_real;
                         }
                         self.ui_values.center_real = val;
                     }
-                    UIAction::CenterImagUpdated(val) => {
+                    UIAction::CenterImag(val) => {
                         if let Ok(center_imag) = val.parse::<f64>() {
                             self.view_region.center_imag = center_imag;
                         }
                         self.ui_values.center_imag = val;
                     }
-                    UIAction::ZoomUpdated(val) => {
+                    UIAction::Zoom(val) => {
                         if let Ok(zoom) = val.parse::<f64>() {
                             self.zoom = zoom;
-                            self.view_region.imag_distance = INITIAL_IMAG_DISTANCE / 2.0_f64.powf(zoom);
-                            self.view_region.real_distance = self.view_region.imag_distance * self.aspect_ratio;
+                            self.view_region.imag_distance =
+                                INITIAL_IMAG_DISTANCE / 2.0_f64.powf(zoom);
+                            self.view_region.real_distance =
+                                self.view_region.imag_distance * self.aspect_ratio;
                         }
                         self.ui_values.zoom = val;
                     }
@@ -495,17 +497,17 @@ impl Application for MandelViewer {
                 ],
                 Text::new("Re(c)"),
                 TextInput::new("Re(c)", &self.ui_values.center_real, |val| Message::UI(
-                    UIAction::CenterRealUpdated(val)
+                    UIAction::CenterReal(val)
                 ))
                 .on_submit(Message::Frame(FrameAction::CenterRealSubmitted)),
                 Text::new("Im(c)"),
                 TextInput::new("Im(c)", &self.ui_values.center_imag, |val| Message::UI(
-                    UIAction::CenterImagUpdated(val)
+                    UIAction::CenterImag(val)
                 ))
                 .on_submit(Message::Frame(FrameAction::CenterImagSubmitted)),
                 Text::new("Zoom factor"),
                 TextInput::new("Zoom factor", &self.ui_values.zoom, |val| Message::UI(
-                    UIAction::ZoomUpdated(val)
+                    UIAction::Zoom(val)
                 )),
                 // A checkbox for rendering the image in grayscale.
                 Checkbox::new("Grayscale", !self.params.color_type.has_color(), |status| {
