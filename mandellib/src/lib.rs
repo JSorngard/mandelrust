@@ -285,8 +285,14 @@ fn pixel_color(pixel_region: Frame, render_parameters: RenderParameters) -> Pixe
         }
     }
 
-    // Divide by the number of samples and convert to sRGB color space.
-    (render_parameters.color_type, color / f64::from(samples)).into()
+    // Divide by the number of samples
+    color /= f64::from(samples);
+    // and convert to sRGB color space in the correct format.
+    match render_parameters.color_type {
+        SupportedColorType::L8 => Pixel::Luma(color.into()),
+        SupportedColorType::Rgb8 => Pixel::Rgb(color.into()),
+        SupportedColorType::Rgba8 => Pixel::Rgba(color.into()),
+    }
 }
 
 /// Iterates the Mandelbrot function
