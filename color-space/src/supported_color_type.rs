@@ -18,22 +18,27 @@ impl From<SupportedColorType> for ColorType {
 }
 
 impl SupportedColorType {
+    #[must_use]
     pub fn bytes_per_pixel(&self) -> u8 {
         ColorType::from(*self).bytes_per_pixel()
     }
 
+    #[must_use]
     pub fn has_color(&self) -> bool {
         ColorType::from(*self).has_color()
     }
 
+    #[must_use]
     pub fn has_alpha(&self) -> bool {
         ColorType::from(*self).has_alpha()
     }
 
+    #[must_use]
     pub fn channel_count(&self) -> u8 {
         ColorType::from(*self).channel_count()
     }
 
+    #[must_use]
     pub fn bits_per_pixel(&self) -> u16 {
         ColorType::from(*self).bits_per_pixel()
     }

@@ -76,6 +76,7 @@ const CARDIOID_AND_BULB_CHECK: bool = true;
 /// If `grayscale` is true the image is rendered in grayscale instead of color.
 ///
 /// If `verbose` is true the function will use prints to `stderr` to display a progress bar.
+#[must_use]
 pub fn render(
     render_parameters: RenderParameters,
     render_region: Frame,
@@ -331,6 +332,7 @@ fn pixel_color(pixel_region: Frame, render_parameters: RenderParameters) -> Pixe
 /// assert_eq!(iters, MAXITERS);
 /// assert!(broken_mag_sqr.is_nan());
 /// ```
+#[must_use]
 pub fn iterate(c_re: f64, c_im: f64, max_iterations: NonZeroU32) -> (u32, f64) {
     let c_imag_sqr = c_im * c_im;
     let mag_sqr = c_re * c_re + c_imag_sqr;
@@ -402,6 +404,7 @@ pub struct Frame {
 }
 
 impl Frame {
+    #[must_use]
     pub const fn new(
         center_real: f64,
         center_imag: f64,
@@ -429,6 +432,8 @@ pub struct RenderParameters {
 }
 
 impl RenderParameters {
+    /// # Errors
+    /// Will return an error if `x_resolution` or `y_resolution` do not fit in a usize.
     pub fn try_new(
         x_resolution: NonZeroU32,
         y_resolution: NonZeroU32,
