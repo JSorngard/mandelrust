@@ -50,13 +50,13 @@ fn main() -> Result<(), Box<dyn Error>> {
     )?;
 
     if args.verbose {
-        let _ = give_user_feedback(&args, &render_parameters);
+        let _: Result<(), Box<dyn Error>> = give_user_feedback(&args, &render_parameters);
     }
 
     let img = render(render_parameters, draw_region, args.verbose);
 
     if args.verbose {
-        let _ = write!(io::stdout(), "\rEncoding and saving image");
+        let _: io::Result<()> = write!(io::stdout(), "\rEncoding and saving image");
     }
 
     let image_name = if args.record_params {
@@ -83,18 +83,18 @@ fn main() -> Result<(), Box<dyn Error>> {
     if let Some(level) = args.optimize_file_size {
         use oxipng::{optimize, InFile, Options, OutFile};
         if args.verbose {
-            let _ = write!(io::stdout(), "\rOptimizing output file   ");
-            let _ = io::stdout().flush();
+            let _: io::Result<()> = write!(io::stdout(), "\rOptimizing output file   ");
+            let _: io::Result<()> = io::stdout().flush();
         }
         optimize(
             &InFile::Path(out_path.clone()),
             &OutFile::Path(None),
             &Options::from_preset(level),
-        )?
+        )?;
     }
 
     if args.verbose {
-        let _ = writeln!(io::stdout(), "\rSaved image as {}", out_path.display());
+        let _: io::Result<()> = writeln!(io::stdout(), "\rSaved image as {}", out_path.display());
     }
 
     Ok(())

@@ -122,8 +122,8 @@ pub fn render(
 
     if verbose {
         // Attempt to report progress, but if this fails it's not important and we just continue.
-        let _ = write!(std::io::stdout(), "\rProcessing image");
-        let _ = std::io::stdout().flush();
+        let _: std::io::Result<()> = write!(std::io::stdout(), "\rProcessing image");
+        let _: std::io::Result<()> = std::io::stdout().flush();
     }
 
     // Undo the rotated state used during rendering.
