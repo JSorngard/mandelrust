@@ -22,7 +22,7 @@ const DEFAULT_FILE_EXTENSION: &str = "png";
 fn main() -> Result<(), Box<dyn Error>> {
     let args = Cli::parse();
 
-    let x_resolution = NonZeroU32::new((args.aspect_ratio * (args.pixels.get() as f64)) as u32)
+    let x_resolution = NonZeroU32::new((args.aspect_ratio * f64::from(args.pixels.get())) as u32)
         .ok_or("the vertical resolution and aspect ratio must be such that the horizontal resolution is non-zero")?;
 
     let zoom = 2.0_f64.powf(args.zoom_level);
