@@ -338,10 +338,11 @@ impl Application for MandelViewer {
                 }
                 SSAAAction::Toggled(do_ssaa) => {
                     self.ui_values.do_ssaa = do_ssaa;
-                    if !self.ui_values.do_ssaa {
-                        self.params.sqrt_samples_per_pixel = 1.try_into().expect("1 is not zero");
-                    } else {
+                    if self.ui_values.do_ssaa {
                         self.params.sqrt_samples_per_pixel = self.ui_values.slider_ssaa_factor;
+                    } else {
+                        self.params.sqrt_samples_per_pixel = 1.try_into().expect("1 is not zero");
+                        
                     };
 
                     if self.ui_values.live_preview {
