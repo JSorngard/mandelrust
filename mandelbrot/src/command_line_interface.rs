@@ -108,30 +108,27 @@ pub struct Cli {
 /// Tries to interpret the input string as if it is an aspect ratio.
 /// 3:2 and 1.5 both work.
 fn parse_aspect_ratio(s: &str) -> Result<f64, String> {
-    match s.parse::<f64>() {
-        Ok(x_by_y) => {
-            if x_by_y > 0.0 {
-                Ok(x_by_y)
-            } else {
-                Err("aspect ratio must be larger than zero".into())
-            }
+    if let Ok(x_by_y) = s.parse::<f64>() {
+        if x_by_y > 0.0 {
+            Ok(x_by_y)
+        } else {
+            Err("aspect ratio must be larger than zero".into())
         }
-        Err(_) => {
-            let substrings: Vec<&str> = s.split(':').collect();
-            if substrings.len() == 2 {
-                match (
-                    substrings[0].parse::<NonZeroU32>(),
-                    substrings[1].parse::<NonZeroU32>(),
-                ) {
-                    (Ok(x), Ok(y)) => Ok(f64::from(x.get()) / f64::from(y.get())),
-                    (Ok(_), Err(e)) | (Err(e), Ok(_)) => Err(e.to_string()),
-                    (Err(e1), Err(e2)) => Err(format!(
-                        "horizontal integer has issue: '{e1}' vertical integer has issue '{e2}'",
-                    )),
-                }
-            } else {
-                Err("input could not be interpreted as an aspect ratio".into())
+    } else {
+        let substrings: Vec<&str> = s.split(':').collect();
+        if substrings.len() == 2 {
+            match (
+                substrings[0].parse::<NonZeroU32>(),
+                substrings[1].parse::<NonZeroU32>(),
+            ) {
+                (Ok(x), Ok(y)) => Ok(f64::from(x.get()) / f64::from(y.get())),
+                (Ok(_), Err(e)) | (Err(e), Ok(_)) => Err(e.to_string()),
+                (Err(e1), Err(e2)) => Err(format!(
+                    "horizontal integer has issue: '{e1}' vertical integer has issue '{e2}'",
+                )),
             }
+        } else {
+            Err("input could not be interpreted as an aspect ratio".into())
         }
     }
 }
