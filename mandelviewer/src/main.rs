@@ -301,7 +301,7 @@ impl Application for MandelViewer {
             Message::VerticalResolutionUpdated(y_res) => match self.with_new_resolution(y_res) {
                 Ok(params) => {
                     if u32::from(params.x_resolution) * u32::from(params.y_resolution) * 4
-                        <= 1000000000
+                        <= 1_000_000_000
                     {
                         self.params = params;
                         if self.ui_values.live_preview {
@@ -342,7 +342,6 @@ impl Application for MandelViewer {
                         self.params.sqrt_samples_per_pixel = self.ui_values.slider_ssaa_factor;
                     } else {
                         self.params.sqrt_samples_per_pixel = 1.try_into().expect("1 is not zero");
-                        
                     };
 
                     if self.ui_values.live_preview {
