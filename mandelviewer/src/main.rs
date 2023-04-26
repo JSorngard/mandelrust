@@ -134,10 +134,6 @@ enum Message {
     UI(UIAction),
 }
 
-async fn background_timer(duration: Duration) {
-    std::thread::sleep(duration);
-}
-
 impl MandelViewer {
     fn with_new_resolution(&self, y_res: NonZeroU32) -> Result<RenderParameters, TryFromIntError> {
         let mut new_params = self.params;
@@ -149,7 +145,7 @@ impl MandelViewer {
 
     fn push_notification(&mut self, text: String) -> Command<<Self as Application>::Message> {
         self.notifications.push(text);
-        Command::perform(background_timer(NOTIFICATION_DURATION), |_| {
+        Command::perform(async { std::thread::sleep(NOTIFICATION_DURATION) }, |_| {
             Message::Notification(NotificationAction::Pop)
         })
     }
