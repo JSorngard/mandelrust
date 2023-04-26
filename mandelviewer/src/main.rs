@@ -135,7 +135,7 @@ enum Message {
 }
 
 async fn background_timer(duration: Duration) {
-    std::thread::sleep(duration)
+    std::thread::sleep(duration);
 }
 
 impl MandelViewer {
