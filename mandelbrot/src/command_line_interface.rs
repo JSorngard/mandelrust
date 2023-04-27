@@ -41,8 +41,7 @@ pub struct Cli {
         short,
         long,
         value_parser(parse_resolution),
-        // unwrap is okay because 2160 is not 0.
-        default_value_t = NonZeroU32::new(2160).unwrap(),
+        default_value_t = NonZeroU32::new(2160).expect("2160 is not 0"),
     )]
     /// The number of pixels along the y-axis of the image
     pub pixels: NonZeroU32,
@@ -57,8 +56,7 @@ pub struct Cli {
         short,
         long,
         value_name = "SQRT(SSAA_FACTOR)",
-        // unwrap is okay because 3 is not 0.
-        default_value_t = NonZeroU8::new(3).unwrap(),
+        default_value_t = NonZeroU8::new(3).expect("3 is not 0"),
     )]
     /// How many samples to compute for each pixel along one dimension. The total number of samples per pixel is the square of this number.
     /// If this is set to 1, supersampling is turned off
@@ -67,14 +65,13 @@ pub struct Cli {
     #[arg(
         short,
         long,
-        // unwrap is okay because 255 is not 0
-        default_value_t = NonZeroU32::new(255).unwrap(),
+        default_value_t = NonZeroU32::new(255).expect("255 is not 0"),
     )]
     /// The maximum number of iterations for each pixel sample
     pub max_iterations: NonZeroU32,
 
     #[arg(long)]
-    /// Output the image in grayscale by linearly mapping the escape speed of each pixel to a luma value between 0 and 255
+    /// Output the image in grayscale by mapping escape speed to brightness
     pub grayscale: bool,
 
     #[arg(long)]
