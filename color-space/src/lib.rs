@@ -30,6 +30,7 @@ pub fn palette(escape_speed: f64) -> LinearRGB {
         .map(srgb_to_linear_rgb),
     )
 }
+
 /// Converts a point in the sRGB color space to a linear RGB triplet.
 fn srgb_to_linear_rgb(c: f64) -> f64 {
     c * c // <-- approximation of the below
