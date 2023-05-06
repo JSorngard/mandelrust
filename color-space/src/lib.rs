@@ -6,7 +6,8 @@
 ///
 /// black -> brown -> orange -> yellow -> cyan -> blue -> dark blue -> black.
 ///
-/// N.B.: The function has not been tested for inputs outside the range \[0, 1\]
+/// # Note
+/// The function has not been tested for inputs outside the range \[0, 1\]
 /// and makes no guarantees about the output in that case.
 #[inline]
 pub fn palette(escape_speed: f64) -> LinearRGB {
