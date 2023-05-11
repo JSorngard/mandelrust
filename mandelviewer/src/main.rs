@@ -270,7 +270,11 @@ impl Application for MandelViewer {
             },
             Message::LiveCheckboxToggled(state) => {
                 self.ui_values.live_preview = state;
-                Command::none()
+                if state {
+                    self.render_preview()
+                } else {
+                    Command::none()
+                }
             }
             Message::GrayscaleToggled(state) => {
                 self.params.color_type = if state {
