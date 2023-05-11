@@ -40,8 +40,6 @@ const INITIAL_ZOOM: f64 = 0.0;
 
 // Program settings
 const PROGRAM_NAME: &str = "Mandelviewer";
-const PREVIEW_RES: NonZeroU32 = nonzero!(480_u32);
-const NOTIFICATION_DURATION: Duration = Duration::from_secs(5);
 
 fn main() {
     let program_settings = iced::Settings {
@@ -106,6 +104,8 @@ enum RenderAction {
 enum FrameAction {
     CenterRealSubmitted,
     CenterImagSubmitted,
+    ZoomSubmitted,
+    ZoomSubmittedWith(f64),
 }
 
 #[derive(Debug, Clone)]
@@ -130,6 +130,11 @@ enum Message {
 }
 
 impl MandelViewer {
+    /// Returns a new version of its own `RenderParameters`
+    /// describing a view with the given vertical resolution.
+    /// # Error
+    /// If the vertical resolution results in an invalid horizontal resolution or does not fit in all the
+    /// necessary types this returns an error.
     fn with_new_resolution(&self, y_res: NonZeroU32) -> Result<RenderParameters, TryFromIntError> {
         let mut new_params = self.params;
         new_params.y_resolution = y_res.try_into()?;
@@ -138,11 +143,36 @@ impl MandelViewer {
         Ok(new_params)
     }
 
+    /// Push the given message to the notification queue.
+    /// It will dissapear after a hard-coded delay.
     fn push_notification(&mut self, text: String) -> Command<<Self as Application>::Message> {
         self.notifications.push(text);
-        Command::perform(async { std::thread::sleep(NOTIFICATION_DURATION) }, |_| {
+        Command::perform(async { std::thread::sleep(Duration::from_secs(5)) }, |_| {
             Message::Notification(NotificationAction::Pop)
         })
+    }
+
+    /// Asynchronously render a low-resolution image.
+    fn render_preview(&self) -> Command<<Self as Application>::Message> {
+        let new_params = self
+            .with_new_resolution(480.try_into().expect("480 is not 0"))
+            .expect("480 is a valid resolution");
+        let view_region = self.view_region;
+        Command::perform(
+            async move { render(new_params, view_region, false) },
+            |img| Message::Render(RenderAction::Finished(img)),
+        )
+    }
+
+    /// Modifies the current view to be zoomed to 2^(the given factor).
+    /// Adding one to the factor halves the dimensions of the view.
+    /// 0 means no zoom relative the the initial state of the application,
+    /// so calling this function twice with the same input has no effect.
+    fn zoom_to(&mut self, factor: f64) {
+        self.zoom = factor;
+        self.ui_values.zoom = factor.to_string();
+        self.view_region.imag_distance = INITIAL_IMAG_DISTANCE / 2.0_f64.powf(factor);
+        self.view_region.real_distance = self.view_region.imag_distance * self.aspect_ratio;
     }
 }
 
@@ -180,7 +210,7 @@ impl Application for MandelViewer {
                 ui_values: UIValues {
                     slider_ssaa_factor: INITIAL_SSAA_FACTOR,
                     do_ssaa: true,
-                    live_preview: false,
+                    live_preview: true,
                     center_real: view_region.center_real.to_string(),
                     center_imag: view_region.center_imag.to_string(),
                     zoom: INITIAL_ZOOM.to_string(),
@@ -209,14 +239,7 @@ impl Application for MandelViewer {
             Message::MaxItersUpdated(max_iters) => {
                 self.params.max_iterations = max_iters;
                 if self.ui_values.live_preview {
-                    let new_params = self
-                        .with_new_resolution(PREVIEW_RES)
-                        .expect("PREVIEW_RES is a valid resolution");
-                    let view_region = self.view_region;
-                    Command::perform(
-                        async move { render(new_params, view_region, false) },
-                        |img| Message::Render(RenderAction::Finished(img)),
-                    )
+                    self.render_preview()
                 } else {
                     Command::none()
                 }
@@ -256,14 +279,7 @@ impl Application for MandelViewer {
                     SupportedColorType::Rgba8
                 };
                 if self.ui_values.live_preview {
-                    let new_params = self
-                        .with_new_resolution(PREVIEW_RES)
-                        .expect("PREVIEW_RES is a valid resolution");
-                    let view_region = self.view_region;
-                    Command::perform(
-                        async move { render(new_params, view_region, false) },
-                        |img| Message::Render(RenderAction::Finished(img)),
-                    )
+                    self.render_preview()
                 } else {
                     Command::none()
                 }
@@ -294,16 +310,7 @@ impl Application for MandelViewer {
                         <= 1_000_000_000
                     {
                         self.params = params;
-                        if self.ui_values.live_preview {
-                            let params = self.params;
-                            let view_region = self.view_region;
-                            Command::perform(
-                                async move { render(params, view_region, false) },
-                                |img| Message::Render(RenderAction::Finished(img)),
-                            )
-                        } else {
-                            Command::none()
-                        }
+                        Command::none()
                     } else {
                         self.push_notification("the resolution is too large".into())
                     }
@@ -315,14 +322,7 @@ impl Application for MandelViewer {
                     self.ui_values.slider_ssaa_factor = ssaa_factor;
                     if self.ui_values.live_preview && self.ui_values.do_ssaa {
                         self.params.sqrt_samples_per_pixel = self.ui_values.slider_ssaa_factor;
-                        let new_params = self
-                            .with_new_resolution(PREVIEW_RES)
-                            .expect("PREVIEW_RES is a valid resolution");
-                        let view_region = self.view_region;
-                        Command::perform(
-                            async move { render(new_params, view_region, false) },
-                            |img| Message::Render(RenderAction::Finished(img)),
-                        )
+                        self.render_preview()
                     } else {
                         Command::none()
                     }
@@ -336,14 +336,7 @@ impl Application for MandelViewer {
                     };
 
                     if self.ui_values.live_preview {
-                        let new_params = self
-                            .with_new_resolution(PREVIEW_RES)
-                            .expect("PREVIEW_RES is a valid resolution");
-                        let view_region = self.view_region;
-                        Command::perform(
-                            async move { render(new_params, view_region, false) },
-                            |img| Message::Render(RenderAction::Finished(img)),
-                        )
+                        self.render_preview()
                     } else {
                         Command::none()
                     }
@@ -353,17 +346,44 @@ impl Application for MandelViewer {
                 FrameAction::CenterRealSubmitted => match self.ui_values.center_real.parse() {
                     Ok(center_real) => {
                         self.view_region.center_real = center_real;
-                        Command::none()
+                        if self.ui_values.live_preview {
+                            self.render_preview()
+                        } else {
+                            Command::none()
+                        }
                     }
                     Err(e) => self.push_notification(e.to_string()),
                 },
                 FrameAction::CenterImagSubmitted => match self.ui_values.center_imag.parse() {
                     Ok(center_imag) => {
                         self.view_region.center_imag = center_imag;
-                        Command::none()
+                        if self.ui_values.live_preview {
+                            self.render_preview()
+                        } else {
+                            Command::none()
+                        }
                     }
                     Err(e) => self.push_notification(e.to_string()),
                 },
+                FrameAction::ZoomSubmitted => match self.ui_values.zoom.parse() {
+                    Ok(factor) => {
+                        self.zoom_to(factor);
+                        if self.ui_values.live_preview {
+                            self.render_preview()
+                        } else {
+                            Command::none()
+                        }
+                    }
+                    Err(e) => self.push_notification(e.to_string()),
+                },
+                FrameAction::ZoomSubmittedWith(factor) => {
+                    self.zoom_to(factor);
+                    if self.ui_values.live_preview {
+                        self.render_preview()
+                    } else {
+                        Command::none()
+                    }
+                }
             },
             Message::UI(action) => {
                 match action {
@@ -380,12 +400,8 @@ impl Application for MandelViewer {
                         self.ui_values.center_imag = val;
                     }
                     UIAction::Zoom(val) => {
-                        if let Ok(zoom) = val.parse::<f64>() {
-                            self.zoom = zoom;
-                            self.view_region.imag_distance =
-                                INITIAL_IMAG_DISTANCE / 2.0_f64.powf(zoom);
-                            self.view_region.real_distance =
-                                self.view_region.imag_distance * self.aspect_ratio;
+                        if let Ok(factor) = val.parse::<f64>() {
+                            self.zoom_to(factor);
                         }
                         self.ui_values.zoom = val;
                     }
@@ -496,9 +512,18 @@ impl Application for MandelViewer {
                 ))
                 .on_submit(Message::Frame(FrameAction::CenterImagSubmitted)),
                 Text::new("Zoom factor"),
-                TextInput::new("Zoom factor", &self.ui_values.zoom, |val| Message::UI(
-                    UIAction::Zoom(val)
-                )),
+                row![
+                    Button::new("-1").on_press(Message::Frame(FrameAction::ZoomSubmittedWith(
+                        self.zoom - 1.0
+                    ))),
+                    TextInput::new("Zoom factor", &self.ui_values.zoom, |val| Message::UI(
+                        UIAction::Zoom(val)
+                    ))
+                    .on_submit(Message::Frame(FrameAction::ZoomSubmitted)),
+                    Button::new("+1").on_press(Message::Frame(FrameAction::ZoomSubmittedWith(
+                        self.zoom + 1.0
+                    ))),
+                ],
                 // A checkbox for rendering the image in grayscale.
                 Checkbox::new("Grayscale", !self.params.color_type.has_color(), |status| {
                     Message::GrayscaleToggled(status)
@@ -534,9 +559,14 @@ impl Application for MandelViewer {
                 } else {
                     Button::new("re-render view").on_press(Message::Render(RenderAction::Started))
                 },
-                Checkbox::new("Live preview", self.ui_values.live_preview, |status| {
-                    Message::LiveCheckboxToggled(status)
-                }),
+                Tooltip::new(
+                    Checkbox::new("Live preview", self.ui_values.live_preview, |status| {
+                        Message::LiveCheckboxToggled(status)
+                    }),
+                    "Render a low-resolution version of the image whenever settings are changed"
+                        .to_owned(),
+                    Position::FollowCursor
+                ),
                 Space::new(Length::Shrink, Length::Fill),
                 // Finally a button for saving the current view.
                 Button::new("Save current view").on_press(Message::SavePressed),
