@@ -541,7 +541,10 @@ impl Application for MandelViewer {
                                 ))
                             }
                         ),
-                        format!("{} samples", self.ui_values.slider_ssaa_factor.get().pow(2)),
+                        format!(
+                            "Take {} samples per pixel",
+                            self.ui_values.slider_ssaa_factor.get().pow(2)
+                        ),
                         Position::FollowCursor
                     ),
                     Space::new(Length::Fixed(10.0), Length::Shrink),
@@ -554,16 +557,21 @@ impl Application for MandelViewer {
                 // A button for re-rendering the current view at full resolution,
                 // as well as a checkbox for whether the user wants the image to be re-rendered
                 // whenever they change a setting.
-                if self.render_in_progress {
-                    Button::new("rendering...")
-                } else {
-                    Button::new("re-render view").on_press(Message::Render(RenderAction::Started))
-                },
+                Tooltip::new(
+                    if self.render_in_progress {
+                        Button::new("rendering...")
+                    } else {
+                        Button::new("re-render view")
+                            .on_press(Message::Render(RenderAction::Started))
+                    },
+                    "Render the current view at full resolution".to_owned(),
+                    Position::FollowCursor
+                ),
                 Tooltip::new(
                     Checkbox::new("Live preview", self.ui_values.live_preview, |status| {
                         Message::LiveCheckboxToggled(status)
                     }),
-                    "Render a low-resolution version of the image whenever settings are changed"
+                    "Render a low-resolution version\nof the image whenever settings are changed"
                         .to_owned(),
                     Position::FollowCursor
                 ),
