@@ -153,11 +153,12 @@ impl MandelViewer {
     }
 
     /// Asynchronously render a low-resolution image.
-    fn render_preview(&self) -> Command<<Self as Application>::Message> {
+    fn render_preview(&mut self) -> Command<<Self as Application>::Message> {
         let new_params = self
             .with_new_resolution(480.try_into().expect("480 is not 0"))
             .expect("480 is a valid resolution");
         let view_region = self.view_region;
+        self.render_in_progress = true;
         Command::perform(
             async move { render(new_params, view_region, false) },
             |img| Message::Render(RenderAction::Finished(img)),
@@ -589,7 +590,16 @@ impl Application for MandelViewer {
                 ),
                 Space::new(Length::Shrink, Length::Fill),
                 // Finally a button for saving the current view.
-                Button::new("Save current view").on_press(Message::SavePressed),
+                Tooltip::new(
+                    Button::new("Save current view").on_press(Message::SavePressed),
+                    if !self.params.color_type.has_color() && !self.ui_values.live_preview {
+                        "WARNING: SAVING IN GRAYSCALE"
+                    } else {
+                        ""
+                    },
+                    Position::FollowCursor
+                ),
+                Space::new(Length::Shrink, Length::FillPortion(1))
             ]
             .width(Length::FillPortion(1)),
         ]
