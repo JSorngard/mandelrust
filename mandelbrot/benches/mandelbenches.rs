@@ -9,11 +9,12 @@ fn get_inputs(
     re: Option<f64>,
     im: Option<f64>,
     miters: Option<u32>,
+    grayscale: Option<bool>,
 ) -> (RenderParameters, Frame) {
     let aspect_ratio = 1.5;
     let x_res = (aspect_ratio * y_res as f64) as u32;
     let ssaa = ssaa.unwrap_or(3);
-    let grayscale = false;
+    let grayscale = grayscale.unwrap_or(false);
     let max_iters = miters.unwrap_or(255);
 
     let params = RenderParameters::try_new(
@@ -42,7 +43,7 @@ fn get_inputs(
 fn fast(c: &mut Criterion) {
     let mut group = c.benchmark_group("fast");
 
-    let (params, frame) = get_inputs(480, None, None, None, None, None);
+    let (params, frame) = get_inputs(480, None, None, None, None, None, None);
     group.bench_function(
         &format!(
             "{}x{} render of full set",
@@ -51,7 +52,7 @@ fn fast(c: &mut Criterion) {
         |b| b.iter(|| render(params, frame, false)),
     );
 
-    let (params, frame) = get_inputs(720, None, None, None, None, None);
+    let (params, frame) = get_inputs(720, None, None, None, None, None, None);
     group.bench_function(
         &format!(
             "{}x{} render of full set",
@@ -60,7 +61,7 @@ fn fast(c: &mut Criterion) {
         |b| b.iter(|| render(params, frame, false)),
     );
 
-    let (params, frame) = get_inputs(1080, None, None, None, None, None);
+    let (params, frame) = get_inputs(1080, None, None, None, None, None, None);
     group.bench_function(
         &format!(
             "{}x{} render of full set",
@@ -69,7 +70,16 @@ fn fast(c: &mut Criterion) {
         |b| b.iter(|| render(params, frame, false)),
     );
 
-    let (params, frame) = get_inputs(1080, Some(1), None, None, None, None);
+    let (params, frame) = get_inputs(1080, None, None, None, None, None, Some(true));
+    group.bench_function(
+        &format!(
+            "{}x{} grayscale render of full set",
+            params.x_resolution, params.y_resolution
+        ),
+        |b| b.iter(|| render(params, frame, false)),
+    );
+
+    let (params, frame) = get_inputs(1080, Some(1), None, None, None, None, None);
     group.bench_function(
         &format!(
             "{}x{} render  of full set without SSAA",
@@ -83,7 +93,7 @@ fn slow(c: &mut Criterion) {
     let mut group = c.benchmark_group("slow");
     group.sample_size(10);
 
-    let (params, frame) = get_inputs(2160, None, None, None, None, None);
+    let (params, frame) = get_inputs(2160, None, None, None, None, None, None);
     group.bench_function(
         &format!(
             "{}x{} render of full set",
@@ -100,6 +110,7 @@ fn slow(c: &mut Criterion) {
         Some(-0.2345),
         Some(-0.7178),
         Some(1000),
+        None,
     );
 
     group.bench_function(
