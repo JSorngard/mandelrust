@@ -41,7 +41,7 @@ fn get_inputs(
 }
 
 fn fast(c: &mut Criterion) {
-    let mut group = c.benchmark_group("fast");
+    let mut group = c.benchmark_group("fast renders");
 
     let (params, frame) = get_inputs(480, None, None, None, None, None, None);
     group.bench_function(
@@ -90,7 +90,7 @@ fn fast(c: &mut Criterion) {
 }
 
 fn slow(c: &mut Criterion) {
-    let mut group = c.benchmark_group("slow");
+    let mut group = c.benchmark_group("slow renders");
     group.sample_size(10);
 
     let (params, frame) = get_inputs(2160, None, None, None, None, None, None);
