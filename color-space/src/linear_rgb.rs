@@ -83,6 +83,7 @@ impl From<LinearRGB> for Rgb<u8> {
     /// Converts a `LinearRGB` into an `Rgb<u8>` by converting its
     /// underlying data into the nonlinear sRGB color space.
     /// Clamps the color channels to the range \[0, 1\] before conversion.
+    #[inline]
     fn from(linear_rgb: LinearRGB) -> Self {
         [linear_rgb.r, linear_rgb.g, linear_rgb.b]
             .map(|c| quantize_srgb(linear_rgb_to_srgb(c)))
@@ -106,12 +107,14 @@ impl From<LinearRGB> for Rgb<f64> {
 }
 
 impl From<[f64; 3]> for LinearRGB {
+    #[inline]
     fn from(data: [f64; 3]) -> Self {
         Self::new(data[0], data[1], data[2])
     }
 }
 
 impl From<LinearRGB> for Luma<u8> {
+    #[inline]
     fn from(linear_rgb: LinearRGB) -> Self {
         Luma::from([quantize_srgb(linear_rgb_to_srgb(
             linear_rgb.r * 0.2126 + linear_rgb.g * 0.7152 + linear_rgb.b * 0.0722,
@@ -120,6 +123,7 @@ impl From<LinearRGB> for Luma<u8> {
 }
 
 impl From<LinearRGB> for Rgba<u8> {
+    #[inline]
     fn from(linear_rgb: LinearRGB) -> Self {
         let [r, g, b] = [linear_rgb.r, linear_rgb.g, linear_rgb.b]
             .map(|c| quantize_srgb(linear_rgb_to_srgb(c)));
