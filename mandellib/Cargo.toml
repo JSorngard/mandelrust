@@ -9,3 +9,10 @@ image = {version = "0.24", default-features = false, features = ["png"]}
 rayon = "1.7"
 indicatif = { version = "0.17", features = ["rayon"] }
 itertools = "0.10"
+
+[dev-dependencies]
+criterion = {version = "0.4", features = ["html_reports"]}
+
+[[bench]]
+name = "mandelbenches"
+harness = false

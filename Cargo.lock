@@ -516,6 +516,7 @@ name = "color-space"
 version = "0.3.1"
 dependencies = [
  "approx",
+ "criterion",
  "image",
  "itertools",
 ]
@@ -1855,7 +1856,6 @@ version = "8.0.4"
 dependencies = [
  "clap 4.2.7",
  "color-space",
- "criterion",
  "image",
  "mandellib",
  "oxipng",
@@ -1866,6 +1866,7 @@ name = "mandellib"
 version = "12.0.0"
 dependencies = [
  "color-space",
+ "criterion",
  "image",
  "indicatif",
  "itertools",

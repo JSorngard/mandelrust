@@ -16,10 +16,3 @@ oxipng = {version = "8.0", optional = true}
 [features]
 default = ["oxipng"]
 oxipng = ["dep:oxipng"]
-
-[dev-dependencies]
-criterion = {version = "0.4", features = ["html_reports"]}
-
-[[bench]]
-name = "mandelbenches"
-harness = false

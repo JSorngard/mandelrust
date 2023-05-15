@@ -9,3 +9,8 @@ image = {version = "0.24", default-features = false, features = ["png"]}
 [dev-dependencies]
 approx = "0.5"
 itertools = "0.10"
+criterion = {version = "0.4", features = ["html_reports"]}
+
+[[bench]]
+name = "colorbenches"
+harness = false
