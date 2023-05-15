@@ -377,6 +377,7 @@ pub fn iterate(c_re: f64, c_im: f64, max_iterations: NonZeroU32) -> (u32, f64) {
 
 /// Returns a value kind of like the potential function of the Mandelbrot set.
 /// Maps the result of [`iterate`] smoothly to a number between 0 (inside the set) and 1 (far outside).
+#[must_use]
 fn potential(c_re: f64, c_im: f64, max_iterations: NonZeroU32) -> f64 {
     let (iterations, mag_sqr) = iterate(c_re, c_im, max_iterations);
 
