@@ -1,10 +1,25 @@
-use criterion::{criterion_group, criterion_main, Criterion};
-use color_space::palette;
+use criterion::{criterion_group, criterion_main, Criterion, Throughput, Bencher};
+use color_space::{palette, LinearRGB};
+use image::Rgb;
 
 fn bench_color_curves(c: &mut Criterion) {
-    const MAG: u32 = 100000;
-    let speeds: Vec<f64> = (0..MAG).map(|v|f64::from(v) / f64::from(MAG)).collect();
-    c.bench_function("color curves", |b| b.iter(|| speeds.iter().map(|s| std::hint::black_box(palette(*s)))));
+    const MAG: u32 = 100_000;
+    let mut group = c.benchmark_group("from_escape_speed");
+    group.throughput(Throughput::Elements(MAG.into()));
+    let speeds: Vec<f64> = (0..MAG).map(|v| f64::from(v) / f64::from(MAG)).collect();
+    let speeds_ref: &[f64] = &speeds;
+    group.bench_with_input("palette", speeds_ref, |b: &mut Bencher, speeds: &[f64]| {
+        b.iter(|| speeds.iter().map(|s| std::hint::black_box(palette(*s))).collect::<Vec<_>>())
+    });
+    drop(speeds_ref);
+    
+    let colors: Vec<LinearRGB> = speeds.into_iter().map(palette).collect();
+    let colors_ref: &[LinearRGB] = &colors;
+    group.bench_with_input("linear<f64> -> srgb<u8>", colors_ref, |b: &mut Bencher, colors: &[LinearRGB]| {
+        b.iter(|| colors.iter().map(|color| std::hint::black_box(Rgb::<u8>::from(*color))).collect::<Vec<_>>())
+    });
+    
+    group.finish();
 }
 
 criterion_group!(benches, bench_color_curves);
