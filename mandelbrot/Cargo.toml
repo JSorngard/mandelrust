@@ -14,5 +14,4 @@ image = {version = "0.24", default-features = false, features = ["png"]}
 oxipng = {version = "8.0", default-features = false, features = ["parallel", "zopfli"], optional = true}
 
 [features]
-default = ["oxipng"]
 oxipng = ["dep:oxipng"]
