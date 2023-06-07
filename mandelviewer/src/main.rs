@@ -303,12 +303,10 @@ impl Application for MandelViewer {
                                 } else {
                                     self.push_notification("save operation successful".into())
                                 }
+                            } else if let Err(e) = img.to_luma8().save(out_path) {
+                                self.push_notification(e.to_string())
                             } else {
-                                if let Err(e) = img.to_luma8().save(out_path) {
-                                    self.push_notification(e.to_string())
-                                } else {
-                                    self.push_notification("save operation successful".into())
-                                }
+                                self.push_notification("save operation successful".into())
                             }
                         }
                         None => self.push_notification("save operation cancelled".into()),
