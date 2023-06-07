@@ -20,7 +20,6 @@ fn bench_color_space(c: &mut Criterion) {
             })
         },
     );
-    drop(speeds_ref);
 
     let colors: Vec<LinearRGB> = speeds.into_iter().map(palette).collect();
     let colors_ref: &[LinearRGB] = &colors;
