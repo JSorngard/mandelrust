@@ -248,8 +248,6 @@ impl Application for MandelViewer {
             Message::Render(action) => match action {
                 RenderAction::Started => {
                     self.render_in_progress = true;
-                    // Clear viewer to save memory
-                    self.image = None;
                     let params = self.params;
                     let view_region = self.view_region;
                     Command::perform(async move { render(params, view_region, false) }, |img| {
