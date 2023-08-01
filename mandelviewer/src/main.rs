@@ -45,7 +45,7 @@ fn main() {
     let program_settings = iced::Settings {
         window: window::Settings {
             icon: Some(
-                window::Icon::from_file_data(ICON, Some(ImageFormat::Png))
+                window::icon::from_file_data(ICON, Some(ImageFormat::Png))
                     .expect("embedded resources are correctly formatted images"),
             ),
             ..Default::default()
@@ -460,15 +460,14 @@ impl Application for MandelViewer {
                     )),
                     TextInput::new(
                         "Vertical resolution",
-                        &u32::from(self.params.y_resolution).to_string(),
-                        |yres| match yres.parse() {
-                            Ok(mi) => {
-                                Message::VerticalResolutionUpdated(mi)
-                            }
-                            Err(e) =>
-                                Message::Notification(NotificationAction::Push(e.to_string())),
-                        }
+                        &u32::from(self.params.y_resolution).to_string()
                     )
+                    .on_input(|yres| match yres.parse() {
+                        Ok(mi) => {
+                            Message::VerticalResolutionUpdated(mi)
+                        }
+                        Err(e) => Message::Notification(NotificationAction::Push(e.to_string())),
+                    })
                     .on_submit(Message::Render(RenderAction::Started)),
                     Button::new("·2").on_press(Message::VerticalResolutionUpdated(
                         NonZeroU32::from(self.params.y_resolution)
@@ -487,19 +486,16 @@ impl Application for MandelViewer {
                             .try_into()
                             .expect("never zero")
                     )),
-                    TextInput::new(
-                        "Iterations",
-                        &self.params.max_iterations.to_string(),
-                        |max_iters| match max_iters.parse() {
+                    TextInput::new("Iterations", &self.params.max_iterations.to_string())
+                        .on_input(|max_iters| match max_iters.parse() {
                             Ok(mi) => {
                                 Message::MaxItersUpdated(mi)
                             }
                             Err(e) => {
                                 Message::Notification(NotificationAction::Push(e.to_string()))
                             }
-                        }
-                    )
-                    .on_submit(Message::Render(RenderAction::Started)),
+                        })
+                        .on_submit(Message::Render(RenderAction::Started)),
                     Button::new("·2").on_press(Message::MaxItersUpdated(
                         self.params
                             .max_iterations
@@ -507,24 +503,21 @@ impl Application for MandelViewer {
                     )),
                 ],
                 Text::new("Re(c)"),
-                TextInput::new("Re(c)", &self.ui_values.center_real, |val| Message::UI(
-                    UIAction::CenterReal(val)
-                ))
-                .on_submit(Message::Frame(FrameAction::CenterRealSubmitted)),
+                TextInput::new("Re(c)", &self.ui_values.center_real)
+                    .on_input(|val| Message::UI(UIAction::CenterReal(val)))
+                    .on_submit(Message::Frame(FrameAction::CenterRealSubmitted)),
                 Text::new("Im(c)"),
-                TextInput::new("Im(c)", &self.ui_values.center_imag, |val| Message::UI(
-                    UIAction::CenterImag(val)
-                ))
-                .on_submit(Message::Frame(FrameAction::CenterImagSubmitted)),
+                TextInput::new("Im(c)", &self.ui_values.center_imag)
+                    .on_input(|val| Message::UI(UIAction::CenterImag(val)))
+                    .on_submit(Message::Frame(FrameAction::CenterImagSubmitted)),
                 Text::new("Zoom factor"),
                 row![
                     Button::new("-1").on_press(Message::Frame(FrameAction::ZoomSubmittedWith(
                         self.zoom - 1.0
                     ))),
-                    TextInput::new("Zoom factor", &self.ui_values.zoom, |val| Message::UI(
-                        UIAction::Zoom(val)
-                    ))
-                    .on_submit(Message::Frame(FrameAction::ZoomSubmitted)),
+                    TextInput::new("Zoom factor", &self.ui_values.zoom)
+                        .on_input(|val| Message::UI(UIAction::Zoom(val)))
+                        .on_submit(Message::Frame(FrameAction::ZoomSubmitted)),
                     Button::new("+1").on_press(Message::Frame(FrameAction::ZoomSubmittedWith(
                         self.zoom + 1.0
                     ))),
