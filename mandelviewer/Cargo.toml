@@ -8,8 +8,12 @@ edition = "2021"
 [dependencies]
 mandellib = {path = "../mandellib"}
 color-space = {path = "../color-space"}
-iced = {version = "0.10", features = ["image", "debug"]}
+iced = {version = "0.10", features = ["image"]}
 image = "0.24"
 rayon = "1.7"
 rfd = "0.11"
 nonzero_ext = "0.3.0"
+
+[features]
+# Enable this feature to show extra debug information in the render window when pressing F12.
+debug = ["iced/debug"]
