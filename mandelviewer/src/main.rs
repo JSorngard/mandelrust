@@ -1,8 +1,7 @@
 use core::{
-    num::{NonZeroU32, NonZeroU8},
+    num::{NonZeroU32, NonZeroU8, TryFromIntError},
     time::Duration,
 };
-use std::num::TryFromIntError;
 
 mod embedded_resources;
 use color_space::SupportedColorType;
