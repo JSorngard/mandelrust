@@ -1898,8 +1898,6 @@ version = "0.1.0"
 dependencies = [
  "color-space",
  "iced",
- "iced_graphics",
- "iced_native",
  "image",
  "mandellib",
  "nonzero_ext",
