@@ -104,7 +104,7 @@ pub struct Cli {
 
 pub use aspect_ratio::AspectRatio;
 mod aspect_ratio {
-    use core::{num::ParseIntError, fmt, ops::Mul, str::FromStr};
+    use core::{fmt, num::ParseIntError, ops::Mul, str::FromStr};
     use std::error::Error;
 
     use super::NonZeroU32;
@@ -141,7 +141,7 @@ mod aspect_ratio {
     }
 
     #[derive(Debug, Clone)]
-    enum ParseAspectRatioError {
+    pub enum ParseAspectRatioError {
         NonPositive,
         ParseNumerator(ParseIntError),
         ParseDenominator(ParseIntError),
@@ -155,16 +155,31 @@ mod aspect_ratio {
                 Self::NonPositive => write!(f, "aspect ratio must be larger than zero"),
                 Self::ParseNumerator(e) => write!(f, "Horizontal integer has issue: {e}"),
                 Self::ParseDenominator(e) => write!(f, "Vertical integer has issue: {e}"),
-                Self::ParseBoth(e) => write!(f, "horizontal integer has issue: '{}' vertical integer has issue '{}'", e.e1, e.e2),
-                Self::InvalidFormat => write!(f, "input could not be interpreted as an aspect ratio"),
+                Self::ParseBoth(e) => write!(
+                    f,
+                    "horizontal integer has issue: '{}' vertical integer has issue '{}'",
+                    e.e1, e.e2
+                ),
+                Self::InvalidFormat => {
+                    write!(f, "input could not be interpreted as an aspect ratio")
+                }
             }
         }
     }
 
     #[derive(Debug, Clone)]
-    struct ParseTwoIntError {
+    pub struct ParseTwoIntError {
         e1: ParseIntError,
         e2: ParseIntError,
+    }
+
+    impl From<(ParseIntError, ParseIntError)> for ParseTwoIntError {
+        fn from(value: (ParseIntError, ParseIntError)) -> Self {
+            Self {
+                e1: value.0,
+                e2: value.1,
+            }
+        }
     }
 
     impl fmt::Display for ParseTwoIntError {
@@ -190,7 +205,7 @@ mod aspect_ratio {
     }
 
     impl FromStr for AspectRatio {
-        type Err = String;
+        type Err = ParseAspectRatioError;
         /// Tries to interpret the input string as if it is an aspect ratio.
         /// 3:2 and 1.5 both work.
         fn from_str(s: &str) -> Result<Self, Self::Err> {
@@ -198,7 +213,7 @@ mod aspect_ratio {
                 if x_by_y > 0.0 {
                     Ok(Self::Number(x_by_y))
                 } else {
-                    Err("aspect ratio must be larger than zero".into())
+                    Err(Self::Err::NonPositive)
                 }
             } else {
                 let substrings: Vec<&str> = s.split(':').collect();
@@ -208,13 +223,12 @@ mod aspect_ratio {
                         substrings[1].parse::<NonZeroU32>(),
                     ) {
                         (Ok(x), Ok(y)) => Ok(Self::Ratio(x, y)),
-                        (Ok(_), Err(e)) | (Err(e), Ok(_)) => Err(e.to_string()),
-                        (Err(e1), Err(e2)) => Err(format!(
-                            "horizontal integer has issue: '{e1}' vertical integer has issue '{e2}'",
-                        )),
+                        (Ok(_), Err(e)) => Err(Self::Err::ParseDenominator(e)),
+                        (Err(e), Ok(_)) => Err(Self::Err::ParseNumerator(e)),
+                        (Err(e1), Err(e2)) => Err(Self::Err::ParseBoth((e1, e2).into())),
                     }
                 } else {
-                    Err("input could not be interpreted as an aspect ratio".into())
+                    Err(Self::Err::InvalidFormat)
                 }
             }
         }
