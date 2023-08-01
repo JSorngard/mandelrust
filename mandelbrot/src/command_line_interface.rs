@@ -153,8 +153,8 @@ mod aspect_ratio {
         fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
             match self {
                 Self::NonPositive => write!(f, "aspect ratio must be larger than zero"),
-                Self::ParseNumerator(e) => write!(f, "Horizontal integer has issue: {e}"),
-                Self::ParseDenominator(e) => write!(f, "Vertical integer has issue: {e}"),
+                Self::ParseNumerator(e) => write!(f, "horizontal integer has issue: {e}"),
+                Self::ParseDenominator(e) => write!(f, "vertical integer has issue: {e}"),
                 Self::ParseBoth(e) => write!(
                     f,
                     "horizontal integer has issue: '{}' vertical integer has issue '{}'",
