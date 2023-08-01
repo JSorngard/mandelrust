@@ -25,14 +25,28 @@ use iced::{
     window, Application, Command, Element, Length, Theme,
 };
 use image::{DynamicImage, ImageFormat};
-use nonzero_ext::nonzero;
 use rfd::FileDialog;
 
+macro_rules! nonzero {
+    ($x:literal, u8) => {
+        match NonZeroU8::new($x) {
+            Some(value) => value,
+            None => panic!("value would be 0 for nonzero type"),
+        }
+    };
+    ($x:literal, u32) => {
+        match NonZeroU32::new($x) {
+            Some(value) => value,
+            None => panic!("value would be 0 for nonzero type"),
+        }
+    };
+}
+
 // Initial view settings
-const INITIAL_SSAA_FACTOR: NonZeroU8 = nonzero!(3_u8);
-const INITIAL_MAX_ITERATIONS: NonZeroU32 = nonzero!(256_u32);
-const INITIAL_X_RES: NonZeroU32 = nonzero!(1920_u32);
-const INITIAL_Y_RES: NonZeroU32 = nonzero!(1080_u32);
+const INITIAL_SSAA_FACTOR: NonZeroU8 = nonzero!(3, u8);
+const INITIAL_MAX_ITERATIONS: NonZeroU32 = nonzero!(256, u32);
+const INITIAL_X_RES: NonZeroU32 = nonzero!(1920, u32);
+const INITIAL_Y_RES: NonZeroU32 = nonzero!(1080, u32);
 const INITIAL_IMAG_DISTANCE: f64 = 8.0 / 3.0;
 const INITIAL_REAL_CENTER: f64 = -0.75;
 const INITIAL_IMAG_CENTER: f64 = 0.0;
