@@ -473,9 +473,8 @@ impl Application for MandelViewer {
                     )
                     .on_submit(Message::Render(RenderAction::Started)),
                     Button::new("·2").on_press(Message::VerticalResolutionUpdated(
-                        (u32::from(self.params.y_resolution).saturating_mul(2))
-                            .try_into()
-                            .expect("doubling a number never gives zero")
+                        NonZeroU32::from(self.params.y_resolution)
+                            .saturating_mul(NonZeroU32::new(2).expect("2 is not zero"))
                     ))
                 ],
                 // A text input field for the number of iterations with buttons on either side to halve or double it.
@@ -506,10 +505,7 @@ impl Application for MandelViewer {
                     Button::new("·2").on_press(Message::MaxItersUpdated(
                         self.params
                             .max_iterations
-                            .get()
-                            .saturating_mul(2)
-                            .try_into()
-                            .expect("doubling a number never gives zero")
+                            .saturating_mul(NonZeroU32::new(2).expect("2 is not zero"))
                     )),
                 ],
                 Text::new("Re(c)"),
