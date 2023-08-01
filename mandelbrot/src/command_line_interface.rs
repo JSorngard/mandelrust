@@ -46,11 +46,11 @@ pub struct Cli {
     /// The number of pixels along the y-axis of the image
     pub pixels: NonZeroU32,
 
-    #[arg(short, long, value_parser(parse_aspect_ratio), default_value_t = 1.5)]
+    #[arg(short, long, default_value_t = AspectRatio::Number(1.5))]
     /// The aspect ratio of the image. The horizontal pixel resolution is calculated by multiplying the
     /// vertical pixel resolution by this number. The aspect ratio can be entered as a real number and also in the format x:y,
     /// where x and y are integers, e.g. 3:2
-    pub aspect_ratio: f64,
+    pub aspect_ratio: AspectRatio,
 
     #[arg(
         short,
@@ -102,30 +102,121 @@ pub struct Cli {
     pub optimize_file_size: Option<u8>,
 }
 
-/// Tries to interpret the input string as if it is an aspect ratio.
-/// 3:2 and 1.5 both work.
-fn parse_aspect_ratio(s: &str) -> Result<f64, String> {
-    if let Ok(x_by_y) = s.parse::<f64>() {
-        if x_by_y > 0.0 {
-            Ok(x_by_y)
-        } else {
-            Err("aspect ratio must be larger than zero".into())
-        }
-    } else {
-        let substrings: Vec<&str> = s.split(':').collect();
-        if substrings.len() == 2 {
-            match (
-                substrings[0].parse::<NonZeroU32>(),
-                substrings[1].parse::<NonZeroU32>(),
-            ) {
-                (Ok(x), Ok(y)) => Ok(f64::from(x.get()) / f64::from(y.get())),
-                (Ok(_), Err(e)) | (Err(e), Ok(_)) => Err(e.to_string()),
-                (Err(e1), Err(e2)) => Err(format!(
-                    "horizontal integer has issue: '{e1}' vertical integer has issue '{e2}'",
-                )),
+pub use aspect_ratio::AspectRatio;
+mod aspect_ratio {
+    use core::{num::ParseIntError, fmt, ops::Mul, str::FromStr};
+    use std::error::Error;
+
+    use super::NonZeroU32;
+
+    #[derive(Debug, Clone, Copy)]
+    pub enum AspectRatio {
+        Number(f64),
+        Ratio(NonZeroU32, NonZeroU32),
+    }
+
+    impl core::convert::From<AspectRatio> for f64 {
+        fn from(value: AspectRatio) -> Self {
+            match value {
+                AspectRatio::Number(r) => r,
+                AspectRatio::Ratio(x, y) => f64::from(x.get()) / f64::from(y.get()),
             }
-        } else {
-            Err("input could not be interpreted as an aspect ratio".into())
+        }
+    }
+
+    impl Mul<f64> for AspectRatio {
+        type Output = f64;
+        fn mul(self, rhs: f64) -> Self::Output {
+            f64::from(self) * rhs
+        }
+    }
+
+    impl fmt::Display for AspectRatio {
+        fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+            match self {
+                Self::Number(r) => write!(f, "{r}"),
+                Self::Ratio(x, y) => write!(f, "{x}:{y}"),
+            }
+        }
+    }
+
+    #[derive(Debug, Clone)]
+    enum ParseAspectRatioError {
+        NonPositive,
+        ParseNumerator(ParseIntError),
+        ParseDenominator(ParseIntError),
+        ParseBoth(ParseTwoIntError),
+        InvalidFormat,
+    }
+
+    impl fmt::Display for ParseAspectRatioError {
+        fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+            match self {
+                Self::NonPositive => write!(f, "aspect ratio must be larger than zero"),
+                Self::ParseNumerator(e) => write!(f, "Horizontal integer has issue: {e}"),
+                Self::ParseDenominator(e) => write!(f, "Vertical integer has issue: {e}"),
+                Self::ParseBoth(e) => write!(f, "horizontal integer has issue: '{}' vertical integer has issue '{}'", e.e1, e.e2),
+                Self::InvalidFormat => write!(f, "input could not be interpreted as an aspect ratio"),
+            }
+        }
+    }
+
+    #[derive(Debug, Clone)]
+    struct ParseTwoIntError {
+        e1: ParseIntError,
+        e2: ParseIntError,
+    }
+
+    impl fmt::Display for ParseTwoIntError {
+        fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+            write!(f, "{}, {}", self.e1, self.e2)
+        }
+    }
+
+    impl Error for ParseTwoIntError {
+        fn source(&self) -> Option<&(dyn Error + 'static)> {
+            None
+        }
+    }
+
+    impl Error for ParseAspectRatioError {
+        fn source(&self) -> Option<&(dyn Error + 'static)> {
+            match self {
+                Self::NonPositive | Self::InvalidFormat => None,
+                Self::ParseNumerator(e) | Self::ParseDenominator(e) => Some(e),
+                Self::ParseBoth(e) => Some(e),
+            }
+        }
+    }
+
+    impl FromStr for AspectRatio {
+        type Err = String;
+        /// Tries to interpret the input string as if it is an aspect ratio.
+        /// 3:2 and 1.5 both work.
+        fn from_str(s: &str) -> Result<Self, Self::Err> {
+            if let Ok(x_by_y) = s.parse::<f64>() {
+                if x_by_y > 0.0 {
+                    Ok(Self::Number(x_by_y))
+                } else {
+                    Err("aspect ratio must be larger than zero".into())
+                }
+            } else {
+                let substrings: Vec<&str> = s.split(':').collect();
+                if substrings.len() == 2 {
+                    match (
+                        substrings[0].parse::<NonZeroU32>(),
+                        substrings[1].parse::<NonZeroU32>(),
+                    ) {
+                        (Ok(x), Ok(y)) => Ok(Self::Ratio(x, y)),
+                        (Ok(_), Err(e)) | (Err(e), Ok(_)) => Err(e.to_string()),
+                        (Err(e1), Err(e2)) => Err(format!(
+                            "horizontal integer has issue: '{e1}' vertical integer has issue '{e2}'",
+                        )),
+                    }
+                } else {
+                    Err("input could not be interpreted as an aspect ratio".into())
+                }
+            }
         }
     }
 }
