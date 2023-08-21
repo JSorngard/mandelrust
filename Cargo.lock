@@ -607,7 +607,7 @@ name = "color-space"
 version = "0.3.1"
 dependencies = [
  "approx",
- "criterion",
+ "criterion 0.4.0",
  "image",
  "itertools",
 ]
@@ -736,6 +736,32 @@ dependencies = [
  "itertools",
  "lazy_static",
  "num-traits",
+ "oorandom",
+ "plotters",
+ "rayon",
+ "regex",
+ "serde",
+ "serde_derive",
+ "serde_json",
+ "tinytemplate",
+ "walkdir",
+]
+
+[[package]]
+name = "criterion"
+version = "0.5.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f2b12d017a929603d80db1831cd3a24082f8137ce19c69e6447f54f5fc8d692f"
+dependencies = [
+ "anes",
+ "cast",
+ "ciborium",
+ "clap 4.3.23",
+ "criterion-plot",
+ "is-terminal",
+ "itertools",
+ "num-traits",
+ "once_cell",
  "oorandom",
  "plotters",
  "rayon",
@@ -1860,7 +1886,7 @@ name = "mandellib"
 version = "12.0.0"
 dependencies = [
  "color-space",
- "criterion",
+ "criterion 0.5.1",
  "image",
  "indicatif",
  "itertools",
