@@ -138,6 +138,9 @@ fn color_band(
     band_index: usize,
     band: &mut [u8],
 ) {
+    #[cfg(feature = "coz")]
+    coz::begin!("color_band");
+
     let x_resolution_f64 = f64::from(render_parameters.x_resolution);
     let y_resolution_f64 = f64::from(render_parameters.y_resolution);
 
@@ -211,6 +214,9 @@ fn color_band(
             }
         }
     }
+
+    #[cfg(feature = "coz")]
+    coz::end!("color_band");
 }
 
 /// Computes the escape speed for samples in a grid inside
