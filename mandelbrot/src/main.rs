@@ -88,7 +88,10 @@ fn main() -> Result<(), Box<dyn Error>> {
         }
         optimize(
             &InFile::Path(out_path.clone()),
-            &OutFile::Path(None),
+            &OutFile::Path {
+                path: None,
+                preserve_attrs: true,
+            },
             &Options::from_preset(level),
         )?;
     }

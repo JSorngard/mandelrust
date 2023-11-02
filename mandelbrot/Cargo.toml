@@ -11,7 +11,7 @@ mandellib = {path = "../mandellib"}
 color-space = {path = "../color-space"}
 clap = { version = "4.4", features = ["derive"] }
 image = {version = "0.24", default-features = false, features = ["png"] }
-oxipng = {version = "8.0", default-features = false, features = ["parallel", "zopfli"], optional = true }
+oxipng = {version = "9.0", default-features = false, features = ["parallel", "zopfli"], optional = true }
 
 [features]
 oxipng = ["dep:oxipng"]

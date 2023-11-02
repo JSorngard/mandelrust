@@ -1,6 +1,8 @@
 use core::{
+    fmt::Write,
     num::{NonZeroU32, NonZeroU8, TryFromIntError},
     time::Duration,
+    writeln,
 };
 
 mod embedded_resources;
@@ -427,9 +429,10 @@ impl Application for MandelViewer {
                     self.notifications
                         .iter()
                         .rev()
-                        .cloned()
-                        .map(|s| format!("{s}\n"))
-                        .collect::<String>()
+                        .fold(String::new(), |mut n, s| {
+                            writeln!(n, "{s}").unwrap_or(());
+                            n
+                        })
                 ),
                 Viewer::new(match &self.image {
                     Some(img) =>
