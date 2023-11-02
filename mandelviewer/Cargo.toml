@@ -10,7 +10,7 @@ mandellib = {path = "../mandellib"}
 color-space = {path = "../color-space"}
 iced = {version = "0.10", features = ["image"]}
 image = "0.24"
-rayon = "1.7"
+rayon = "1.8"
 rfd = "0.12"
 nonzero_ext = "0.3.0"
 
