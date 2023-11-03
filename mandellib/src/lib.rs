@@ -196,7 +196,7 @@ fn color_band(
             mirror_from -= bytes_per_pixel;
 
             // `memmove` the data from the already computed pixel into this one.
-            band.copy_within((mirror_from - bytes_per_pixel)..mirror_from, y_index)
+            band.copy_within((mirror_from - bytes_per_pixel)..mirror_from, y_index);
         }
     }
 
