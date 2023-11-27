@@ -8,6 +8,7 @@ use std::{
 };
 
 use clap::Parser;
+use rayon::ThreadPoolBuilder;
 use color_space::SupportedColorType;
 
 use crate::command_line_interface::Cli;
@@ -51,6 +52,12 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     if args.verbose {
         _ = give_user_feedback(&args, &render_parameters);
+    }
+
+    if args.jobs > 0 {
+        ThreadPoolBuilder::new()
+            .num_threads(args.jobs)
+            .build_global()?;
     }
 
     let img = render(render_parameters, draw_region, args.verbose);

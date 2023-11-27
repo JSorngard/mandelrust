@@ -1750,6 +1750,7 @@ dependencies = [
  "image",
  "mandellib",
  "oxipng",
+ "rayon",
 ]
 
 [[package]]

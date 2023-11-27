@@ -86,6 +86,11 @@ pub struct Cli {
     /// Print extra information and show the progress of the rendering process
     pub verbose: bool,
 
+    #[arg(short, long, default_value_t = 0)]
+    /// The number of parallel jobs to dispatch. If this is 0 the program
+    /// will let the parallelism library decide.
+    pub jobs: usize,
+
     #[cfg(feature = "oxipng")]
     #[arg(
         long,
