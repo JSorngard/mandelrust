@@ -4,11 +4,18 @@ use core::{
     time::Duration,
     writeln,
 };
+use std::error::Error;
 
+mod command_line_interface;
 mod embedded_resources;
 use color_space::SupportedColorType;
+use command_line_interface::Cli;
 use embedded_resources::{ICON, RENDERING_IN_PROGRESS};
 use mandellib::{render, Frame, RenderParameters};
+
+use clap::Parser;
+
+use rayon::ThreadPoolBuilder;
 
 use iced::{
     self, executor,
@@ -42,7 +49,14 @@ const INITIAL_ZOOM: f64 = 0.0;
 // Program settings
 const PROGRAM_NAME: &str = "Mandelviewer";
 
-fn main() {
+fn main() -> Result<(), Box<dyn Error>> {
+    let args = Cli::parse();
+    if args.jobs > 0 {
+        ThreadPoolBuilder::new()
+            .num_threads(args.jobs)
+            .build_global()?;
+    }
+
     let program_settings = iced::Settings {
         window: window::Settings {
             icon: Some(
@@ -54,7 +68,8 @@ fn main() {
         ..Default::default()
     };
 
-    MandelViewer::run(program_settings).unwrap();
+    MandelViewer::run(program_settings)?;
+    Ok(())
 }
 
 /// This struct contains values that are not part of making the viewer itself function,

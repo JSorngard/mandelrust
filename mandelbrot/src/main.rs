@@ -8,8 +8,8 @@ use std::{
 };
 
 use clap::Parser;
-use rayon::ThreadPoolBuilder;
 use color_space::SupportedColorType;
+use rayon::ThreadPoolBuilder;
 
 use crate::command_line_interface::Cli;
 
