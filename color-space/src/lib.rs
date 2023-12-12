@@ -1,3 +1,5 @@
+#![forbid(unsafe_code)]
+
 /// Determines the color of a pixel in linear RGB color space.
 /// The color map that this function uses was taken from the python code in
 /// [this](https://preshing.com/20110926/high-resolution-mandelbrot-in-obfuscated-python/) blog post.
