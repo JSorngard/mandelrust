@@ -46,3 +46,18 @@ If we want to zoom even deeper we can change the maximum number of iterations in
 ![Deep zoomed detail with changed max iterations](/examples/mandelbrot_set_at_re_-0.2345_im_-0.7178_zoom_12.5_maxiters_1000.avif)
 Images in grayscale without any color mapping can also be made:
 ![Grayscale example](/examples/mandelbrot_set_at_re_-0.728_im_-0.212_zoom_6.4_maxiters_1000.avif)
+
+## License
+
+Licensed under either of
+
+ * [Apache License, Version 2.0](LICENSE-APACHE)
+ * [MIT license](LICENSE-MIT)
+
+at your option.
+
+## Contribution
+
+Unless you explicitly state otherwise, any contribution intentionally submitted
+for inclusion in the work by you, as defined in the Apache-2.0 license, shall be
+dual licensed as above, without any additional terms or conditions.
