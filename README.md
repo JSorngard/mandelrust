@@ -15,13 +15,6 @@ This was one of my first projects to learn rust.
  7. You can specify where the image is focused, how zoomed it is and how many iterations to do (among other things) with command line arguments. For an exhaustive list run the program with the `--help` argument
  8. `mandelviewer` can be compiled with `cargo build --release -p mandelviewer` and run with `./target/release/mandelviewer.exe`. If you are on Linux you will need to have the [dependencies](https://docs.rs/rfd/0.11.2/rfd/#linux--bsd-backends) of the file save dialog installed.
 
-# Prettier mandelbrot rendering
-The main goal of this program is to generate pretty looking pictures, "pretty" is of course subjective, but here is a list of what I've done to make the resulting images look better in my eyes:  
-
- 1. Use a color palette that is smooth i.e. small differences in escape speed should map to small differences in color. In this program this is achieved by the color palette being a continuous function that maps escape speeds to colors.  
- 2. Do not abort the iteration [when |z| > 2](/examples/smoothing/no_smoothing_abs_geq_2.avif), but at a larger absolute value (in this program I have [chosen 6](/examples/smoothing/no_smoothing_abs_geq_6.avif)). Together with using a function that smoothly maps iteration count and absolute value to a number between 0 and 1 this [completely removes color banding](/examples/smoothing/smoothing_abs_geq_6.avif).  
- 4. [Supersample the image](/examples/smoothing/smoothing_abs_geq_6_ssaa.avif) to remove graininess.
-
 # Faster mandelbrot rendering
 I have tried to make the program faster over time. Some of the techniques used are:
 
@@ -36,6 +29,13 @@ I have tried to make the program faster over time. Some of the techniques used a
 The program can render a nine times supersampled 4k image of the set in around 580 ms on my laptop with a quad core i7-7500U CPU, while a non-supersampled 1080p image finishes in around 80 ms.
 
 You can easily test the performance of various renders on your own machine with `cargo bench`. The results will be printed to the terminal, but more detailed data can be found in `target/criterion/report/index.html` in the form of a web page.
+
+# Prettier mandelbrot rendering
+The main goal of this program is to generate pretty looking pictures, "pretty" is of course subjective, but here is a list of what I've done to make the resulting images look better in my eyes:  
+
+ 1. Use a color palette that is smooth i.e. small differences in escape speed should map to small differences in color. In this program this is achieved by the color palette being a continuous function that maps escape speeds to colors.  
+ 2. Do not abort the iteration [when |z| > 2](/examples/smoothing/no_smoothing_abs_geq_2.avif), but at a larger absolute value (in this program I have [chosen 6](/examples/smoothing/no_smoothing_abs_geq_6.avif)). Together with using a function that smoothly maps iteration count and absolute value to a number between 0 and 1 this [completely removes color banding](/examples/smoothing/smoothing_abs_geq_6.avif).  
+ 4. [Supersample the image](/examples/smoothing/smoothing_abs_geq_6_ssaa.avif) to remove graininess.
 
 # Example images
 Default settings:
