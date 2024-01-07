@@ -1,3 +1,5 @@
+#![cfg_attr(target_os = "windows", windows_subsystem = "windows")]
+
 use core::{
     fmt::Write,
     num::{NonZeroU32, NonZeroU8, TryFromIntError},
