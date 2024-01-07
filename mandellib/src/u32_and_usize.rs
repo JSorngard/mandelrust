@@ -1,6 +1,6 @@
 use core::fmt;
 use core::num::{NonZeroU32, NonZeroUsize, TryFromIntError};
-/// A struct containing a resolution that is known
+/// A struct containing a value that is known
 /// to fit in both a u32 and usize type.
 #[derive(Debug, Clone, Copy)]
 pub struct U32AndUsize {
