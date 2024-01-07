@@ -5,7 +5,7 @@ Contains two programs, `mandelbrot` and `mandelviewer`.
 This was one of my first projects to learn rust.  
 `mandelviewer` shows a view of the fractal and lets you pan and zoom around in it, change settings, and save images. This part is currently under development as I am using it to learn the [iced](https://docs.rs/iced/latest/iced/) UI crate.
 
-# How to use these programs
+## How to use these programs
  1. Install [Rust](https://www.rust-lang.org/tools/install) and [git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git)
  2. Open a terminal in the folder you want to install the program in
  3. Clone this git repo with `git clone https://www.github.com/JSorngard/mandelrust.git`
@@ -15,14 +15,7 @@ This was one of my first projects to learn rust.
  7. You can specify where the image is focused, how zoomed it is and how many iterations to do (among other things) with command line arguments. For an exhaustive list run the program with the `--help` argument
  8. `mandelviewer` can be compiled with `cargo build --release -p mandelviewer` and run with `./target/release/mandelviewer.exe`. If you are on Linux you will need to have the [dependencies](https://docs.rs/rfd/0.11.2/rfd/#linux--bsd-backends) of the file save dialog installed.
 
-# Prettier mandelbrot rendering
-The main goal of this program is to generate pretty looking pictures, "pretty" is of course subjective, but here is a list of what I've done to make the resulting images look better in my eyes:  
-
- 1. Use a color palette that is smooth i.e. small differences in escape speed should map to small differences in color. In this program this is achieved by the color palette being a continuous function that maps escape speeds to colors.  
- 2. Do not abort the iteration [when |z| > 2](/examples/smoothing/no_smoothing_abs_geq_2.avif), but at a larger absolute value (in this program I have [chosen 6](/examples/smoothing/no_smoothing_abs_geq_6.avif)). Together with using a function that smoothly maps iteration count and absolute value to a number between 0 and 1 this [completely removes color banding](/examples/smoothing/smoothing_abs_geq_6.avif).  
- 4. [Supersample the image](/examples/smoothing/smoothing_abs_geq_6_ssaa.avif) to remove graininess.
-
-# Faster mandelbrot rendering
+## Faster mandelbrot rendering
 I have tried to make the program faster over time. Some of the techniques used are:
 
  1. If the image contains the real axis, split the image there and only render the larger half, then mirror the smaller half from it.
@@ -37,7 +30,14 @@ The program can render a nine times supersampled 4k image of the set in around 5
 
 You can easily test the performance of various renders on your own machine with `cargo bench`. The results will be printed to the terminal, but more detailed data can be found in `target/criterion/report/index.html` in the form of a web page.
 
-# Example images
+## Prettier mandelbrot rendering
+The main goal of this program is to generate pretty looking pictures, "pretty" is of course subjective, but here is a list of what I've done to make the resulting images look better in my eyes:  
+
+ 1. Use a color palette that is smooth i.e. small differences in escape speed should map to small differences in color. In this program this is achieved by the color palette being a continuous function that maps escape speeds to colors.  
+ 2. Do not abort the iteration [when |z| > 2](/examples/smoothing/no_smoothing_abs_geq_2.avif), but at a larger absolute value (in this program I have [chosen 6](/examples/smoothing/no_smoothing_abs_geq_6.avif)). Together with using a function that smoothly maps iteration count and absolute value to a number between 0 and 1 this [completely removes color banding](/examples/smoothing/smoothing_abs_geq_6.avif).  
+ 4. [Supersample the image](/examples/smoothing/smoothing_abs_geq_6_ssaa.avif) to remove graininess.
+
+## Example images
 Default settings:
 ![Full set, default settings](/examples/mandelbrot_set.avif)
 We can zoom in on details in the above image:
