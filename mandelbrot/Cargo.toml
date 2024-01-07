@@ -16,4 +16,3 @@ oxipng = {version = "9.0", default-features = false, features = ["parallel", "zo
 
 [features]
 oxipng = ["dep:oxipng"]
-coz = ["mandellib/coz"]

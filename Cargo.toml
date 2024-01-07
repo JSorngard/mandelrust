@@ -11,7 +11,3 @@ resolver = "2"
 inherits = "release"
 codegen-units = 1
 lto = true
-
-[profile.coz-profiling]
-inherits = "release-lto"
-debug = 1
