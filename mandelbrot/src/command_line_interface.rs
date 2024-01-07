@@ -42,7 +42,7 @@ pub struct Cli {
         short = 'p',
         value_name = "X_RES:Y_RES",
         long,
-        default_value = "1920:1080"
+        default_value = "3240:2160"
     )]
     /// The resolution of the image in the form "X_RES:Y_RES"
     pub resolution: Resolution,
