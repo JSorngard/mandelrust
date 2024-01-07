@@ -2,7 +2,6 @@ use std::{
     error::Error,
     fs,
     io::{self, Write},
-    num::NonZeroU32,
     path::PathBuf,
     str,
 };
@@ -23,13 +22,14 @@ const DEFAULT_FILE_EXTENSION: &str = "png";
 fn main() -> Result<(), Box<dyn Error>> {
     let args = Cli::parse();
 
-    let x_resolution = NonZeroU32::new((args.aspect_ratio * f64::from(args.pixels.get())) as u32)
-        .ok_or("the vertical resolution and aspect ratio must be such that the horizontal resolution is non-zero")?;
+    let x_resolution = args.resolution.x_resolution();
+    let y_resolution = args.resolution.y_resolution();
 
     let zoom = 2.0_f64.powf(args.zoom_level);
 
     let imag_distance = 8.0 / (3.0 * zoom);
-    let real_distance = args.aspect_ratio * imag_distance;
+    let real_distance =
+        f64::from(x_resolution.get()) / f64::from(y_resolution.get()) * imag_distance;
 
     let draw_region = Frame::new(
         args.real_center,
@@ -40,7 +40,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     let render_parameters = RenderParameters::try_new(
         x_resolution,
-        args.pixels,
+        y_resolution,
         args.max_iterations,
         args.ssaa,
         if args.grayscale {
@@ -127,7 +127,7 @@ fn give_user_feedback(args: &Cli, rparams: &RenderParameters) -> Result<(), Box<
         &mut header,
         " image with a resolution of {} by {} pixels",
         u32::from(rparams.x_resolution),
-        args.pixels.get(),
+        rparams.y_resolution,
     )?;
     if args.zoom_level > 0.0 {
         write!(

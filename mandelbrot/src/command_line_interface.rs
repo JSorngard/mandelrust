@@ -1,5 +1,4 @@
 use core::num::{NonZeroU32, NonZeroU8};
-use std::num::NonZeroUsize;
 
 use clap::Parser;
 
@@ -10,23 +9,11 @@ use clap::Parser;
 /// the number of iterations to use, as well as a few other things.
 pub struct Cli {
     // This struct contains the runtime specified configuration of the program.
-    #[arg(
-        short,
-        long,
-        value_name = "RE(CENTER)",
-        default_value_t = -0.75,
-        allow_negative_numbers = true,
-    )]
+    #[arg(short, long, value_name = "RE(CENTER)", allow_negative_numbers = true)]
     /// The real part of the center point of the image
     pub real_center: f64,
 
-    #[arg(
-        short,
-        long,
-        value_name = "IM(CENTER)",
-        default_value_t = 0.0,
-        allow_negative_numbers = true
-    )]
+    #[arg(short, long, value_name = "IM(CENTER)", allow_negative_numbers = true)]
     /// The imaginary part of the center point of the image
     pub imag_center: f64,
 
@@ -37,20 +24,9 @@ pub struct Cli {
     /// distances covered by the image are halved
     pub zoom_level: f64,
 
-    #[arg(
-        short,
-        long,
-        value_parser(parse_resolution),
-        default_value_t = NonZeroU32::new(2160).expect("2160 is not 0"),
-    )]
-    /// The number of pixels along the y-axis of the image
-    pub pixels: NonZeroU32,
-
-    #[arg(short, long, default_value_t = AspectRatio::Number(1.5))]
-    /// The aspect ratio of the image. The horizontal pixel resolution is calculated by multiplying the
-    /// vertical pixel resolution by this number. The aspect ratio can be entered as a real number and also in the format x:y,
-    /// where x and y are integers, e.g. 3:2
-    pub aspect_ratio: AspectRatio,
+    #[arg(short = 'p', value_name = "X_RES:Y_RES", long)]
+    /// The resolution of the image in the form "X_RES:Y_RES"
+    pub resolution: Resolution,
 
     #[arg(
         short,
@@ -107,150 +83,86 @@ pub struct Cli {
     pub optimize_file_size: Option<u8>,
 }
 
-pub use aspect_ratio::AspectRatio;
-mod aspect_ratio {
-    use core::{fmt, num::ParseIntError, ops::Mul, str::FromStr};
-    use std::error::Error;
+pub use resolution::Resolution;
+mod resolution {
+    use core::fmt;
+    use core::num::{NonZeroU32, ParseIntError};
+    use core::str::FromStr;
 
-    use super::NonZeroU32;
-
-    #[derive(Debug, Clone, Copy)]
-    pub enum AspectRatio {
-        Number(f64),
-        Ratio(NonZeroU32, NonZeroU32),
+    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+    pub struct Resolution {
+        x_res: NonZeroU32,
+        y_res: NonZeroU32,
     }
 
-    impl core::convert::From<AspectRatio> for f64 {
-        fn from(value: AspectRatio) -> Self {
-            match value {
-                AspectRatio::Number(r) => r,
-                AspectRatio::Ratio(x, y) => f64::from(x.get()) / f64::from(y.get()),
-            }
+    impl Resolution {
+        pub const fn x_resolution(&self) -> NonZeroU32 {
+            self.x_res
+        }
+
+        pub const fn y_resolution(&self) -> NonZeroU32 {
+            self.y_res
         }
     }
 
-    impl Mul<f64> for AspectRatio {
-        type Output = f64;
-        fn mul(self, rhs: f64) -> Self::Output {
-            f64::from(self) * rhs
-        }
-    }
-
-    impl fmt::Display for AspectRatio {
-        fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-            match self {
-                Self::Number(r) => write!(f, "{r}"),
-                Self::Ratio(x, y) => write!(f, "{x}:{y}"),
-            }
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub enum ParseAspectRatioError {
-        NonPositive,
-        ParseNumerator(ParseIntError),
-        ParseDenominator(ParseIntError),
-        ParseBoth(ParseTwoIntError),
+    #[derive(Debug, Clone, PartialEq, Eq)]
+    pub enum ParseResolutionError {
         InvalidFormat,
+        XResInvalidValue(ParseIntError),
+        YResInvalidValue(ParseIntError),
+        TooLarge,
     }
 
-    impl fmt::Display for ParseAspectRatioError {
+    impl fmt::Display for ParseResolutionError {
         fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
             match self {
-                Self::NonPositive => write!(f, "aspect ratio must be larger than zero"),
-                Self::ParseNumerator(e) => write!(f, "horizontal integer has issue: {e}"),
-                Self::ParseDenominator(e) => write!(f, "vertical integer has issue: {e}"),
-                Self::ParseBoth(e) => write!(
-                    f,
-                    "horizontal integer has issue: '{}' vertical integer has issue '{}'",
-                    e.e1, e.e2
-                ),
                 Self::InvalidFormat => {
-                    write!(f, "input could not be interpreted as an aspect ratio")
+                    write!(f, "the resolution must be given in the format x_res:y_res")
+                }
+                Self::XResInvalidValue(e) => write!(f, "the x-resolution could not be parsed: {e}"),
+                Self::YResInvalidValue(e) => write!(f, "the y-resolution could not be parsed: {e}"),
+                Self::TooLarge => {
+                    write!(f, "the total number of pixels must be below {}", usize::MAX)
                 }
             }
         }
     }
 
-    #[derive(Debug, Clone)]
-    pub struct ParseTwoIntError {
-        e1: ParseIntError,
-        e2: ParseIntError,
-    }
-
-    impl From<(ParseIntError, ParseIntError)> for ParseTwoIntError {
-        fn from(value: (ParseIntError, ParseIntError)) -> Self {
-            Self {
-                e1: value.0,
-                e2: value.1,
-            }
-        }
-    }
-
-    impl fmt::Display for ParseTwoIntError {
-        fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-            write!(f, "{}, {}", self.e1, self.e2)
-        }
-    }
-
-    impl Error for ParseTwoIntError {
-        fn source(&self) -> Option<&(dyn Error + 'static)> {
-            None
-        }
-    }
-
-    impl Error for ParseAspectRatioError {
-        fn source(&self) -> Option<&(dyn Error + 'static)> {
+    impl std::error::Error for ParseResolutionError {
+        fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
             match self {
-                Self::NonPositive | Self::InvalidFormat => None,
-                Self::ParseNumerator(e) | Self::ParseDenominator(e) => Some(e),
-                Self::ParseBoth(e) => Some(e),
+                Self::XResInvalidValue(e) | Self::YResInvalidValue(e) => Some(e),
+                Self::InvalidFormat | Self::TooLarge => None,
             }
         }
     }
 
-    impl FromStr for AspectRatio {
-        type Err = ParseAspectRatioError;
-        /// Tries to interpret the input string as if it is an aspect ratio.
-        /// 3:2 and 1.5 both work.
+    impl FromStr for Resolution {
+        type Err = ParseResolutionError;
         fn from_str(s: &str) -> Result<Self, Self::Err> {
-            if let Ok(x_by_y) = s.parse::<f64>() {
-                if x_by_y > 0.0 {
-                    Ok(Self::Number(x_by_y))
-                } else {
-                    Err(Self::Err::NonPositive)
-                }
+            let mut parts = s.split(':');
+
+            let x_res: NonZeroU32 = match parts.next() {
+                Some(s) => s.parse().map_err(|e| Self::Err::XResInvalidValue(e)),
+                None => Err(Self::Err::InvalidFormat),
+            }?;
+            let x_usize: usize = x_res.get().try_into().map_err(|_| Self::Err::TooLarge)?;
+
+            let y_res: NonZeroU32 = match parts.next() {
+                Some(s) => s.parse().map_err(|e| Self::Err::YResInvalidValue(e)),
+                None => Err(Self::Err::InvalidFormat),
+            }?;
+            let y_usize: usize = y_res.get().try_into().map_err(|_| Self::Err::TooLarge)?;
+
+            if parts.next().is_some() {
+                Err(Self::Err::InvalidFormat)
+            } else if x_usize.checked_mul(y_usize).is_none() {
+                Err(Self::Err::TooLarge)
             } else {
-                let substrings: Vec<&str> = s.split(':').collect();
-                if substrings.len() == 2 {
-                    match (
-                        substrings[0].parse::<NonZeroU32>(),
-                        substrings[1].parse::<NonZeroU32>(),
-                    ) {
-                        (Ok(x), Ok(y)) => Ok(Self::Ratio(x, y)),
-                        (Ok(_), Err(e)) => Err(Self::Err::ParseDenominator(e)),
-                        (Err(e), Ok(_)) => Err(Self::Err::ParseNumerator(e)),
-                        (Err(e1), Err(e2)) => Err(Self::Err::ParseBoth((e1, e2).into())),
-                    }
-                } else {
-                    Err(Self::Err::InvalidFormat)
-                }
+                Ok(Self { x_res, y_res })
             }
         }
     }
-}
-
-fn parse_resolution(s: &str) -> Result<NonZeroU32, String> {
-    let candidate: NonZeroU32 = match s.parse() {
-        Ok(res) => res,
-        Err(e) => return Err(e.to_string()),
-    };
-
-    if NonZeroUsize::try_from(candidate).is_err() {
-        return Err("given resolution would not fit in both a u32 and usize".to_owned());
-    };
-
-    Ok(candidate)
 }
 
 #[cfg(test)]
