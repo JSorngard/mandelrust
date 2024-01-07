@@ -11,11 +11,23 @@ use crate::resolution::Resolution;
 /// the number of iterations to use, as well as a few other things.
 pub struct Cli {
     // This struct contains the runtime specified configuration of the program.
-    #[arg(short, long, value_name = "RE(CENTER)", allow_negative_numbers = true)]
+    #[arg(
+        short,
+        long,
+        value_name = "RE(CENTER)",
+        allow_negative_numbers = true,
+        default_value_t = -0.75
+    )]
     /// The real part of the center point of the image
     pub real_center: f64,
 
-    #[arg(short, long, value_name = "IM(CENTER)", allow_negative_numbers = true)]
+    #[arg(
+        short,
+        long,
+        value_name = "IM(CENTER)",
+        allow_negative_numbers = true,
+        default_value_t = 0.0
+    )]
     /// The imaginary part of the center point of the image
     pub imag_center: f64,
 
@@ -26,7 +38,12 @@ pub struct Cli {
     /// distances covered by the image are halved
     pub zoom_level: f64,
 
-    #[arg(short = 'p', value_name = "X_RES:Y_RES", long)]
+    #[arg(
+        short = 'p',
+        value_name = "X_RES:Y_RES",
+        long,
+        default_value = "1920:1080"
+    )]
     /// The resolution of the image in the form "X_RES:Y_RES"
     pub resolution: Resolution,
 
