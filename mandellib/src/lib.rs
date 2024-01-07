@@ -461,7 +461,7 @@ impl RenderParameters {
 pub use u32_and_usize::U32AndUsize;
 mod u32_and_usize {
     use core::num::{NonZeroU32, NonZeroUsize, TryFromIntError};
-    use std::fmt;
+    use core::fmt;
     /// A struct containing a resolution that is known
     /// to fit in both a u32 and usize type.
     #[derive(Debug, Clone, Copy)]
