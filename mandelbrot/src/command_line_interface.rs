@@ -34,7 +34,8 @@ pub struct Cli {
         value_name = "SQRT(SSAA_FACTOR)",
         default_value_t = NonZeroU8::new(3).expect("3 is not 0"),
     )]
-    /// How many samples to compute for each pixel along one dimension. The total number of samples per pixel is the square of this number.
+    /// How many samples to compute for each pixel along one dimension.
+    /// The total number of samples per pixel is the square of this number.
     /// If this is set to 1, supersampling is turned off
     pub ssaa: NonZeroU8,
 
