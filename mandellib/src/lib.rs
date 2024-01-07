@@ -458,8 +458,8 @@ impl RenderParameters {
     }
 }
 
-pub use resolution::U32AndUsize;
-mod resolution {
+pub use u32_and_usize::U32AndUsize;
+mod u32_and_usize {
     use core::num::{NonZeroU32, NonZeroUsize, TryFromIntError};
     use std::fmt;
     /// A struct containing a resolution that is known
