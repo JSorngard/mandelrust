@@ -431,8 +431,8 @@ impl Frame {
 /// that is relevant to the rendering process.
 #[derive(Debug, Clone, Copy)]
 pub struct RenderParameters {
-    pub x_resolution: Resolution,
-    pub y_resolution: Resolution,
+    pub x_resolution: U32AndUsize,
+    pub y_resolution: U32AndUsize,
     pub max_iterations: NonZeroU32,
     pub sqrt_samples_per_pixel: NonZeroU8,
     pub color_type: SupportedColorType,
@@ -458,25 +458,25 @@ impl RenderParameters {
     }
 }
 
-pub use resolution::Resolution;
+pub use resolution::U32AndUsize;
 mod resolution {
     use core::num::{NonZeroU32, NonZeroUsize, TryFromIntError};
     use std::fmt;
     /// A struct containing a resolution that is known
     /// to fit in both a u32 and usize type.
     #[derive(Debug, Clone, Copy)]
-    pub struct Resolution {
+    pub struct U32AndUsize {
         u32: NonZeroU32,
         usize: NonZeroUsize,
     }
 
-    impl fmt::Display for Resolution {
+    impl fmt::Display for U32AndUsize {
         fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
             write!(f, "{}", self.u32)
         }
     }
 
-    impl TryFrom<NonZeroU32> for Resolution {
+    impl TryFrom<NonZeroU32> for U32AndUsize {
         type Error = TryFromIntError;
         fn try_from(value: NonZeroU32) -> Result<Self, Self::Error> {
             Ok(Self {
@@ -486,7 +486,7 @@ mod resolution {
         }
     }
 
-    impl TryFrom<u32> for Resolution {
+    impl TryFrom<u32> for U32AndUsize {
         type Error = TryFromIntError;
         fn try_from(value: u32) -> Result<Self, Self::Error> {
             let nzvalue: NonZeroU32 = value.try_into()?;
@@ -497,38 +497,38 @@ mod resolution {
         }
     }
 
-    impl From<Resolution> for usize {
-        fn from(value: Resolution) -> Self {
+    impl From<U32AndUsize> for usize {
+        fn from(value: U32AndUsize) -> Self {
             value.usize.get()
         }
     }
 
-    impl From<Resolution> for NonZeroUsize {
-        fn from(value: Resolution) -> Self {
+    impl From<U32AndUsize> for NonZeroUsize {
+        fn from(value: U32AndUsize) -> Self {
             value.usize
         }
     }
 
-    impl From<Resolution> for u32 {
-        fn from(value: Resolution) -> Self {
+    impl From<U32AndUsize> for u32 {
+        fn from(value: U32AndUsize) -> Self {
             value.u32.get()
         }
     }
 
-    impl From<Resolution> for NonZeroU32 {
-        fn from(value: Resolution) -> Self {
+    impl From<U32AndUsize> for NonZeroU32 {
+        fn from(value: U32AndUsize) -> Self {
             value.u32
         }
     }
 
-    impl From<Resolution> for u64 {
-        fn from(value: Resolution) -> Self {
+    impl From<U32AndUsize> for u64 {
+        fn from(value: U32AndUsize) -> Self {
             value.u32.get().into()
         }
     }
 
-    impl From<Resolution> for f64 {
-        fn from(value: Resolution) -> Self {
+    impl From<U32AndUsize> for f64 {
+        fn from(value: U32AndUsize) -> Self {
             value.u32.get().into()
         }
     }
