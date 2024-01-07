@@ -3,8 +3,9 @@ use std::{
     fs,
     io::{self, Write},
     path::PathBuf,
-    str,
 };
+
+use core::str;
 
 use clap::Parser;
 use color_space::SupportedColorType;
