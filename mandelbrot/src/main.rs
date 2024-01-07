@@ -15,6 +15,7 @@ use crate::command_line_interface::Cli;
 use mandellib::{render, Frame, RenderParameters};
 
 mod command_line_interface;
+mod resolution;
 
 const DEFAULT_FILE_NAME: &str = "mandelbrot_set";
 const DEFAULT_FILE_EXTENSION: &str = "png";
