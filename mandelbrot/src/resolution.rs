@@ -9,12 +9,25 @@ pub struct Resolution {
 }
 
 impl Resolution {
+    pub(crate) const fn new(x_resolution: u32, y_resolution: u32) -> Option<Self> {
+        match (NonZeroU32::new(x_resolution), NonZeroU32::new(y_resolution)) {
+            (Some(x_res), Some(y_res)) => Some(Self { x_res, y_res }),
+            _ => None,
+        }
+    }
+
     pub const fn x_resolution(&self) -> NonZeroU32 {
         self.x_res
     }
 
     pub const fn y_resolution(&self) -> NonZeroU32 {
         self.y_res
+    }
+}
+
+impl fmt::Display for Resolution {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}x{}", self.x_res, self.y_res)
     }
 }
 
@@ -30,7 +43,7 @@ impl fmt::Display for ParseResolutionError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::InvalidFormat => {
-                write!(f, "the resolution must be given in the format x_res:y_res")
+                write!(f, "the resolution must be given in the format X_RESxY_RES")
             }
             Self::XResInvalidValue(e) => write!(f, "the x-resolution could not be parsed: {e}"),
             Self::YResInvalidValue(e) => write!(f, "the y-resolution could not be parsed: {e}"),
@@ -53,7 +66,7 @@ impl std::error::Error for ParseResolutionError {
 impl FromStr for Resolution {
     type Err = ParseResolutionError;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let mut parts = s.split(':');
+        let mut parts = s.split('x');
 
         let x_res: NonZeroU32 = match parts.next() {
             Some(s) => s.parse().map_err(|e| Self::Err::XResInvalidValue(e)),
