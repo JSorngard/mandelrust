@@ -44,7 +44,7 @@ pub struct Cli {
         long,
         default_value_t = Resolution::new(3240, 2160).expect("3240 and 2160 are not 0"),
     )]
-    /// The resolution of the image in the form "X_RESxY_RES, e.g. 3240x2160"
+    /// The resolution of the image in the form "X_RESxY_RES", e.g. "3240x2160"
     pub resolution: Resolution,
 
     #[arg(
