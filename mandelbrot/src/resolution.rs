@@ -69,13 +69,13 @@ impl FromStr for Resolution {
         let mut parts = s.split('x');
 
         let x_res: NonZeroU32 = match parts.next() {
-            Some(s) => s.parse().map_err(|e| Self::Err::XResInvalidValue(e)),
+            Some(s) => s.parse().map_err(Self::Err::XResInvalidValue),
             None => Err(Self::Err::InvalidFormat),
         }?;
         let x_usize: usize = x_res.get().try_into().map_err(|_| Self::Err::TooLarge)?;
 
         let y_res: NonZeroU32 = match parts.next() {
-            Some(s) => s.parse().map_err(|e| Self::Err::YResInvalidValue(e)),
+            Some(s) => s.parse().map_err(Self::Err::YResInvalidValue),
             None => Err(Self::Err::InvalidFormat),
         }?;
         let y_usize: usize = y_res.get().try_into().map_err(|_| Self::Err::TooLarge)?;
