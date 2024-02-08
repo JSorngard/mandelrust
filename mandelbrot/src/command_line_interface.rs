@@ -86,21 +86,6 @@ pub struct Cli {
     /// The number of parallel jobs to dispatch. If this is not set the program
     /// will let the parallelism library decide.
     pub jobs: Option<NonZeroUsize>,
-
-    #[cfg(feature = "oxipng")]
-    #[arg(
-        long,
-        required = false,
-        default_missing_value = "4",
-        value_name = "OPTIMIZATION_LEVEL",
-        num_args = 0..=1,
-        require_equals = true,
-        value_parser = clap::value_parser!(u8).range(0..=6),
-    )]
-    /// Spend extra time after iterations are completed optimizing the file size
-    /// of the resulting image. Supports optimizations levels between
-    /// 0 and 6. [default level if flag is present: 4]
-    pub optimize_file_size: Option<u8>,
 }
 
 #[cfg(test)]

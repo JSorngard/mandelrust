@@ -88,23 +88,6 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     img.save(&out_path)?;
 
-    #[cfg(feature = "oxipng")]
-    if let Some(level) = args.optimize_file_size {
-        use oxipng::{optimize, InFile, Options, OutFile};
-        if args.verbose {
-            _ = write!(io::stdout(), "\rOptimizing output file   ");
-            _ = io::stdout().flush();
-        }
-        optimize(
-            &InFile::Path(out_path.clone()),
-            &OutFile::Path {
-                path: None,
-                preserve_attrs: true,
-            },
-            &Options::from_preset(level),
-        )?;
-    }
-
     if args.verbose {
         _ = writeln!(io::stdout(), "\rSaved image as {}", out_path.display());
     }
