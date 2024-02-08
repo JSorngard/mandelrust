@@ -23,6 +23,7 @@ tiff = ["image/tiff"]
 gif = ["image/gif"]
 farbfeld = ["image/farbfeld"]
 ico = ["image/ico"]
+## Adds support for pbm, pgm, ppm and pam
 pnm = ["image/pnm"]
 tga = ["image/tga"]
 dxt = ["image/dxt"]
