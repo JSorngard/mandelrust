@@ -15,7 +15,7 @@ image = {version = "0.24", default-features = false, features = ["png"] }
 
 [features]
 # Additional file format support
-jpeg = ["image/jpeg", "image/jpeg_rayon"]
+jpg = ["image/jpeg", "image/jpeg_rayon"]
 bmp = ["image/bmp"]
 qoi = ["image/qoi"]
 webp = ["image/webp"]
@@ -25,7 +25,6 @@ farbfeld = ["image/farbfeld"]
 ico = ["image/ico"]
 pnm = ["image/pnm"]
 tga = ["image/tga"]
-hdr = ["image/hdr"]
 dxt = ["image/dxt"]
 dds = ["image/dds"]
 openexr = ["image/openexr"]
