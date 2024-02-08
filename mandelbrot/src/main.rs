@@ -56,9 +56,9 @@ fn main() -> Result<(), Box<dyn Error>> {
         _ = give_user_feedback(&args, &render_parameters);
     }
 
-    if args.jobs > 0 {
+    if let Some(jobs) = args.jobs {
         ThreadPoolBuilder::new()
-            .num_threads(args.jobs)
+            .num_threads(jobs.into())
             .build_global()?;
     }
 

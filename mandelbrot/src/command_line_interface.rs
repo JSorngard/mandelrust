@@ -1,4 +1,4 @@
-use core::num::{NonZeroU32, NonZeroU8};
+use core::num::{NonZeroU32, NonZeroU8, NonZeroUsize};
 
 use clap::Parser;
 
@@ -82,10 +82,10 @@ pub struct Cli {
     /// Print extra information and show the progress of the rendering process
     pub verbose: bool,
 
-    #[arg(short, long, default_value_t = 0)]
-    /// The number of parallel jobs to dispatch. If this is 0 the program
+    #[arg(short, long)]
+    /// The number of parallel jobs to dispatch. If this is not set the program
     /// will let the parallelism library decide.
-    pub jobs: usize,
+    pub jobs: Option<NonZeroUsize>,
 
     #[cfg(feature = "oxipng")]
     #[arg(
