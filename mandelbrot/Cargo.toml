@@ -14,6 +14,7 @@ clap = { version = "4.4", features = ["derive"] }
 image = {version = "0.24", default-features = false, features = ["png"] }
 
 [features]
+# Additional file format support
 jpeg = ["image/jpeg", "image/jpeg_rayon"]
 bmp = ["image/bmp"]
 qoi = ["image/qoi"]
