@@ -70,13 +70,9 @@ pub struct Cli {
     /// Output the image in grayscale by mapping escape speed to brightness
     pub grayscale: bool,
 
-    #[arg(long)]
-    /// Save information about the image location in the complex plane in the file name
-    pub record_params: bool,
-
-    #[arg(short, long, default_value_t = String::from("mandelbrot_renders"))]
-    /// The folder in which to save the resulting image
-    pub output_folder: String,
+    #[arg(short, long, default_value_t = String::from("mandelbrot_set.png"))]
+    /// The path at which to save the resulting image
+    pub output_path: String,
 
     #[arg(short, long)]
     /// Print extra information and show the progress of the rendering process

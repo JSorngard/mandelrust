@@ -12,3 +12,11 @@ rayon = "1.8"
 color-space = {path = "../color-space"}
 clap = { version = "4.4", features = ["derive"] }
 image = {version = "0.24", default-features = false, features = ["png"] }
+
+[features]
+jpeg = ["image/jpeg", "image/jpeg_rayon"]
+bmp = ["image/bmp"]
+qoi = ["image/qoi"]
+webp = ["image/webp"]
+tiff = ["image/tiff"]
+gif = ["image/gif"]

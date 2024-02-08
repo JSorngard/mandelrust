@@ -1,6 +1,5 @@
 use std::{
     error::Error,
-    fs,
     io::{self, Write},
     path::PathBuf,
 };
@@ -17,9 +16,6 @@ use mandellib::{render, Frame, RenderParameters};
 
 mod command_line_interface;
 mod resolution;
-
-const DEFAULT_FILE_NAME: &str = "mandelbrot_set";
-const DEFAULT_FILE_EXTENSION: &str = "png";
 
 fn main() -> Result<(), Box<dyn Error>> {
     let args = Cli::parse();
@@ -68,23 +64,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         _ = write!(io::stdout(), "\rEncoding and saving image");
     }
 
-    let image_name = if args.record_params {
-        format!(
-            "{DEFAULT_FILE_NAME}_at_re_{}_im_{}_zoom_{}_maxiters_{}.{DEFAULT_FILE_EXTENSION}",
-            args.real_center, args.imag_center, args.zoom_level, args.max_iterations,
-        )
-    } else {
-        format!("{DEFAULT_FILE_NAME}.{DEFAULT_FILE_EXTENSION}")
-    };
-
-    let mut out_path = PathBuf::new();
-    out_path.push(args.output_folder);
-
-    // If the output folder does not exist, we create it
-    if !out_path.is_dir() {
-        fs::create_dir(&out_path)?;
-    }
-    out_path.push(image_name);
+    let out_path = PathBuf::from(args.output_path);
 
     img.save(&out_path)?;
 
