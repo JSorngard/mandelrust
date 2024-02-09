@@ -71,7 +71,31 @@ pub struct Cli {
     pub grayscale: bool,
 
     #[arg(short, long, default_value_t = String::from("mandelbrot_set.png"))]
-    /// The path at which to save the resulting image
+    /// The path at which to save the resulting image.
+    /// Supports saving as png
+    #[cfg_attr(
+        any(
+            feature = "jpg",
+            feature = "webp",
+            feature = "tiff",
+            feature = "bmp",
+            feature = "qoi",
+            feature = "gif",
+            feature = "ico",
+            feature = "pnm",
+            feature = "tga",
+        ),
+        doc = ","
+    )]
+    #[cfg_attr(feature = "jpg", doc = "jpg,")]
+    #[cfg_attr(feature = "webp", doc = "webp,")]
+    #[cfg_attr(feature = "tiff", doc = "tiff,")]
+    #[cfg_attr(feature = "bmp", doc = "bmp,")]
+    #[cfg_attr(feature = "qoi", doc = "qoi,")]
+    #[cfg_attr(feature = "gif", doc = "gif,")]
+    #[cfg_attr(feature = "ico", doc = "ico,")]
+    #[cfg_attr(feature = "pnm", doc = "ppm, pam")]
+    #[cfg_attr(feature = "tga", doc = "tga,")]
     pub output_path: String,
 
     #[arg(short, long)]

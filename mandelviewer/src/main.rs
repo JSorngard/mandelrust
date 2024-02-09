@@ -309,7 +309,13 @@ impl Application for MandelViewer {
                 if let Some(ref img) = self.image {
                     match FileDialog::new()
                         .set_file_name("mandelbrot_set.png")
-                        .add_filter("image", &["png", "jpg", "gif", "bmp", "tiff", "webp"])
+                        .add_filter(
+                            "image",
+                            &[
+                                "png", "jpg", "gif", "webp", "bmp", "tiff", "tga", "qoi", "ico",
+                                "ppm", "pam",
+                            ],
+                        )
                         .save_file()
                     {
                         Some(out_path) => {

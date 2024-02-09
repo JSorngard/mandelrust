@@ -21,10 +21,7 @@ qoi = ["image/qoi"]
 webp = ["image/webp"]
 tiff = ["image/tiff"]
 gif = ["image/gif"]
-farbfeld = ["image/farbfeld"]
 ico = ["image/ico"]
-## Adds support for pbm, pgm, ppm and pam
+## Adds support for ppm and pam
 pnm = ["image/pnm"]
 tga = ["image/tga"]
-dxt = ["image/dxt"]
-openexr = ["image/openexr"]
