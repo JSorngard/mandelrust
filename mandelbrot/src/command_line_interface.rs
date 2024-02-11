@@ -94,8 +94,8 @@ pub struct Cli {
     #[cfg_attr(feature = "qoi", doc = "qoi,")]
     #[cfg_attr(feature = "gif", doc = "gif,")]
     #[cfg_attr(feature = "ico", doc = "ico,")]
-    #[cfg_attr(feature = "pnm", doc = "ppm, pam")]
-    #[cfg_attr(feature = "tga", doc = "tga,")]
+    #[cfg_attr(feature = "pnm", doc = "ppm, pam,")]
+    #[cfg_attr(feature = "tga", doc = "and tga")]
     pub output_path: String,
 
     #[arg(short, long)]
