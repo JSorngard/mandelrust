@@ -338,7 +338,7 @@ fn pixel_color(pixel_region: Frame, render_parameters: RenderParameters) -> Pixe
 #[must_use]
 pub fn iterate(c_re: f64, c_im: f64, max_iterations: NonZeroU32) -> (u32, f64) {
     let c_imag_sqr = c_im * c_im;
-    let mag_sqr = c_re * c_re + c_imag_sqr;
+    let mut mag_sqr = c_re * c_re + c_imag_sqr;
 
     let max_iterations = max_iterations.get();
 
@@ -365,13 +365,14 @@ pub fn iterate(c_re: f64, c_im: f64, max_iterations: NonZeroU32) -> (u32, f64) {
     // While it is common to abort when |z| > 2 since such a point is guaranteed
     // to not be in the set, we keep iterating until |z| > 6 as this reduces
     // color banding.
-    while iterations < max_iterations && z_re_sqr + z_im_sqr <= 36.0 {
+    while iterations < max_iterations && mag_sqr <= 36.0 {
         z_im *= z_re;
         z_im += z_im;
         z_im += c_im;
         z_re = z_re_sqr - z_im_sqr + c_re;
         z_re_sqr = z_re * z_re;
         z_im_sqr = z_im * z_im;
+        mag_sqr = z_re_sqr + z_im_sqr;
         iterations += 1;
     }
 
