@@ -11,3 +11,7 @@ resolver = "2"
 inherits = "release"
 codegen-units = 1
 lto = true
+
+[profile.dev.package."*"]
+# Enable optimization of dependencies also in debug mode
+opt-level=3
