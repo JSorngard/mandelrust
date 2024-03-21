@@ -69,7 +69,11 @@ fn main() -> Result<(), Box<dyn Error>> {
     img.save(&out_path)?;
 
     if args.verbose {
-        _ = writeln!(io::stdout(), "\rSaved image as {}", out_path.display());
+        _ = writeln!(
+            io::stdout(),
+            "\rSaved image as {}                       ",
+            out_path.display()
+        );
     }
 
     Ok(())
