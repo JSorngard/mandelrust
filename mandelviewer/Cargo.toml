@@ -11,7 +11,7 @@ color-space = {path = "../color-space"}
 clap = {version = "4.4", features = ["derive"]}
 iced = {version = "0.10", features = ["image"]}
 image = "0.24"
-rayon = "1.9"
+rayon = "1.10"
 rfd = "0.12"
 nonzero_ext = "0.3.0"
 

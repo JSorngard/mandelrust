@@ -6,7 +6,7 @@ edition = "2021"
 [dependencies]
 color-space = {path = "../color-space"}
 image = {version = "0.24", default-features = false, features = ["png"]}
-rayon = "1.9"
+rayon = "1.10"
 indicatif = { version = "0.17", features = ["rayon"] }
 itertools = {version = "0.12", default-features = false}
 
