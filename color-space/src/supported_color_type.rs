@@ -75,11 +75,7 @@ impl std::fmt::Display for UnsupportedColorTypeError {
     }
 }
 
-impl std::error::Error for UnsupportedColorTypeError {
-    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
-        None
-    }
-}
+impl std::error::Error for UnsupportedColorTypeError {}
 
 impl TryFrom<ColorType> for SupportedColorType {
     type Error = UnsupportedColorTypeError;
