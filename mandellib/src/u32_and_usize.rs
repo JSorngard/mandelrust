@@ -5,7 +5,6 @@ use core::num::{NonZeroU32, NonZeroUsize, TryFromIntError};
 #[derive(Debug, Clone, Copy)]
 pub struct U32AndUsize {
     u32: NonZeroU32,
-    usize: NonZeroUsize,
 }
 
 impl fmt::Display for U32AndUsize {
@@ -17,10 +16,8 @@ impl fmt::Display for U32AndUsize {
 impl TryFrom<NonZeroU32> for U32AndUsize {
     type Error = TryFromIntError;
     fn try_from(value: NonZeroU32) -> Result<Self, Self::Error> {
-        Ok(Self {
-            u32: value,
-            usize: value.try_into()?,
-        })
+        NonZeroUsize::try_from(value)?;
+        Ok(Self { u32: value })
     }
 }
 
@@ -28,22 +25,22 @@ impl TryFrom<u32> for U32AndUsize {
     type Error = TryFromIntError;
     fn try_from(value: u32) -> Result<Self, Self::Error> {
         let nzvalue: NonZeroU32 = value.try_into()?;
-        Ok(Self {
-            u32: nzvalue,
-            usize: nzvalue.try_into()?,
-        })
+        NonZeroUsize::try_from(nzvalue)?;
+        Ok(Self { u32: nzvalue })
     }
 }
 
 impl From<U32AndUsize> for usize {
     fn from(value: U32AndUsize) -> Self {
-        value.usize.get()
+        // Cast can not fail since we checked its legality upon creation of the type
+        value.u32.get() as usize
     }
 }
 
 impl From<U32AndUsize> for NonZeroUsize {
     fn from(value: U32AndUsize) -> Self {
-        value.usize
+        // We already check that this conversion is legal upon creation of the type
+        value.u32.try_into().unwrap()
     }
 }
 
