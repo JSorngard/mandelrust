@@ -1,6 +1,6 @@
 use image::ColorType;
 
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum SupportedColorType {
     Rgba8,
     Rgb8,
@@ -44,7 +44,7 @@ impl SupportedColorType {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum UnsupportedColorTypeError {
     La8,
     L16,
