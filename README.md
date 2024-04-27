@@ -23,8 +23,9 @@ I have tried to make the program faster over time. Some of the techniques used a
  3. [Rayon](https://docs.rs/rayon/latest/rayon/) is used to parallelize the rendering.  
  4. Supersampling is done only [close to the border of the set](/examples/smoothing/mandelbrot_set_ssaa_region.avif).  
  5. The iteration loop has been restructured to use the minimum number of multiplications.  
- 6. [Link time optimization](https://doc.rust-lang.org/rustc/codegen-options/index.html#lto) has been enabled and the number of [codegen units](https://doc.rust-lang.org/rustc/codegen-options/index.html#codegen-units) set to 1  
- 7. Cargo is set to enable optimization with every instruction set available [on the compiling CPU](https://rust-lang.github.io/packed_simd/perf-guide/target-feature/rustflags.html#target-cpu).
+ 6. [Link time optimization](https://doc.rust-lang.org/rustc/codegen-options/index.html#lto) can been enabled by changing `--release` to `--profile release-lto`.
+ 7. The number of [codegen units](https://doc.rust-lang.org/rustc/codegen-options/index.html#codegen-units) set has been to 1  
+ 8. Cargo is set to enable optimization with every instruction set available [on the compiling CPU](https://rust-lang.github.io/packed_simd/perf-guide/target-feature/rustflags.html#target-cpu).
 
 The program can render a nine times supersampled 4k image of the set in around 580 ms on my laptop with a quad core i7-7500U CPU, while a non-supersampled 1080p image finishes in around 80 ms.
 
