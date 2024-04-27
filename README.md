@@ -11,7 +11,7 @@ This was one of my first projects to learn rust.
  3. Clone this git repo with `git clone https://www.github.com/JSorngard/mandelrust.git`
  4. Go into the repository with `cd mandelrust`
  5. Compile `mandelbrot` with `cargo build --release -p mandelbrot`
- 6. Run it with `./target/release/mandelbrot.exe`. The resulting image can be found in the `mandelbrot_renders` folder.
+ 6. Run it with `./target/release/mandelbrot.exe`. The resulting image can be found in the folder the program was ran in (use `--help` to see all options).
  7. You can specify where the image is focused, how zoomed it is and how many iterations to do (among other things) with command line arguments. For an exhaustive list run the program with the `--help` argument
  8. `mandelviewer` can be compiled with `cargo build --release -p mandelviewer` and run with `./target/release/mandelviewer.exe`. If you are on Linux you will need to have the [dependencies](https://docs.rs/rfd/0.11.2/rfd/#linux--bsd-backends) of the file save dialog installed.
 
