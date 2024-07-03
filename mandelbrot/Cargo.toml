@@ -10,12 +10,12 @@ edition = "2021"
 mandellib = {path = "../mandellib"}
 rayon = "1.10"
 color-space = {path = "../color-space"}
-clap = { version = "4.4", features = ["derive"] }
-image = {version = "0.24", default-features = false, features = ["png"] }
+clap = { version = "4.5", features = ["derive"] }
+image = {version = "0.25", default-features = false, features = ["png"] }
 
 [features]
 # Additional file format support
-jpg = ["image/jpeg", "image/jpeg_rayon"]
+jpg = ["image/jpeg"]
 bmp = ["image/bmp"]
 qoi = ["image/qoi"]
 webp = ["image/webp"]
