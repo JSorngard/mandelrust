@@ -4,14 +4,14 @@ version = "12.0.0"
 edition = "2021"
 
 [dependencies]
-color-space = {path = "../color-space"}
-image = {version = "0.24", default-features = false, features = ["png"]}
+color-space = { path = "../color-space" }
+image = { version = "0.25", default-features = false, features = ["png"] }
 rayon = "1.10"
 indicatif = { version = "0.17", features = ["rayon"] }
-itertools = {version = "0.12", default-features = false}
+itertools = { version = "0.12", default-features = false }
 
 [dev-dependencies]
-criterion = {version = "0.5", features = ["html_reports"]}
+criterion = { version = "0.5", features = ["html_reports"] }
 
 [[bench]]
 name = "mandelbenches"

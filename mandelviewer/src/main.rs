@@ -34,7 +34,7 @@ use iced::{
     },
     window, Application, Command, Element, Length, Theme,
 };
-use image::{DynamicImage, ImageFormat};
+use image::DynamicImage;
 use nonzero_ext::nonzero;
 use rfd::FileDialog;
 
@@ -61,10 +61,6 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     let program_settings = iced::Settings {
         window: window::Settings {
-            icon: Some(
-                window::icon::from_file_data(ICON, Some(ImageFormat::Png))
-                    .expect("embedded resources are correctly formatted images"),
-            ),
             ..Default::default()
         },
         ..Default::default()
