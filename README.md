@@ -48,17 +48,20 @@ If we want to zoom even deeper we can change the maximum number of iterations in
 Images in grayscale without any color mapping can also be made:
 ![Grayscale example](/examples/mandelbrot_set_at_re_-0.728_im_-0.212_zoom_6.4_maxiters_1000.avif)
 
-## License
 
-Licensed under either of
+<br>
 
- * [Apache License, Version 2.0](LICENSE-APACHE)
- * [MIT license](LICENSE-MIT)
+### License
 
-at your option.
+<sup>
+Licensed under either of <a href="LICENSE-APACHE">Apache License, Version
+2.0</a> or <a href="LICENSE-MIT">MIT license</a> at your option.
+</sup>
 
-## Contribution
+<br>
 
+<sub>
 Unless you explicitly state otherwise, any contribution intentionally submitted
 for inclusion in the work by you, as defined in the Apache-2.0 license, shall be
 dual licensed as above, without any additional terms or conditions.
+</sub>
