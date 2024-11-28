@@ -35,14 +35,13 @@ use iced::{
     window, Application, Command, Element, Length, Theme,
 };
 use image::DynamicImage;
-use nonzero_ext::nonzero;
 use rfd::FileDialog;
 
 // Initial view settings
-const INITIAL_SSAA_FACTOR: NonZeroU8 = nonzero!(3_u8);
-const INITIAL_MAX_ITERATIONS: NonZeroU32 = nonzero!(256_u32);
-const INITIAL_X_RES: NonZeroU32 = nonzero!(1920_u32);
-const INITIAL_Y_RES: NonZeroU32 = nonzero!(1080_u32);
+const INITIAL_SSAA_FACTOR: NonZeroU8 = NonZeroU8::new(3).unwrap();
+const INITIAL_MAX_ITERATIONS: NonZeroU32 = NonZeroU32::new(256).unwrap();
+const INITIAL_X_RES: NonZeroU32 = NonZeroU32::new(1920).unwrap();
+const INITIAL_Y_RES: NonZeroU32 = NonZeroU32::new(1080).unwrap();
 const INITIAL_IMAG_DISTANCE: f64 = 8.0 / 3.0;
 const INITIAL_REAL_CENTER: f64 = -0.75;
 const INITIAL_IMAG_CENTER: f64 = 0.0;
