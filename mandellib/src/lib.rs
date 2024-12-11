@@ -111,10 +111,10 @@ pub fn render(
         ProgressBar::hidden()
     };
 
-    match image {
-        DynamicImage::ImageLuma8(ref mut buffer) => buffer.as_mut(),
-        DynamicImage::ImageRgb8(ref mut buffer) => buffer.as_mut(),
-        DynamicImage::ImageRgba8(ref mut buffer) => buffer.as_mut(),
+    match &mut image {
+        DynamicImage::ImageLuma8(buffer) => buffer.as_mut(),
+        DynamicImage::ImageRgb8(buffer) => buffer.as_mut(),
+        DynamicImage::ImageRgba8(buffer) => buffer.as_mut(),
         _ => unreachable!("we define the image so that it can only be one of the above"),
     }
     // Split the image up into vertical bands and iterate over them in parallel.
@@ -301,31 +301,37 @@ fn pixel_color(pixel_region: Frame, render_parameters: RenderParameters) -> Pixe
 
 /// Iterates the Mandelbrot function
 ///
+/// ```math
 /// z_(n+1) = z_n^2 + c
+/// ```
 ///
 /// on the given c starting with z_0 = c until it either escapes
 /// or the loop exceeds the maximum number of iterations.
 /// Returns a tuple of `(iterations, final |z|^2)`.
+/// 
 /// # Example
+///
 /// ```
 /// # use mandellib::iterate;
 /// # use core::num::NonZeroU32;
-/// const MAXITERS: u32 = 100;
-/// let maxiters = NonZeroU32::new(MAXITERS).unwrap();
+/// const MAXITERS: NonZeroU32 = NonZeroU32::new(10).unwrap();
 /// // The origin is in the set
-/// assert_eq!(iterate(0.0, 0.0, maxiters).0, MAXITERS);
+/// assert_eq!(iterate(0.0, 0.0, MAXITERS).0, MAXITERS.into());
 ///
 /// // but 1 + i is not.
-/// assert_ne!(iterate(1.0, 1.0, maxiters).0, MAXITERS);
+/// assert_ne!(iterate(1.0, 1.0, MAXITERS).0, MAXITERS.into());
 ///
 /// // The magnitude of -2 never changes, regardless of iteration number.
-/// assert_eq!(iterate(-2.0, 0.0, maxiters).1, 4.0);
+/// assert_eq!(iterate(-2.0, 0.0, MAXITERS), (MAXITERS.into(), 4.0));
 /// ```
+///
 /// # Note
+///
 /// Points inside the main cardioid or period-2 bulb are not iterated
 /// but instead return immediately while reporting the maximum number of iterations.
 /// For those points the modulus squared is not well defined and
 /// is currently returned as NaN to indicate that the value should not be used.
+/// 
 /// ```
 /// # use mandellib::iterate;
 /// # use core::num::NonZeroU32;
@@ -376,7 +382,7 @@ pub fn iterate(c_re: f64, c_im: f64, max_iterations: NonZeroU32) -> (u32, f64) {
         iterations += 1;
     }
 
-    (iterations, z_re_sqr + z_im_sqr)
+    (iterations, mag_sqr)
 }
 
 /// Returns a value kind of like the potential function of the Mandelbrot set.

@@ -7,9 +7,9 @@ use image::{Luma, Rgb, Rgba};
 /// and added to another `LinearRGB`.
 #[derive(Clone, Copy, Debug, Default, PartialEq)]
 pub struct LinearRGB {
-    pub r: f64,
-    pub g: f64,
-    pub b: f64,
+    r: f64,
+    g: f64,
+    b: f64,
 }
 
 impl LinearRGB {

@@ -42,7 +42,7 @@ pub struct Cli {
         short = 'p',
         value_name = "X_RESxY_RES",
         long,
-        default_value_t = Resolution::new(3240, 2160).expect("3240 and 2160 are not 0"),
+        default_value_t = const {Resolution::new(3240, 2160).expect("3240 and 2160 are not 0")},
     )]
     /// The resolution of the image in the form "X_RESxY_RES", e.g. "3240x2160"
     pub resolution: Resolution,
@@ -51,7 +51,7 @@ pub struct Cli {
         short,
         long,
         value_name = "SQRT(SSAA_FACTOR)",
-        default_value_t = NonZeroU8::new(3).expect("3 is not 0"),
+        default_value_t = const {NonZeroU8::new(3).expect("3 is not 0")},
     )]
     /// How many samples to compute for each pixel along one dimension.
     /// The total number of samples per pixel is the square of this number.
@@ -61,7 +61,7 @@ pub struct Cli {
     #[arg(
         short,
         long,
-        default_value_t = NonZeroU32::new(255).expect("255 is not 0"),
+        default_value_t = const {NonZeroU32::new(255).expect("255 is not 0")},
     )]
     /// The maximum number of iterations for each pixel sample
     pub max_iterations: NonZeroU32,
