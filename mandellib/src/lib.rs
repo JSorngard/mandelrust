@@ -111,10 +111,10 @@ pub fn render(
         ProgressBar::hidden()
     };
 
-    match image {
-        DynamicImage::ImageLuma8(ref mut buffer) => buffer.as_mut(),
-        DynamicImage::ImageRgb8(ref mut buffer) => buffer.as_mut(),
-        DynamicImage::ImageRgba8(ref mut buffer) => buffer.as_mut(),
+    match &mut image {
+        DynamicImage::ImageLuma8(buffer) => buffer.as_mut(),
+        DynamicImage::ImageRgb8(buffer) => buffer.as_mut(),
+        DynamicImage::ImageRgba8(buffer) => buffer.as_mut(),
         _ => unreachable!("we define the image so that it can only be one of the above"),
     }
     // Split the image up into vertical bands and iterate over them in parallel.
