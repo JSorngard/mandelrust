@@ -382,7 +382,7 @@ pub fn iterate(c_re: f64, c_im: f64, max_iterations: NonZeroU32) -> (u32, f64) {
         iterations += 1;
     }
 
-    (iterations, z_re_sqr + z_im_sqr)
+    (iterations, mag_sqr)
 }
 
 /// Returns a value kind of like the potential function of the Mandelbrot set.
