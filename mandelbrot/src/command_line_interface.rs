@@ -6,7 +6,7 @@ use crate::resolution::Resolution;
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
-/// Renders a supersampled image of the Mandelbrot set to a png file.
+/// Renders a supersampled image of the Mandelbrot set to an image file.
 /// It is possible to change which part of the set is rendered, how zoomed in the image is,
 /// the number of iterations to use, as well as a few other things.
 pub struct Cli {
