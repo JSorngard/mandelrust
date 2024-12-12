@@ -308,7 +308,7 @@ fn pixel_color(pixel_region: Frame, render_parameters: RenderParameters) -> Pixe
 /// on the given c starting with z_0 = c until it either escapes
 /// or the loop exceeds the maximum number of iterations.
 /// Returns a tuple of `(iterations, final |z|^2)`.
-/// 
+///
 /// # Example
 ///
 /// ```
@@ -331,7 +331,7 @@ fn pixel_color(pixel_region: Frame, render_parameters: RenderParameters) -> Pixe
 /// but instead return immediately while reporting the maximum number of iterations.
 /// For those points the modulus squared is not well defined and
 /// is currently returned as NaN to indicate that the value should not be used.
-/// 
+///
 /// ```
 /// # use mandellib::iterate;
 /// # use core::num::NonZeroU32;
