@@ -4,7 +4,7 @@ version = "0.3.1"
 edition = "2021"
 
 [dependencies]
-image = {version = "0.24", default-features = false, features = ["png"]}
+image = {version = "0.25", default-features = false, features = ["png"]}
 
 [dev-dependencies]
 approx = "0.5"
