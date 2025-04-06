@@ -9,7 +9,7 @@ edition = "2021"
 mandellib = { path = "../mandellib" }
 color-space = { path = "../color-space" }
 clap = { version = "4.4", features = ["derive"] }
-iced = { version = "0.10", features = ["image"] }
+iced = { version = "0.13", features = ["image"] }
 image = "0.25"
 rayon = "1.10"
 rfd = "0.15"
