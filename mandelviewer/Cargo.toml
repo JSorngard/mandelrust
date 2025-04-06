@@ -12,7 +12,7 @@ clap = { version = "4.4", features = ["derive"] }
 iced = { version = "0.10", features = ["image"] }
 image = "0.25"
 rayon = "1.10"
-rfd = "0.14"
+rfd = "0.15"
 
 [features]
 # Enable this feature to show extra debug information in the render window when pressing F12.
