@@ -45,6 +45,14 @@ jobs:
     - name: Run clippy
       run: cargo clippy -- -D warnings
 
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - uses: dtolnay/rust-toolchain@stable
+    - name: Build
+      run: cargo build
+
   compile_benchmarks:
     runs-on: ubuntu-latest
     steps:
