@@ -812,7 +812,7 @@ dependencies = [
  "approx",
  "criterion",
  "image 0.24.9",
- "itertools 0.10.5",
+ "itertools 0.12.1",
 ]
 
 [[package]]
