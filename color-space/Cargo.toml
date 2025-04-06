@@ -8,7 +8,7 @@ image = {version = "0.24", default-features = false, features = ["png"]}
 
 [dev-dependencies]
 approx = "0.5"
-itertools = "0.10"
+itertools = "0.12"
 criterion = {version = "0.5", features = ["html_reports"]}
 
 [[bench]]
