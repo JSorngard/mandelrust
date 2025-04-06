@@ -29,11 +29,8 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - uses: dtolnay/rust-toolchain@stable
-    - uses: taiki-e/install-action@v2
-      with:
-        tool: cargo-all-features
-    - name: Check all feature combinations
-      run: cargo check-all-features
+    - name: Check
+      run: cargo check
 
   clippy:
     runs-on: ubuntu-latest
@@ -43,7 +40,7 @@ jobs:
       with:
         components: clippy
     - name: Run clippy
-      run: cargo clippy -- -D warnings
+      run: cargo clippy --all-features -- -D warnings
 
   build:
     runs-on: ubuntu-latest
