@@ -21,6 +21,8 @@ jobs:
     - uses: dtolnay/rust-toolchain@stable
       with:
         components: rustfmt
+    - name: Cache
+      uses: Swatinem/rust-cache@v2.8.0
     - name: Format
       run: cargo fmt --check
 
@@ -29,6 +31,8 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - uses: dtolnay/rust-toolchain@stable
+    - name: Cache
+      uses: Swatinem/rust-cache@v2.8.0
     - name: Check
       run: cargo check
 
@@ -39,6 +43,8 @@ jobs:
     - uses: dtolnay/rust-toolchain@stable
       with:
         components: clippy
+    - name: Cache
+      uses: Swatinem/rust-cache@v2.8.0
     - name: Run clippy
       run: cargo clippy --all-features -- -D warnings
 
@@ -53,6 +59,8 @@ jobs:
     - uses: dtolnay/rust-toolchain@master
       with:
         toolchain: ${{ matrix.toolchain }}
+    - name: Cache
+      uses: Swatinem/rust-cache@v2.8.0
     - name: Build
       run: cargo build --all-features
 
@@ -61,6 +69,8 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - uses: dtolnay/rust-toolchain@stable
+    - name: Cache
+      uses: Swatinem/rust-cache@v2.8.0
     - name: Compile benchmarks, but do not run them
       # There are no benchmarks with "nothing" in their name, hence this command only compiles the benchmarks but does not run them.
       run: cargo bench --all-features nothing
