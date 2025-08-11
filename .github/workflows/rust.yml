@@ -71,4 +71,4 @@ jobs:
       uses: Swatinem/rust-cache@v2.8.0
     - name: Compile benchmarks, but do not run them
       # There are no benchmarks with "nothing" in their name, hence this command only compiles the benchmarks but does not run them.
-      run: cargo bench --all-features nothing
+      run: cargo bench --all-features --no-run
