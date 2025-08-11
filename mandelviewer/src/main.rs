@@ -440,7 +440,7 @@ impl Application for MandelViewer {
         }
     }
 
-    fn view(&self) -> Element<Self::Message> {
+    fn view(&self) -> Element<'_, Self::Message> {
         row![
             // An image viewer with an expanding notification field above it.
             column![
