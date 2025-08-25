@@ -8,7 +8,7 @@ edition = "2021"
 
 [dependencies]
 mandellib = {path = "../mandellib"}
-rayon = "1.10"
+rayon = "1.11"
 color-space = {path = "../color-space"}
 clap = { version = "4.5", features = ["derive"] }
 image = {version = "0.25", default-features = false, features = ["png"] }
