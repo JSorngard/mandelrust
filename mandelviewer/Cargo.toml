@@ -14,6 +14,9 @@ image = "0.25"
 rayon = "1.11"
 rfd = "0.16"
 
+[target.'cfg(target_env = "musl")'.dependencies]
+mimalloc = "0.1.48"
+
 [features]
 # Enable this feature to show extra debug information in the render window when pressing F12.
 debug = ["iced/debug"]

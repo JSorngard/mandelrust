@@ -13,6 +13,9 @@ color-space = {path = "../color-space"}
 clap = { version = "4.5", features = ["derive"] }
 image = {version = "0.25", default-features = false, features = ["png"] }
 
+[target.'cfg(target_env = "musl")'.dependencies]
+mimalloc = "0.1.48"
+
 [features]
 # Additional file format support
 jpg = ["image/jpeg"]
