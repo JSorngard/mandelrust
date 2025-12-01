@@ -47,6 +47,7 @@ jobs:
       run: cargo clippy --all-features -- -D warnings
 
   build:
+    needs: format
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
@@ -63,6 +64,7 @@ jobs:
       run: cargo build --all-features
 
   compile_benchmarks:
+    needs: format
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
