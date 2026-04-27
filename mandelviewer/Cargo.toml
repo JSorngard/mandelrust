@@ -15,7 +15,7 @@ rayon = "1.12"
 rfd = "0.17"
 
 [target.'cfg(target_env = "musl")'.dependencies]
-mimalloc = "0.1.48"
+mimalloc = "0.1.50"
 
 [features]
 # Enable this feature to show extra debug information in the render window when pressing F12.
