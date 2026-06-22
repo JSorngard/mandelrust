@@ -8,7 +8,7 @@ color-space = { path = "../color-space" }
 image = { version = "0.25", default-features = false, features = ["png"] }
 rayon = "1.12"
 indicatif = { version = "0.18", features = ["rayon"] }
-itertools = { version = "0.14", default-features = false }
+itertools = { version = "0.15", default-features = false }
 
 [dev-dependencies]
 criterion = { version = "0.8", features = ["html_reports"] }
